@@ -1,5 +1,3 @@
-# Note this container is meant to be built in a parent directory that contains the osml-imagery-toolkit package
-
 # set the base image to build from Internal Amazon Docker Image rather than DockerHub
 # if a lot of request were made, CodeBuild will failed due to...
 # "You have reached your pull rate limit. You may increase the limit by authenticating and upgrading"
@@ -68,12 +66,6 @@ RUN conda init && echo 'conda activate "${CONDA_TARGET_ENV:-base}"' >>  ~/.bashr
 
 # copy our lcoal application source into the container
 ADD . osml-tile-server
-
-# copy our lcoal application source into the container
-# ADD osml-imagery-toolkit osml-imagery-toolkit
-
-# install the imagery toolkit library from source
-# RUN python3 -m pip install osml-imagery-toolkit/
 
 # install the model runner application from source
 RUN python3 -m pip install osml-tile-server/
