@@ -68,17 +68,7 @@ async def validate_viewpoint_status(current_status: ViewpointStatus, api_operati
 
     :return: viewpoint detail
     """
-    if api_operation in [
-        ViewpointApiNames.METADATA, 
-        ViewpointApiNames.INFO,
-        ViewpointApiNames.PREVIEW,
-        ViewpointApiNames.CROP,
-        ViewpointApiNames.TILE,
-        ViewpointApiNames.BOUNDS,
-        ViewpointApiNames.UPDATE,
-        ViewpointApiNames.STATISTICS
-    ]:
-        if current_status == ViewpointStatus.DELETED:
-            raise HTTPException(status_code=400, detail=f"Cannot view {api_operation} for this image since this has already been deleted.")
-        elif current_status == ViewpointStatus.REQUESTED:
-            raise HTTPException(status_code=400, detail="This viewpoint has been requested and not in READY state. Please try again later.")
+    if current_status == ViewpointStatus.DELETED:
+        raise HTTPException(status_code=400, detail=f"Cannot view {api_operation} for this image since this has already been deleted.")
+    elif current_status == ViewpointStatus.REQUESTED:
+        raise HTTPException(status_code=400, detail="This viewpoint has been requested and not in READY state. Please try again later.")

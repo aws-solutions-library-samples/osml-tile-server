@@ -59,8 +59,8 @@ class ViewpointStatusTable:
             raise HTTPException(status_code=err.response['Error']['Code'], detail=f"Cannot write to ViewpointStatusTable, error: {err.response['Error']['Message']}")
 
     def update_viewpoint(self, viewpoint_item: ViewpointModel) -> ViewpointModel:
-        self.logger.info(viewpoint_item)
-        
+        self.logger.info(viewpoint_item.model_dump())
+
         try:
             update_exp, update_attr = self.get_update_params(viewpoint_item.model_dump())
 

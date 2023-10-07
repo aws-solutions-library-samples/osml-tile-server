@@ -79,8 +79,7 @@ class ViewpointRouter:
             local_object_path = Path(local_viewpoint_folder, file_name)
 
             try:
-                # TODO split into more read-able
-                self.s3.Object(viewpoint_request.bucket_name, viewpoint_request.object_key).download_file(str(local_object_path.absolute()))
+                self.s3.meta.client.download_file(viewpoint_request.bucket_name, viewpoint_request.object_key, str(local_object_path.absolute()))
             except botocore.exceptions.ClientError as err:
                 if err.response['Error']['Code'] == "404":
                     raise HTTPException(status_code=404, detail=f"The {viewpoint_request.bucket_name} bucket does not exist! Error={err}")
@@ -116,8 +115,7 @@ class ViewpointRouter:
             """
             viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
 
-            if viewpoint_item.viewpoint_status == ViewpointStatus.DELETED:
-                raise HTTPException(status_code=400, detail="This viewpoint file has already been deleted! Viewpoint: {viewpoint_state.description}")
+            await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.UPDATE)
 
             if viewpoint_item:
                 shutil.rmtree(Path(viewpoint_item.local_object_path).parent, ignore_errors=True)
@@ -125,11 +123,9 @@ class ViewpointRouter:
             viewpoint_item.viewpoint_status = ViewpointStatus.DELETED
             viewpoint_item.local_object_path = None
 
-            self.viewpoint_database.update_viewpoint(viewpoint_item)
+            return self.viewpoint_database.update_viewpoint(viewpoint_item)
 
-            return viewpoint_item
-
-        @api_router.post("/", status_code=201)
+        @api_router.put("/", status_code=201)
         async def update_viewpoint(viewpoint_request: ViewpointUpdate) -> ViewpointModel:
             """
             Update the viewpoint item in DynamoDB based on the given viewpoint_id
@@ -146,7 +142,7 @@ class ViewpointRouter:
             viewpoint_item.tile_size = viewpoint_request.tile_size
             viewpoint_item.range_adjustment = viewpoint_request.range_adjustment
 
-            return self.viewpoint_database.update_viewpoint(viewpoint_item)    
+            return self.viewpoint_database.update_viewpoint(viewpoint_item)
 
         @api_router.get("/{viewpoint_id}")
         async def describe_viewpoint(viewpoint_id: str) -> ViewpointModel:
@@ -273,18 +269,18 @@ class ViewpointRouter:
 
             await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.TILE)
 
-            if viewpoint_item.description.range_adjustment is not PixelRangeAdjustmentType.NONE:
+            if viewpoint_item.range_adjustment is not PixelRangeAdjustmentType.NONE:
                 tile_factory = get_tile_factory(tile_format, compression, str(viewpoint_item.local_object_path.absolute()),
                                                 output_type=gdalconst.GDT_Byte,
-                                                range_adjustment=viewpoint_item.description.range_adjustment)
+                                                range_adjustment=viewpoint_item.range_adjustment)
             else:
                 tile_factory = get_tile_factory(tile_format, compression, str(viewpoint_item.local_object_path.absolute()))
             
             if tile_factory is None:
                 raise HTTPException(status_code=500,
-                                    detail=f"Unable to read tiles from viewpoint {viewpoint_item.description.viewpoint_id}")
+                                    detail=f"Unable to read tiles from viewpoint {viewpoint_item.viewpoint_id}")
 
-            tile_size = viewpoint_item.description.tile_size
+            tile_size = viewpoint_item.tile_size
             image_bytes = tile_factory.create_encoded_tile([x * tile_size, y * tile_size, tile_size, tile_size])
             
             return StreamingResponse(io.BytesIO(image_bytes), media_type=get_media_type(tile_format), status_code=200)

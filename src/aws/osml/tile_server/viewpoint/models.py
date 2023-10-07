@@ -44,7 +44,7 @@ class ViewpointModel(BaseModel):
     object_key: str
     tile_size: int
     range_adjustment: PixelRangeAdjustmentType
-    local_object_path: str
+    local_object_path: str | None
 
 class ViewpointUpdate(BaseModel):
     viewpoint_id: str
