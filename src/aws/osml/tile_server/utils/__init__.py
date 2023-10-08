@@ -1,1 +1,1 @@
-from .aws_services import initialize_s3, initialize_ddb
+from .aws_services import initialize_ddb, initialize_s3

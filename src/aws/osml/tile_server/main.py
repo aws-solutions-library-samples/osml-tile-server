@@ -1,12 +1,11 @@
-from fastapi import FastAPI
-from aws.osml.tile_server.utils.aws_services import initialize_ddb
-from aws.osml.tile_server.utils.aws_services import initialize_s3
-from aws.osml.tile_server.viewpoint.database import ViewpointStatusTable
-from aws.osml.tile_server.viewpoint.routers import ViewpointRouter
+import logging
 
+from fastapi import FastAPI
 from osgeo import gdal
 
-import logging
+from aws.osml.tile_server.utils.aws_services import initialize_ddb, initialize_s3
+from aws.osml.tile_server.viewpoint.database import ViewpointStatusTable
+from aws.osml.tile_server.viewpoint.routers import ViewpointRouter
 
 app = FastAPI()
 gdal.UseExceptions()
@@ -20,9 +19,10 @@ viewpoint_database = ViewpointStatusTable(aws_ddb)
 viewpoint_router = ViewpointRouter(viewpoint_database, aws_s3)
 
 # routers api
-app.include_router(viewpoint_router.router) 
+app.include_router(viewpoint_router.router)
 
 logger = logging.getLogger("uvicorn")
+
 
 @app.get("/")
 async def root():

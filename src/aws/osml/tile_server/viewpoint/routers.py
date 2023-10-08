@@ -1,32 +1,32 @@
-
-from secrets import token_hex
+import io
+import logging
+import os
 import shutil
-from fastapi import APIRouter
-from fastapi import HTTPException, Response, Query
-from aws.osml.tile_server.viewpoint.utils import get_tile_factory, get_media_type, validate_viewpoint_status
+from pathlib import Path
+from secrets import token_hex
+from typing import Any, Dict, List
 
-from starlette.responses import StreamingResponse
-
-
-from aws.osml.tile_server.viewpoint.database import ViewpointStatusTable
-from aws.osml.tile_server.viewpoint.models import ViewpointModel, ViewpointRequest, ViewpointStatus, ViewpointUpdate, PixelRangeAdjustmentType, ViewpointApiNames
-
-import boto3
 import botocore
 from boto3.resources.base import ServiceResource
+from fastapi import APIRouter, HTTPException, Query, Response
+from osgeo import gdal, gdalconst
+from starlette.responses import StreamingResponse
 
-from pathlib import Path
-import os
-import io
-from typing import List, Dict, Any
-from osgeo import gdalconst, gdal
-
-from aws.osml.gdal import GDALImageFormats, GDALCompressionOptions, load_gdal_dataset
+from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, load_gdal_dataset
 from aws.osml.photogrammetry.coordinates import ImageCoordinate
-
-import logging
+from aws.osml.tile_server.viewpoint.database import ViewpointStatusTable
+from aws.osml.tile_server.viewpoint.models import (
+    PixelRangeAdjustmentType,
+    ViewpointApiNames,
+    ViewpointModel,
+    ViewpointRequest,
+    ViewpointStatus,
+    ViewpointUpdate,
+)
+from aws.osml.tile_server.viewpoint.utils import get_media_type, get_tile_factory, validate_viewpoint_status
 
 FILESYSTEM_CACHE_ROOT = os.getenv("VIEWPOINT_FILESYSTEM_CACHE", "/tmp/viewpoint")
+
 
 class ViewpointRouter:
     def __init__(self, viewpoint_database: ViewpointStatusTable, aws_s3: ServiceResource) -> None:
@@ -53,7 +53,7 @@ class ViewpointRouter:
             :return: a list of viewpoints with details
             """
             return self.viewpoint_database.get_all_viewpoints()
-        
+
         @api_router.post("/", status_code=201)
         async def create_viewpoint(viewpoint_request: ViewpointRequest) -> Dict[str, Any]:
             """
@@ -70,7 +70,7 @@ class ViewpointRouter:
             """
             # Create unique viewpoint_id
             viewpoint_id = token_hex(16)
-            
+
             file_name = viewpoint_request.object_key.split("/")[-1]
 
             # TODO rename local to EFS (CDK changes required)
@@ -79,15 +79,22 @@ class ViewpointRouter:
             local_object_path = Path(local_viewpoint_folder, file_name)
 
             try:
-                self.s3.meta.client.download_file(viewpoint_request.bucket_name, viewpoint_request.object_key, str(local_object_path.absolute()))
+                self.s3.meta.client.download_file(
+                    viewpoint_request.bucket_name, viewpoint_request.object_key, str(local_object_path.absolute())
+                )
             except botocore.exceptions.ClientError as err:
-                if err.response['Error']['Code'] == "404":
-                    raise HTTPException(status_code=404, detail=f"The {viewpoint_request.bucket_name} bucket does not exist! Error={err}")
-                elif err.response['Error']['Code'] == "403":
-                    raise HTTPException(status_code=403, detail=f"You do not have permission to access {viewpoint_request.bucket_name} bucket! Error={err}")
+                if err.response["Error"]["Code"] == "404":
+                    raise HTTPException(
+                        status_code=404, detail=f"The {viewpoint_request.bucket_name} bucket does not exist! Error={err}"
+                    )
+                elif err.response["Error"]["Code"] == "403":
+                    raise HTTPException(
+                        status_code=403,
+                        detail=f"You do not have permission to access {viewpoint_request.bucket_name} bucket! Error={err}",
+                    )
 
                 raise HTTPException(status_code=400, detail=f"Image Tile Server cannot process your S3 request! Error={err}")
-            
+
             # these will be stored in ddb
             new_viewpoint_request = ViewpointModel(
                 viewpoint_id=viewpoint_id,
@@ -97,12 +104,12 @@ class ViewpointRouter:
                 tile_size=viewpoint_request.tile_size,
                 range_adjustment=viewpoint_request.range_adjustment,
                 viewpoint_status=ViewpointStatus.REQUESTED,
-                local_object_path=str(local_object_path.absolute())
+                local_object_path=str(local_object_path.absolute()),
             )
 
             # TODO we need to integrate background task here and update the status to READY when its completed
 
-            return self.viewpoint_database.create_viewpoint(new_viewpoint_request)    
+            return self.viewpoint_database.create_viewpoint(new_viewpoint_request)
 
         @api_router.delete("/{viewpoint_id}")
         async def delete_viewpoint(viewpoint_id: str) -> ViewpointModel:
@@ -166,7 +173,7 @@ class ViewpointRouter:
             :return Dict[str, Any]: viewpoint metadata
             """
             viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
-            
+
             await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.METADATA)
 
             viewpoint_path = viewpoint_item.local_object_path
@@ -176,8 +183,8 @@ class ViewpointRouter:
 
             if not metadata:
                 raise HTTPException(status_code=200, detail="The metadata is empty!")
-            
-            return { "metadata": metadata }
+
+            return {"metadata": metadata}
 
         @api_router.get("/{viewpoint_id}/bounds")
         async def get_bounds(viewpoint_id: str) -> Dict[str, Any]:
@@ -199,11 +206,11 @@ class ViewpointRouter:
             height = ds.RasterYSize
 
             world_coordinates = []
-            for coordinates in [[0, 0], [0, height], [width, height], [width/2, height/2]]:
+            for coordinates in [[0, 0], [0, height], [width, height], [width / 2, height / 2]]:
                 world_coordinates.append(sm.image_to_world(ImageCoordinate(coordinates)).to_dms_string())
 
-            return { "bounds": world_coordinates }
-            
+            return {"bounds": world_coordinates}
+
         @api_router.get("/{viewpoint_id}/info")
         async def get_info(viewpoint_id: str) -> Dict[str, Any]:
             """
@@ -214,7 +221,7 @@ class ViewpointRouter:
             :return Dict[str, Any]: viewpoint info
             """
             viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
-            
+
             await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.INFO)
 
             viewpoint_path = viewpoint_item.local_object_path
@@ -224,12 +231,12 @@ class ViewpointRouter:
             height = ds.RasterYSize
 
             world_coordinates = []
-            for coordinates in [[0, 0], [0, height], [width, height], [width/2, height/2]]:
+            for coordinates in [[0, 0], [0, height], [width, height], [width / 2, height / 2]]:
                 world_coordinates.append(sm.image_to_world(ImageCoordinate(coordinates)).to_dms_string())
 
             # TODO get geoJson feature that has a polygon geometry using the world coordinates above
-            
-            return { "features": None }
+
+            return {"features": None}
 
         @api_router.get("/{viewpoint_id}/statistics")
         async def get_statistics(viewpoint_id: str) -> Dict[str, Any]:
@@ -241,48 +248,53 @@ class ViewpointRouter:
             :return Dict[str, Any]: viewpoint statistics
             """
             viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
-            
+
             await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.STATISTICS)
 
             viewpoint_path = viewpoint_item.local_object_path
 
-            try: 
-                gdalOptions = gdal.InfoOptions(format='json', showMetadata=False)
+            try:
+                gdalOptions = gdal.InfoOptions(format="json", showMetadata=False)
                 gdalInfo = gdal.Info(viewpoint_path, options=gdalOptions)
             except Exception as err:
                 raise HTTPException(status_code=400, detail=f"Failed to fetch statistics of an image. {err}")
-            
-            return { "image_statistics": gdalInfo }
+
+            return {"image_statistics": gdalInfo}
 
         @api_router.get("/{viewpoint_id}/tiles/{z}/{x}/{y}.{tile_format}")
-        async def get_tile(viewpoint_id: str,
-                        z: int,
-                        x: int,
-                        y: int,
-                        tile_format: GDALImageFormats = Path(GDALImageFormats.PNG,
-                                                                description="Output image type. Defaults to PNG."),
-                        compression: GDALCompressionOptions = Query(GDALCompressionOptions.NONE,
-                                                                    description="Compression Algorithm for image."),
-                        ) -> Response:
-
+        async def get_tile(
+            viewpoint_id: str,
+            z: int,
+            x: int,
+            y: int,
+            tile_format: GDALImageFormats = Path(GDALImageFormats.PNG, description="Output image type. Defaults to PNG."),
+            compression: GDALCompressionOptions = Query(
+                GDALCompressionOptions.NONE, description="Compression Algorithm for image."
+            ),
+        ) -> Response:
             viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
 
             await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.TILE)
 
             if viewpoint_item.range_adjustment is not PixelRangeAdjustmentType.NONE:
-                tile_factory = get_tile_factory(tile_format, compression, str(viewpoint_item.local_object_path.absolute()),
-                                                output_type=gdalconst.GDT_Byte,
-                                                range_adjustment=viewpoint_item.range_adjustment)
+                tile_factory = get_tile_factory(
+                    tile_format,
+                    compression,
+                    str(viewpoint_item.local_object_path.absolute()),
+                    output_type=gdalconst.GDT_Byte,
+                    range_adjustment=viewpoint_item.range_adjustment,
+                )
             else:
                 tile_factory = get_tile_factory(tile_format, compression, str(viewpoint_item.local_object_path.absolute()))
-            
+
             if tile_factory is None:
-                raise HTTPException(status_code=500,
-                                    detail=f"Unable to read tiles from viewpoint {viewpoint_item.viewpoint_id}")
+                raise HTTPException(
+                    status_code=500, detail=f"Unable to read tiles from viewpoint {viewpoint_item.viewpoint_id}"
+                )
 
             tile_size = viewpoint_item.tile_size
             image_bytes = tile_factory.create_encoded_tile([x * tile_size, y * tile_size, tile_size, tile_size])
-            
+
             return StreamingResponse(io.BytesIO(image_bytes), media_type=get_media_type(tile_format), status_code=200)
 
         @api_router.get("/{viewpoint_id}/preview")
@@ -294,8 +306,7 @@ class ViewpointRouter:
         @api_router.get("/{viewpoint_id}/crop/{minx},{miny},{maxx},{maxy}/{width}x{height}.{tile_format}")
         async def get_crop():
             # *Body:* Empty
-            # *Response:* TODO Image crop in format   
+            # *Response:* TODO Image crop in format
             pass
 
         return api_router
-
