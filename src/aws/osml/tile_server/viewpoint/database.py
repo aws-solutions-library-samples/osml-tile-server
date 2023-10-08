@@ -28,6 +28,11 @@ class ViewpointStatusTable:
         self.logger = logging.getLogger("uvicorn")
 
     def get_all_viewpoints(self) -> List[Dict[str, Any]]:
+        """
+        Get all the viewpoint items from the dynamodb table
+
+        :returnsList[Dict[str, any]]: list of viewpoints
+        """
         try:
             response = self.table.scan()
             return response.get("Items", [])
@@ -45,6 +50,13 @@ class ViewpointStatusTable:
             raise HTTPException(status_code=500, detail=f"Something went wrong with ViewpointStatusTable! Error: {err}")
 
     async def get_viewpoint(self, viewpoint_id: str) -> ViewpointModel:
+        """
+        Get detail of a viewpoint based on a given viewpoint id
+
+        :param viewpoint_id: unique viewpoint id
+
+        :return ViewpointModel: Viewpoint details
+        """
         try:
             response = self.table.get_item(Key={"viewpoint_id": viewpoint_id})["Item"]
             return ViewpointModel.model_validate_json(json.dumps(response, cls=DecimalEncoder))
@@ -62,6 +74,13 @@ class ViewpointStatusTable:
             raise HTTPException(status_code=500, detail=f"Something went wrong with ViewpointStatusTable! Error: {err}")
 
     def create_viewpoint(self, viewpoint_request: ViewpointModel) -> Dict:
+        """
+        Create a viewpoint item and store them in a DynamoDB table
+
+        :param viewpoint_request: user given viewpoint details
+
+        :return ViewpointModel: details of a newly created viewpoint
+        """
         viewpoint_request_dict = viewpoint_request.model_dump()  # converts to dict
 
         # TODO remove when implemented a background task
@@ -77,6 +96,13 @@ class ViewpointStatusTable:
             )
 
     def update_viewpoint(self, viewpoint_item: ViewpointModel) -> ViewpointModel:
+        """
+        Update viewpoint item in a dynamodb table
+
+        :param viewpoint_request: user given viewpoint details
+
+        :return ViewpointModel: details of a updated viewpoint
+        """
         self.logger.info(viewpoint_item.model_dump())
 
         try:

@@ -280,12 +280,12 @@ class ViewpointRouter:
                 tile_factory = get_tile_factory(
                     tile_format,
                     compression,
-                    str(viewpoint_item.local_object_path.absolute()),
+                    viewpoint_item.local_object_path,
                     output_type=gdalconst.GDT_Byte,
                     range_adjustment=viewpoint_item.range_adjustment,
                 )
             else:
-                tile_factory = get_tile_factory(tile_format, compression, str(viewpoint_item.local_object_path.absolute()))
+                tile_factory = get_tile_factory(tile_format, compression, viewpoint_item.local_object_path)
 
             if tile_factory is None:
                 raise HTTPException(
@@ -296,17 +296,5 @@ class ViewpointRouter:
             image_bytes = tile_factory.create_encoded_tile([x * tile_size, y * tile_size, tile_size, tile_size])
 
             return StreamingResponse(io.BytesIO(image_bytes), media_type=get_media_type(tile_format), status_code=200)
-
-        @api_router.get("/{viewpoint_id}/preview")
-        async def get_preview():
-            # *Body:* Empty
-            # *Response:* TODO Image overview in format
-            pass
-
-        @api_router.get("/{viewpoint_id}/crop/{minx},{miny},{maxx},{maxy}/{width}x{height}.{tile_format}")
-        async def get_crop():
-            # *Body:* Empty
-            # *Response:* TODO Image crop in format
-            pass
 
         return api_router

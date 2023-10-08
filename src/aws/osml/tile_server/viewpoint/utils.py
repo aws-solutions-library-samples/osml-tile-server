@@ -16,13 +16,13 @@ def get_media_type(tile_format: GDALImageFormats) -> str:
 
     :return: image format
     """
-    if tile_format == GDALImageFormats.PNG:
+    if tile_format.upper() == GDALImageFormats.PNG:
         return "image/png"
-    elif tile_format == GDALImageFormats.NITF:
+    elif tile_format.upper() == GDALImageFormats.NITF:
         return "image/nitf"
-    elif tile_format == GDALImageFormats.JPEG:
+    elif tile_format.upper() == GDALImageFormats.JPEG:
         return "image/jpeg"
-    elif tile_format == GDALImageFormats.GTIFF:
+    elif tile_format.upper() == GDALImageFormats.GTIFF:
         return "image/tiff"
     return "image"
 

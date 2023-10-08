@@ -1,0 +1,151 @@
+{
+    "image_statistics": {
+      "description": "/tmp/viewpoint/3db6fde04e4d87f738cac9bb8a72a72a/meta.ntf",
+      "driverShortName": "NITF",
+      "driverLongName": "National Imagery Transmission Format",
+      "files": [
+        "/tmp/viewpoint/3db6fde04e4d87f738cac9bb8a72a72a/meta.ntf"
+      ],
+      "size": [
+        1024,
+        1024
+      ],
+      "coordinateSystem": {
+        "wkt": "GEOGCRS[\"WGS 84\",\n    DATUM[\"World Geodetic System 1984\",\n        ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n            LENGTHUNIT[\"metre\",1]]],\n    PRIMEM[\"Greenwich\",0,\n        ANGLEUNIT[\"degree\",0.0174532925199433]],\n    CS[ellipsoidal,2],\n        AXIS[\"geodetic latitude (Lat)\",north,\n            ORDER[1],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        AXIS[\"geodetic longitude (Lon)\",east,\n            ORDER[2],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n    ID[\"EPSG\",4326]]",
+        "dataAxisToSRSAxisMapping": [
+          2,
+          1
+        ]
+      },
+      "geoTransform": [
+        84.99999986423373,
+        2.715325296e-7,
+        0,
+        32.9833334690996,
+        0,
+        -2.715325296e-7
+      ],
+      "cornerCoordinates": {
+        "upperLeft": [
+          84.9999999,
+          32.9833335
+        ],
+        "lowerLeft": [
+          84.9999999,
+          32.9830554
+        ],
+        "lowerRight": [
+          85.0002779,
+          32.9830554
+        ],
+        "upperRight": [
+          85.0002779,
+          32.9833335
+        ],
+        "center": [
+          85.0001389,
+          32.9831944
+        ]
+      },
+      "wgs84Extent": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              84.9999999,
+              32.9833335
+            ],
+            [
+              84.9999999,
+              32.9830554
+            ],
+            [
+              85.0002779,
+              32.9830554
+            ],
+            [
+              85.0002779,
+              32.9833335
+            ],
+            [
+              84.9999999,
+              32.9833335
+            ]
+          ]
+        ]
+      },
+      "bands": [
+        {
+          "band": 1,
+          "block": [
+            1024,
+            1
+          ],
+          "type": "Byte",
+          "colorInterpretation": "Gray"
+        }
+      ],
+      "stac": {
+        "proj:shape": [
+          1024,
+          1024
+        ],
+        "proj:wkt2": "GEOGCRS[\"WGS 84\",\n    DATUM[\"World Geodetic System 1984\",\n        ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n            LENGTHUNIT[\"metre\",1]]],\n    PRIMEM[\"Greenwich\",0,\n        ANGLEUNIT[\"degree\",0.0174532925199433]],\n    CS[ellipsoidal,2],\n        AXIS[\"geodetic latitude (Lat)\",north,\n            ORDER[1],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        AXIS[\"geodetic longitude (Lon)\",east,\n            ORDER[2],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n    ID[\"EPSG\",4326]]",
+        "proj:epsg": 4326,
+        "proj:projjson": {
+          "$schema": "https://proj.org/schemas/v0.7/projjson.schema.json",
+          "type": "GeographicCRS",
+          "name": "WGS 84",
+          "datum": {
+            "type": "GeodeticReferenceFrame",
+            "name": "World Geodetic System 1984",
+            "ellipsoid": {
+              "name": "WGS 84",
+              "semi_major_axis": 6378137,
+              "inverse_flattening": 298.257223563
+            }
+          },
+          "coordinate_system": {
+            "subtype": "ellipsoidal",
+            "axis": [
+              {
+                "name": "Geodetic latitude",
+                "abbreviation": "Lat",
+                "direction": "north",
+                "unit": "degree"
+              },
+              {
+                "name": "Geodetic longitude",
+                "abbreviation": "Lon",
+                "direction": "east",
+                "unit": "degree"
+              }
+            ]
+          },
+          "id": {
+            "authority": "EPSG",
+            "code": 4326
+          }
+        },
+        "proj:transform": [
+          84.99999986423373,
+          2.715325296e-7,
+          0,
+          32.9833334690996,
+          0,
+          -2.715325296e-7
+        ],
+        "raster:bands": [
+          {
+            "data_type": "uint8"
+          }
+        ],
+        "eo:bands": [
+          {
+            "name": "b1",
+            "description": "Gray"
+          }
+        ]
+      }
+    }
+  }
