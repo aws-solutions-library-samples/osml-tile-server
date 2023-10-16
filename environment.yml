@@ -1,0 +1,6 @@
+name: osml_tile_server
+channels:
+  - conda-forge
+dependencies:
+  - conda-forge::gdal=3.7.0
+  - conda-forge::proj=9.2.1
