@@ -7,6 +7,7 @@ from boto3.resources.base import ServiceResource
 from botocore.exceptions import ClientError
 from fastapi import HTTPException
 
+from aws.osml.tile_server.app_config import ServerConfig
 from aws.osml.tile_server.viewpoint.models import ViewpointModel, ViewpointStatus
 
 
@@ -24,8 +25,15 @@ class DecimalEncoder(json.JSONEncoder):
 class ViewpointStatusTable:
     def __init__(self, aws_ddb: ServiceResource) -> None:
         self.ddb = aws_ddb
-        self.table = self.ddb.Table("ViewpointStatusTable")
+        self.table = self.ddb.Table(ServerConfig.viewpoint_status_table)
         self.logger = logging.getLogger("uvicorn")
+        try:
+            self.table.table_status
+        except ClientError:
+            self.logger.error(
+                "{} table does not exist in {}.".format(ServerConfig.viewpoint_status_table, ServerConfig.aws_region)
+            )
+            raise
 
     def get_all_viewpoints(self) -> List[Dict[str, Any]]:
         """

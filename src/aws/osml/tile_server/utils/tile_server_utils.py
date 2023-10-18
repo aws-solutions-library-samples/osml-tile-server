@@ -1,11 +1,14 @@
 from functools import cache
-from typing import Optional
+from typing import Dict, Optional
+from uuid import uuid4
 
 from fastapi import HTTPException
+from osgeo import gdal
+from osgeo.gdal import Dataset
 
-from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, load_gdal_dataset
+from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustmentType, load_gdal_dataset
 from aws.osml.image_processing import GDALTileFactory
-from aws.osml.tile_server.viewpoint.models import PixelRangeAdjustmentType, ViewpointApiNames, ViewpointStatus
+from aws.osml.tile_server.viewpoint.models import ViewpointApiNames, ViewpointStatus
 
 
 def get_media_type(tile_format: GDALImageFormats) -> str:
@@ -16,15 +19,14 @@ def get_media_type(tile_format: GDALImageFormats) -> str:
 
     :return: image format
     """
-    if tile_format.upper() == GDALImageFormats.PNG:
-        return "image/png"
-    elif tile_format.upper() == GDALImageFormats.NITF:
-        return "image/nitf"
-    elif tile_format.upper() == GDALImageFormats.JPEG:
-        return "image/jpeg"
-    elif tile_format.upper() == GDALImageFormats.GTIFF:
-        return "image/tiff"
-    return "image"
+    supported_media_types = {
+        GDALImageFormats.PNG.value.lower(): "image/png",
+        GDALImageFormats.NITF.value.lower(): "image/nitf",
+        GDALImageFormats.JPEG.value.lower(): "image/jpeg",
+        GDALImageFormats.GTIFF.value.lower(): "image/tiff",
+    }
+    default_media_type = "image"
+    return supported_media_types.get(tile_format.lower(), default_media_type)
 
 
 @cache
@@ -33,7 +35,7 @@ def get_tile_factory(
     compression: GDALCompressionOptions,
     local_object_path: str,
     output_type: Optional[int] = None,
-    range_adjustment: PixelRangeAdjustmentType = PixelRangeAdjustmentType.NONE,
+    range_adjustment: RangeAdjustmentType = RangeAdjustmentType.NONE,
 ) -> GDALTileFactory:
     """
     This is a helper function which is to validate if we can execute an operation based on the
@@ -49,8 +51,7 @@ def get_tile_factory(
     """
 
     ds, sensor_model = load_gdal_dataset(local_object_path)
-    tile_factory = GDALTileFactory(ds, sensor_model, tile_format, compression, output_type, range_adjustment)
-    return tile_factory
+    return GDALTileFactory(ds, sensor_model, tile_format, compression, output_type, range_adjustment)
 
 
 async def validate_viewpoint_status(current_status: ViewpointStatus, api_operation: ViewpointApiNames) -> None:
@@ -71,3 +72,23 @@ async def validate_viewpoint_status(current_status: ViewpointStatus, api_operati
         raise HTTPException(
             status_code=400, detail="This viewpoint has been requested and not in READY state. Please try again later."
         )
+
+
+def perform_gdal_translation(dataset: Dataset, gdal_options: Dict) -> Optional[bytearray]:
+    tmp_name = f"/vsimem/{uuid4()}"
+
+    gdal.Translate(tmp_name, dataset, **gdal_options)
+
+    # Read the VSIFile
+    vsifile_handle = None
+    try:
+        vsifile_handle = gdal.VSIFOpenL(tmp_name, "r")
+        if vsifile_handle is None:
+            return None
+        stat = gdal.VSIStatL(tmp_name, gdal.VSI_STAT_SIZE_FLAG)
+        vsibuf = gdal.VSIFReadL(1, stat.size, vsifile_handle)
+        return vsibuf
+    finally:
+        if vsifile_handle is not None:
+            gdal.VSIFCloseL(vsifile_handle)
+        gdal.GetDriverByName(gdal_options.get("format")).Delete(tmp_name)
