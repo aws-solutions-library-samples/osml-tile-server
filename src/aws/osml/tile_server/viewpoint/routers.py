@@ -12,18 +12,17 @@ from fastapi import APIRouter, HTTPException, Query, Response
 from osgeo import gdal, gdalconst
 from starlette.responses import StreamingResponse
 
-from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, load_gdal_dataset
+from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustmentType, load_gdal_dataset
 from aws.osml.photogrammetry.coordinates import ImageCoordinate
+from aws.osml.tile_server.utils import get_media_type, get_tile_factory, validate_viewpoint_status
 from aws.osml.tile_server.viewpoint.database import ViewpointStatusTable
 from aws.osml.tile_server.viewpoint.models import (
-    PixelRangeAdjustmentType,
     ViewpointApiNames,
     ViewpointModel,
     ViewpointRequest,
     ViewpointStatus,
     ViewpointUpdate,
 )
-from aws.osml.tile_server.viewpoint.utils import get_media_type, get_tile_factory, validate_viewpoint_status
 
 FILESYSTEM_CACHE_ROOT = os.getenv("VIEWPOINT_FILESYSTEM_CACHE", "/tmp/viewpoint")
 
@@ -276,7 +275,7 @@ class ViewpointRouter:
 
             await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.TILE)
 
-            if viewpoint_item.range_adjustment is not PixelRangeAdjustmentType.NONE:
+            if viewpoint_item.range_adjustment is not RangeAdjustmentType.NONE:
                 tile_factory = get_tile_factory(
                     tile_format,
                     compression,

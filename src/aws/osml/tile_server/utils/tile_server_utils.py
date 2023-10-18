@@ -3,9 +3,9 @@ from typing import Optional
 
 from fastapi import HTTPException
 
-from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, load_gdal_dataset
+from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustmentType, load_gdal_dataset
 from aws.osml.image_processing import GDALTileFactory
-from aws.osml.tile_server.viewpoint.models import PixelRangeAdjustmentType, ViewpointApiNames, ViewpointStatus
+from aws.osml.tile_server.viewpoint.models import ViewpointApiNames, ViewpointStatus
 
 
 def get_media_type(tile_format: GDALImageFormats) -> str:
@@ -16,15 +16,14 @@ def get_media_type(tile_format: GDALImageFormats) -> str:
 
     :return: image format
     """
-    if tile_format.upper() == GDALImageFormats.PNG:
-        return "image/png"
-    elif tile_format.upper() == GDALImageFormats.NITF:
-        return "image/nitf"
-    elif tile_format.upper() == GDALImageFormats.JPEG:
-        return "image/jpeg"
-    elif tile_format.upper() == GDALImageFormats.GTIFF:
-        return "image/tiff"
-    return "image"
+    supported_media_types = {
+        GDALImageFormats.PNG: "image/png",
+        GDALImageFormats.NITF: "image/nitf",
+        GDALImageFormats.JPEG: "image/jpeg",
+        GDALImageFormats.GTIFF: "image/tiff",
+    }
+    default_media_type = "image"
+    return supported_media_types.get(tile_format.upper(), default_media_type)
 
 
 @cache
@@ -33,7 +32,7 @@ def get_tile_factory(
     compression: GDALCompressionOptions,
     local_object_path: str,
     output_type: Optional[int] = None,
-    range_adjustment: PixelRangeAdjustmentType = PixelRangeAdjustmentType.NONE,
+    range_adjustment: RangeAdjustmentType = RangeAdjustmentType.NONE,
 ) -> GDALTileFactory:
     """
     This is a helper function which is to validate if we can execute an operation based on the
@@ -49,8 +48,7 @@ def get_tile_factory(
     """
 
     ds, sensor_model = load_gdal_dataset(local_object_path)
-    tile_factory = GDALTileFactory(ds, sensor_model, tile_format, compression, output_type, range_adjustment)
-    return tile_factory
+    return GDALTileFactory(ds, sensor_model, tile_format, compression, output_type, range_adjustment)
 
 
 async def validate_viewpoint_status(current_status: ViewpointStatus, api_operation: ViewpointApiNames) -> None:
