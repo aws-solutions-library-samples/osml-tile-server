@@ -4,26 +4,26 @@ import os
 import shutil
 from pathlib import Path
 from secrets import token_hex
-from typing import Any, Dict, List
+from typing import Annotated, Any, Dict, List
 
-import botocore
 from boto3.resources.base import ServiceResource
+from botocore.exceptions import ClientError
 from fastapi import APIRouter, HTTPException, Query, Response
 from osgeo import gdal, gdalconst
 from starlette.responses import StreamingResponse
 
-from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, load_gdal_dataset
+from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustmentType, load_gdal_dataset
+from aws.osml.image_processing import GDALTileFactory
 from aws.osml.photogrammetry.coordinates import ImageCoordinate
+from aws.osml.tile_server.utils import get_media_type, get_tile_factory, perform_gdal_translation, validate_viewpoint_status
 from aws.osml.tile_server.viewpoint.database import ViewpointStatusTable
 from aws.osml.tile_server.viewpoint.models import (
-    PixelRangeAdjustmentType,
     ViewpointApiNames,
     ViewpointModel,
     ViewpointRequest,
     ViewpointStatus,
     ViewpointUpdate,
 )
-from aws.osml.tile_server.viewpoint.utils import get_media_type, get_tile_factory, validate_viewpoint_status
 
 FILESYSTEM_CACHE_ROOT = os.getenv("VIEWPOINT_FILESYSTEM_CACHE", "/tmp/viewpoint")
 
@@ -82,7 +82,7 @@ class ViewpointRouter:
                 self.s3.meta.client.download_file(
                     viewpoint_request.bucket_name, viewpoint_request.object_key, str(local_object_path.absolute())
                 )
-            except botocore.exceptions.ClientError as err:
+            except ClientError as err:
                 if err.response["Error"]["Code"] == "404":
                     raise HTTPException(
                         status_code=404, detail=f"The {viewpoint_request.bucket_name} bucket does not exist! Error={err}"
@@ -197,7 +197,7 @@ class ViewpointRouter:
             """
             viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
 
-            await validate_viewpoint_status(viewpoint_item.viewpoint_status, "bounds")
+            await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.BOUNDS)
 
             viewpoint_path = viewpoint_item.local_object_path
 
@@ -261,6 +261,48 @@ class ViewpointRouter:
 
             return {"image_statistics": gdalInfo}
 
+        @api_router.get("/{viewpoint_id}/preview.{img_format}/")
+        async def get_preview(
+            viewpoint_id: str,
+            img_format: GDALImageFormats = Path(GDALImageFormats.PNG, description="Output image type."),
+            scale: Annotated[int, Query(gt=0, le=100)] = None,
+            x_px: int = 0,
+            y_px: int = 0,
+            compression: GDALCompressionOptions = Query(
+                GDALCompressionOptions.NONE, description="Compression Algorithm for image."
+            ),
+        ) -> Response:
+            """
+            Get preview of viewpoint in the requested format
+
+            :param viewpoint_id: Unique viewpoint id
+            :param img_format: Desired format for preview output. Valid options are defined by GDALImageFormats
+            :param scale: Preview scale in percentage or original image. (0-100%)
+            :param x_px: Preview width (px).  Supercedes scale if > 0.
+            :param y_px: Preview height (px).  Supercedes scale if > 0.
+            :param compression: GDAL image compression
+
+            :return: StreamingResponse of preview binary with the appropriate mime type based on the img_format
+            """
+            viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
+            await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
+
+            ds, sensor_model = load_gdal_dataset(viewpoint_item.local_object_path)
+            tile_factory = GDALTileFactory(
+                ds, sensor_model, img_format, compression, gdalconst.GDT_Byte, viewpoint_item.range_adjustment
+            )
+            preview_options = tile_factory.default_gdal_translate_kwargs.copy()
+
+            if x_px > 0 or y_px > 0:
+                preview_options["width"] = x_px
+                preview_options["height"] = y_px
+            elif scale:
+                preview_options["widthPct"] = scale
+                preview_options["heightPct"] = scale
+
+            preview_bytes = perform_gdal_translation(ds, preview_options)
+            return StreamingResponse(io.BytesIO(preview_bytes), media_type=get_media_type(img_format), status_code=200)
+
         @api_router.get("/{viewpoint_id}/tiles/{z}/{x}/{y}.{tile_format}")
         async def get_tile(
             viewpoint_id: str,
@@ -272,11 +314,22 @@ class ViewpointRouter:
                 GDALCompressionOptions.NONE, description="Compression Algorithm for image."
             ),
         ) -> Response:
+            """
+
+            :param viewpoint_id: Unique viewpoint id
+            :param z: r-level
+            :param x: tile row (px)
+            :param y: tile column(px)
+            :param tile_format: Desired format for tile output. Valid options are defined by GDALImageFormats
+            :param compression: GDAL tile compression
+
+            :return: StreamingResponse of tile image binary
+            """
             viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
 
             await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.TILE)
 
-            if viewpoint_item.range_adjustment is not PixelRangeAdjustmentType.NONE:
+            if viewpoint_item.range_adjustment is not RangeAdjustmentType.NONE:
                 tile_factory = get_tile_factory(
                     tile_format,
                     compression,
@@ -296,5 +349,59 @@ class ViewpointRouter:
             image_bytes = tile_factory.create_encoded_tile([x * tile_size, y * tile_size, tile_size, tile_size])
 
             return StreamingResponse(io.BytesIO(image_bytes), media_type=get_media_type(tile_format), status_code=200)
+
+        @api_router.get("/{viewpoint_id}/crop/{min_x},{min_y},{max_x},{max_y}.{img_format}")
+        async def get_crop(
+            viewpoint_id: str,
+            min_x: int = Path(description="Unique viewpoint id"),
+            min_y: int = Path(description="The left pixel coordinate of the desired crop."),
+            max_x: int = Path(description="The right pixel coordinate of the desired crop."),
+            max_y: int = Path(description="The lower pixel coordinate of the pixel crop."),
+            img_format: GDALImageFormats = Path(
+                default=GDALImageFormats.PNG,
+                description="Desired format for cropped output. Valid options are defined by GDALImageFormats.",
+            ),
+            compression: GDALCompressionOptions = Query(
+                default=GDALCompressionOptions.NONE, description="GDAL compression algorithm for image."
+            ),
+            width: int = Query(
+                default=None, description="Optional. Width in px of the desired crop.  If provided, max_x will be ignored."
+            ),
+            height: int = Query(
+                default=None, description="Optional. Height in px of the desired crop.  If provided, max_y will be ignored."
+            ),
+        ) -> Response:
+            """
+            \f
+            Crop a portion of the viewpoint.
+
+            :param viewpoint_id: Unique viewpoint id
+            :param min_x: The left pixel coordinate of the desired crop.
+            :param min_y: The upper pixel coordinate of the desired crop.
+            :param max_x: The right pixel coordinate of the desired crop.
+            :param max_y: The lower pixel coordinate of the pixel crop.
+            :param img_format: Desired format for cropped output. Valid options are defined by GDALImageFormats.
+            :param compression: GDAL compression algorithm for image.
+            :param width: Optional. Width in px of the desired crop.  If provided, max_x will be ignored.
+            :param height: Optional. Height in px of the desired crop.  If provided, max_y will be ignored.
+
+            :return: StreamingResponse of cropped image binary with the appropriate mime type based on the img_format
+            """
+
+            viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
+            await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
+
+            tile_factory = get_tile_factory(
+                img_format,
+                compression,
+                viewpoint_item.local_object_path,
+                output_type=gdalconst.GDT_Byte,
+                range_adjustment=viewpoint_item.range_adjustment,
+            )
+            crop_width = width if width is not None else max_x - min_x
+            crop_height = height if height is not None else max_y - min_y
+
+            crop_bytes = tile_factory.create_encoded_tile([min_x, min_y, crop_width, crop_height])
+            return StreamingResponse(io.BytesIO(crop_bytes), media_type=get_media_type(img_format), status_code=200)
 
         return api_router
