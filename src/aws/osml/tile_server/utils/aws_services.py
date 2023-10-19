@@ -1,20 +1,16 @@
-import os
-
 import boto3
 from boto3.resources.base import ServiceResource
 
-
-class Config:
-    AWS_REGION = os.getenv("us-west-2")
+from aws.osml.tile_server.app_config import BotoConfig, ServerConfig
 
 
 def initialize_ddb() -> ServiceResource:
-    ddb = boto3.resource("dynamodb", region_name="us-west-2")
+    ddb = boto3.resource("dynamodb", config=BotoConfig.default, region_name=ServerConfig.aws_region)
 
     return ddb
 
 
 def initialize_s3() -> ServiceResource:
-    s3 = boto3.resource("s3")
+    s3 = boto3.resource("s3", config=BotoConfig.default)
 
     return s3
