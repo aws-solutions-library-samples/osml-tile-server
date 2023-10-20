@@ -1,8 +1,10 @@
 from functools import cache
-from typing import Optional
+from typing import Dict, Optional
+from uuid import uuid4
 
 from fastapi import HTTPException
 from osgeo import gdal
+from osgeo.gdal import Dataset
 
 from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustmentType, load_gdal_dataset
 from aws.osml.image_processing import GDALTileFactory
@@ -72,13 +74,10 @@ async def validate_viewpoint_status(current_status: ViewpointStatus, api_operati
         )
 
 
-def generate_preview(local_object_path: str, img_format: GDALImageFormats, scale: int) -> Optional[bytearray]:
-    ds, sensor_model = load_gdal_dataset(local_object_path)
-    tmp_name = "preview.tmp"
-    options_list = [f"-outsize {scale}% {scale}%", f"-of {img_format.value}"]
-    options_string = " ".join(options_list)
+def generate_preview(dataset: Dataset, gdal_options: Dict) -> Optional[bytearray]:
+    tmp_name = f"/vsimem/{uuid4()}"
 
-    gdal.Translate(tmp_name, ds, options=options_string)
+    gdal.Translate(tmp_name, dataset, **gdal_options)
 
     # Read the VSIFile
     vsifile_handle = None
@@ -92,4 +91,4 @@ def generate_preview(local_object_path: str, img_format: GDALImageFormats, scale
     finally:
         if vsifile_handle is not None:
             gdal.VSIFCloseL(vsifile_handle)
-        gdal.GetDriverByName(img_format).Delete(tmp_name)
+        gdal.GetDriverByName(gdal_options.get("format")).Delete(tmp_name)
