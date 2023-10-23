@@ -350,7 +350,7 @@ class ViewpointRouter:
 
             return StreamingResponse(io.BytesIO(image_bytes), media_type=get_media_type(tile_format), status_code=200)
 
-        @api_router.get("/{viewpoint_id}/crop/{min_x},{min_y},{max_x},{max_y}.{tile_format}")
+        @api_router.get("/{viewpoint_id}/crop/{min_x},{min_y},{max_x},{max_y}.{img_format}")
         async def get_crop(
             viewpoint_id: str,
             min_x: int,
