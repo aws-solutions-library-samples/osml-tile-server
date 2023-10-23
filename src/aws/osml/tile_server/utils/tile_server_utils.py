@@ -1,7 +1,10 @@
 from functools import cache
-from typing import Optional
+from typing import Dict, Optional
+from uuid import uuid4
 
 from fastapi import HTTPException
+from osgeo import gdal
+from osgeo.gdal import Dataset
 
 from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustmentType, load_gdal_dataset
 from aws.osml.image_processing import GDALTileFactory
@@ -17,13 +20,13 @@ def get_media_type(tile_format: GDALImageFormats) -> str:
     :return: image format
     """
     supported_media_types = {
-        GDALImageFormats.PNG: "image/png",
-        GDALImageFormats.NITF: "image/nitf",
-        GDALImageFormats.JPEG: "image/jpeg",
-        GDALImageFormats.GTIFF: "image/tiff",
+        GDALImageFormats.PNG.value.lower(): "image/png",
+        GDALImageFormats.NITF.value.lower(): "image/nitf",
+        GDALImageFormats.JPEG.value.lower(): "image/jpeg",
+        GDALImageFormats.GTIFF.value.lower(): "image/tiff",
     }
     default_media_type = "image"
-    return supported_media_types.get(tile_format.upper(), default_media_type)
+    return supported_media_types.get(tile_format.lower(), default_media_type)
 
 
 @cache
@@ -69,3 +72,23 @@ async def validate_viewpoint_status(current_status: ViewpointStatus, api_operati
         raise HTTPException(
             status_code=400, detail="This viewpoint has been requested and not in READY state. Please try again later."
         )
+
+
+def generate_preview(dataset: Dataset, gdal_options: Dict) -> Optional[bytearray]:
+    tmp_name = f"/vsimem/{uuid4()}"
+
+    gdal.Translate(tmp_name, dataset, **gdal_options)
+
+    # Read the VSIFile
+    vsifile_handle = None
+    try:
+        vsifile_handle = gdal.VSIFOpenL(tmp_name, "r")
+        if vsifile_handle is None:
+            return None
+        stat = gdal.VSIStatL(tmp_name, gdal.VSI_STAT_SIZE_FLAG)
+        vsibuf = gdal.VSIFReadL(1, stat.size, vsifile_handle)
+        return vsibuf
+    finally:
+        if vsifile_handle is not None:
+            gdal.VSIFCloseL(vsifile_handle)
+        gdal.GetDriverByName(gdal_options.get("format")).Delete(tmp_name)

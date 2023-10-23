@@ -4,17 +4,18 @@ import os
 import shutil
 from pathlib import Path
 from secrets import token_hex
-from typing import Any, Dict, List
+from typing import Annotated, Any, Dict, List
 
-import botocore
 from boto3.resources.base import ServiceResource
+from botocore.exceptions import ClientError
 from fastapi import APIRouter, HTTPException, Query, Response
 from osgeo import gdal, gdalconst
 from starlette.responses import StreamingResponse
 
 from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustmentType, load_gdal_dataset
+from aws.osml.image_processing import GDALTileFactory
 from aws.osml.photogrammetry.coordinates import ImageCoordinate
-from aws.osml.tile_server.utils import get_media_type, get_tile_factory, validate_viewpoint_status
+from aws.osml.tile_server.utils import generate_preview, get_media_type, get_tile_factory, validate_viewpoint_status
 from aws.osml.tile_server.viewpoint.database import ViewpointStatusTable
 from aws.osml.tile_server.viewpoint.models import (
     ViewpointApiNames,
@@ -81,7 +82,7 @@ class ViewpointRouter:
                 self.s3.meta.client.download_file(
                     viewpoint_request.bucket_name, viewpoint_request.object_key, str(local_object_path.absolute())
                 )
-            except botocore.exceptions.ClientError as err:
+            except ClientError as err:
                 if err.response["Error"]["Code"] == "404":
                     raise HTTPException(
                         status_code=404, detail=f"The {viewpoint_request.bucket_name} bucket does not exist! Error={err}"
@@ -196,7 +197,7 @@ class ViewpointRouter:
             """
             viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
 
-            await validate_viewpoint_status(viewpoint_item.viewpoint_status, "bounds")
+            await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.BOUNDS)
 
             viewpoint_path = viewpoint_item.local_object_path
 
@@ -260,6 +261,48 @@ class ViewpointRouter:
 
             return {"image_statistics": gdalInfo}
 
+        @api_router.get("/{viewpoint_id}/preview.{img_format}/")
+        async def get_preview(
+            viewpoint_id: str,
+            img_format: GDALImageFormats = Path(GDALImageFormats.PNG, description="Output image type. Defaults to PNG."),
+            scale: Annotated[int, Query(gt=0, le=100)] = None,
+            x_px: int = 0,
+            y_px: int = 0,
+            compression: GDALCompressionOptions = Query(
+                GDALCompressionOptions.NONE, description="Compression Algorithm for image."
+            ),
+        ) -> Response:
+            """
+            Get preview of viewpoint in the requested format
+
+            :param viewpoint_id: Unique viewpoint id
+            :param img_format: Desired format for preview output. Valid options are defined by GDALImageFormats
+            :param scale: Preview scale in percentage or original image. (0-100%)
+            :param x_px: Preview width (px).  Supercedes scale if > 0.
+            :param y_px: Preview height (px).  Supercedes scale if > 0.
+            :param compression: GDAL tile compression
+
+            :return: StreamingResponse of preview binary with the appropriate mime type based on the img_format
+            """
+            viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
+            await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
+
+            ds, sensor_model = load_gdal_dataset(viewpoint_item.local_object_path)
+            tile_factory = GDALTileFactory(
+                ds, sensor_model, img_format, compression, gdalconst.GDT_Byte, viewpoint_item.range_adjustment
+            )
+            preview_options = tile_factory.default_gdal_translate_kwargs.copy()
+
+            if x_px > 0 or y_px > 0:
+                preview_options["width"] = x_px
+                preview_options["height"] = y_px
+            elif scale:
+                preview_options["widthPct"] = scale
+                preview_options["heightPct"] = scale
+
+            preview_bytes = generate_preview(ds, preview_options)
+            return StreamingResponse(io.BytesIO(preview_bytes), media_type=get_media_type(img_format), status_code=200)
+
         @api_router.get("/{viewpoint_id}/tiles/{z}/{x}/{y}.{tile_format}")
         async def get_tile(
             viewpoint_id: str,
@@ -271,6 +314,17 @@ class ViewpointRouter:
                 GDALCompressionOptions.NONE, description="Compression Algorithm for image."
             ),
         ) -> Response:
+            """
+
+            :param viewpoint_id: Unique viewpoint id
+            :param z: r-level
+            :param x: tile row (px)
+            :param y: tile column(px)
+            :param tile_format: Desired format for tile output. Valid options are defined by GDALImageFormats
+            :param compression: GDAL tile compression
+
+            :return: StreamingResponse of tile image binary
+            """
             viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
 
             await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.TILE)
