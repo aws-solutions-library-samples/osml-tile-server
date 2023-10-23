@@ -15,7 +15,7 @@ from starlette.responses import StreamingResponse
 from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustmentType, load_gdal_dataset
 from aws.osml.image_processing import GDALTileFactory
 from aws.osml.photogrammetry.coordinates import ImageCoordinate
-from aws.osml.tile_server.utils import generate_preview, get_media_type, get_tile_factory, validate_viewpoint_status
+from aws.osml.tile_server.utils import get_media_type, get_tile_factory, perform_gdal_translation, validate_viewpoint_status
 from aws.osml.tile_server.viewpoint.database import ViewpointStatusTable
 from aws.osml.tile_server.viewpoint.models import (
     ViewpointApiNames,
@@ -264,7 +264,7 @@ class ViewpointRouter:
         @api_router.get("/{viewpoint_id}/preview.{img_format}/")
         async def get_preview(
             viewpoint_id: str,
-            img_format: GDALImageFormats = Path(GDALImageFormats.PNG, description="Output image type. Defaults to PNG."),
+            img_format: GDALImageFormats = Path(GDALImageFormats.PNG, description="Output image type."),
             scale: Annotated[int, Query(gt=0, le=100)] = None,
             x_px: int = 0,
             y_px: int = 0,
@@ -280,7 +280,7 @@ class ViewpointRouter:
             :param scale: Preview scale in percentage or original image. (0-100%)
             :param x_px: Preview width (px).  Supercedes scale if > 0.
             :param y_px: Preview height (px).  Supercedes scale if > 0.
-            :param compression: GDAL tile compression
+            :param compression: GDAL image compression
 
             :return: StreamingResponse of preview binary with the appropriate mime type based on the img_format
             """
@@ -300,7 +300,7 @@ class ViewpointRouter:
                 preview_options["widthPct"] = scale
                 preview_options["heightPct"] = scale
 
-            preview_bytes = generate_preview(ds, preview_options)
+            preview_bytes = perform_gdal_translation(ds, preview_options)
             return StreamingResponse(io.BytesIO(preview_bytes), media_type=get_media_type(img_format), status_code=200)
 
         @api_router.get("/{viewpoint_id}/tiles/{z}/{x}/{y}.{tile_format}")
@@ -349,5 +349,50 @@ class ViewpointRouter:
             image_bytes = tile_factory.create_encoded_tile([x * tile_size, y * tile_size, tile_size, tile_size])
 
             return StreamingResponse(io.BytesIO(image_bytes), media_type=get_media_type(tile_format), status_code=200)
+
+        @api_router.get("/{viewpoint_id}/crop/{min_x},{min_y},{max_x},{max_y}.{tile_format}")
+        async def get_crop(
+            viewpoint_id: str,
+            min_x: int,
+            min_y: int,
+            max_x: int,
+            max_y: int,
+            img_format: GDALImageFormats = Path(GDALImageFormats.PNG, description="Output image type."),
+            compression: GDALCompressionOptions = Query(
+                GDALCompressionOptions.NONE, description="Compression Algorithm for image."
+            ),
+            width: int = Query(None, description="Width of cropped image in px."),
+            height: int = Query(None, description="Height of cropped image in px."),
+        ) -> Response:
+            """
+            Crop a portion of the viewpoint.
+
+            :param viewpoint_id: Unique viewpoint id
+            :param min_x: The left pixel coordinate of the desired crop.
+            :param min_y: The upper pixel coordinate of the desired crop.
+            :param max_x: The right pixel coordinate of the desired crop.
+            :param max_y: The lower pixel coordinate of the pixel crop.
+            :param img_format: Desired format for cropped output. Valid options are defined by GDALImageFormats.
+            :param compression: GDAL image compression.
+            :param width: Optional. Width in px of the desired crop.  If provided, max_x will be ignored.
+            :param height: Optional. Height in px of the desired crop.  If provided, max_y will be ignored.
+
+            :return: StreamingResponse of cropped image binary with the appropriate mime type based on the img_format
+            """
+
+            viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
+            await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
+
+            ds, sensor_model = load_gdal_dataset(viewpoint_item.local_object_path)
+            tile_factory = GDALTileFactory(
+                ds, sensor_model, img_format, compression, gdalconst.GDT_Byte, viewpoint_item.range_adjustment
+            )
+            preview_options = tile_factory.default_gdal_translate_kwargs.copy()
+            crop_width = width if width is not None else max_x - min_x
+            crop_height = height if height is not None else max_y - min_y
+            preview_options["srcWin"] = [min_x, min_y, crop_width, crop_height]
+
+            preview_bytes = perform_gdal_translation(ds, preview_options)
+            return StreamingResponse(io.BytesIO(preview_bytes), media_type=get_media_type(img_format), status_code=200)
 
         return api_router
