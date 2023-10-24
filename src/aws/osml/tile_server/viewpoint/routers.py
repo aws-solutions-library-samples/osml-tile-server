@@ -359,19 +359,16 @@ class ViewpointRouter:
             max_y: int = Path(description="The lower pixel coordinate of the pixel crop."),
             img_format: GDALImageFormats = Path(
                 default=GDALImageFormats.PNG,
-                description="Desired format for cropped output. Valid options are defined by GDALImageFormats."
+                description="Desired format for cropped output. Valid options are defined by GDALImageFormats.",
             ),
             compression: GDALCompressionOptions = Query(
-                default=GDALCompressionOptions.NONE,
-                description="GDAL compression algorithm for image."
+                default=GDALCompressionOptions.NONE, description="GDAL compression algorithm for image."
             ),
             width: int = Query(
-                default=None,
-                description="Optional. Width in px of the desired crop.  If provided, max_x will be ignored."
+                default=None, description="Optional. Width in px of the desired crop.  If provided, max_x will be ignored."
             ),
             height: int = Query(
-                default=None,
-                description="Optional. Height in px of the desired crop.  If provided, max_y will be ignored."
+                default=None, description="Optional. Height in px of the desired crop.  If provided, max_y will be ignored."
             ),
         ) -> Response:
             """
