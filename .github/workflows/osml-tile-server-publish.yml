@@ -1,0 +1,17 @@
+name: "OSML Tile Server Build and Publish Workflow"
+
+on:
+  push:
+    branches: ["main", "dev"]
+
+jobs:
+  Build_Validate_Tox:
+    uses: ./.github/workflows/python-tox.yml
+    secrets: inherit
+  Build_Docker_Container:
+    uses: ./.github/workflows/docker-build.yml
+    secrets: inherit
+  Publish_Documentation:
+    needs: [Build_Validate_Tox, Build_Docker_Container]
+    uses: ./.github/workflows/documentation-publish.yml
+    secrets: inherit
