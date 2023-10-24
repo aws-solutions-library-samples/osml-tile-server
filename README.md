@@ -1,6 +1,6 @@
 # OversightML Tile Server
 
-The OversightML Tile Server is a Python package allows you to quickly pass an image from S3 bucket to get metadata, image statistics, and set of tiles in real-time.
+The OversightML Tile Server is a lightweight, cloud-based tile server which allows you to quickly pass an image from S3 bucket to get metadata, image statistics, and set of tiles in real-time.
 
 ### Table of Contents
 * [Getting Started](#getting-started)
@@ -75,7 +75,15 @@ docker build . -t osml-tile-server:latest
 To build the container in a build/test mode and work inside it.
 
 ```shell
-./scripts/run-interactive-gdal-container.sh
+LATEST_IMAGE=$(docker images | grep osml-viewpoint | awk 'NR==1{print $1":"$2}')
+
+docker run \
+  -it \
+  --entrypoint /bin/bash \
+  -v `pwd`/:/work:rw \
+  -v `pwd`/local_viewpoint_cache:/tmp/viewpoint:rw \
+  --env AWS_ACCESS_KEY_ID --env AWS_SECRET_ACCESS_KEY --env AWS_SESSION_TOKEN \
+  ${LATEST_IMAGE}
 ```
 
 ## Support & Feedback

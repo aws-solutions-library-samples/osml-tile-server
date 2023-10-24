@@ -2,7 +2,7 @@
 aws-osml-tile-server
 =====================
 
-The OversightML Tile Server is a Python package allows you to quickly pass an image from S3 bucket to get metadata, image statistics, and set of tiles in real-time.
+The OversightML Tile Server is a lightweight, cloud-based tile server which allows you to quickly pass an image from S3 bucket to get metadata, image statistics, and set of tiles in real-time.
 
 .. toctree::
    :maxdepth: 1
