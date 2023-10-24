@@ -353,18 +353,29 @@ class ViewpointRouter:
         @api_router.get("/{viewpoint_id}/crop/{min_x},{min_y},{max_x},{max_y}.{img_format}")
         async def get_crop(
             viewpoint_id: str,
-            min_x: int,
-            min_y: int,
-            max_x: int,
-            max_y: int,
-            img_format: GDALImageFormats = Path(GDALImageFormats.PNG, description="Output image type."),
-            compression: GDALCompressionOptions = Query(
-                GDALCompressionOptions.NONE, description="Compression Algorithm for image."
+            min_x: int = Path(description="Unique viewpoint id"),
+            min_y: int = Path(description="The left pixel coordinate of the desired crop."),
+            max_x: int = Path(description="The right pixel coordinate of the desired crop."),
+            max_y: int = Path(description="The lower pixel coordinate of the pixel crop."),
+            img_format: GDALImageFormats = Path(
+                default=GDALImageFormats.PNG,
+                description="Desired format for cropped output. Valid options are defined by GDALImageFormats."
             ),
-            width: int = Query(None, description="Width of cropped image in px."),
-            height: int = Query(None, description="Height of cropped image in px."),
+            compression: GDALCompressionOptions = Query(
+                default=GDALCompressionOptions.NONE,
+                description="GDAL compression algorithm for image."
+            ),
+            width: int = Query(
+                default=None,
+                description="Optional. Width in px of the desired crop.  If provided, max_x will be ignored."
+            ),
+            height: int = Query(
+                default=None,
+                description="Optional. Height in px of the desired crop.  If provided, max_y will be ignored."
+            ),
         ) -> Response:
             """
+            \f
             Crop a portion of the viewpoint.
 
             :param viewpoint_id: Unique viewpoint id
@@ -373,7 +384,7 @@ class ViewpointRouter:
             :param max_x: The right pixel coordinate of the desired crop.
             :param max_y: The lower pixel coordinate of the pixel crop.
             :param img_format: Desired format for cropped output. Valid options are defined by GDALImageFormats.
-            :param compression: GDAL image compression.
+            :param compression: GDAL compression algorithm for image.
             :param width: Optional. Width in px of the desired crop.  If provided, max_x will be ignored.
             :param height: Optional. Height in px of the desired crop.  If provided, max_y will be ignored.
 
@@ -383,16 +394,17 @@ class ViewpointRouter:
             viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
             await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
 
-            ds, sensor_model = load_gdal_dataset(viewpoint_item.local_object_path)
-            tile_factory = GDALTileFactory(
-                ds, sensor_model, img_format, compression, gdalconst.GDT_Byte, viewpoint_item.range_adjustment
+            tile_factory = get_tile_factory(
+                img_format,
+                compression,
+                viewpoint_item.local_object_path,
+                output_type=gdalconst.GDT_Byte,
+                range_adjustment=viewpoint_item.range_adjustment,
             )
-            preview_options = tile_factory.default_gdal_translate_kwargs.copy()
             crop_width = width if width is not None else max_x - min_x
             crop_height = height if height is not None else max_y - min_y
-            preview_options["srcWin"] = [min_x, min_y, crop_width, crop_height]
 
-            preview_bytes = perform_gdal_translation(ds, preview_options)
-            return StreamingResponse(io.BytesIO(preview_bytes), media_type=get_media_type(img_format), status_code=200)
+            crop_bytes = tile_factory.create_encoded_tile([min_x, min_y, crop_width, crop_height])
+            return StreamingResponse(io.BytesIO(crop_bytes), media_type=get_media_type(img_format), status_code=200)
 
         return api_router
