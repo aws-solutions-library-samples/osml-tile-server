@@ -1,6 +1,6 @@
 # OversightML Tile Server
 
-The OversightML Tile Server is a Python package ...
+The OversightML Tile Server is a Python package allows you to quickly pass an image from S3 bucket to get metadata, image statistics, and set of tiles in real-time.
 
 ### Table of Contents
 * [Getting Started](#getting-started)
@@ -36,7 +36,7 @@ Build the Tile Server container
 docker build . -t osml-tile-server:latest
 ```
 
-To boot up the Tile Server
+To boot up the Tile Server, ensure you have the AWS credentials loaded!
 
 ```shell
 ./scripts/run-local-server.sh
@@ -56,6 +56,12 @@ curl -X 'POST' \
   "tile_size": 512,
   "range_adjustment": "NONE"
 }'
+```
+
+Additionally, you can head over to FastAPI homepage and be able to execute various of API calls by visiting
+
+```
+http://0.0.0.0:80/docs or http://0.0.0.0:80/redoc
 ```
 
 ### Development Environment

@@ -32,17 +32,16 @@ def get_media_type(tile_format: GDALImageFormats) -> str:
 @cache
 def get_tile_factory(
     tile_format: GDALImageFormats,
-    compression: GDALCompressionOptions,
+    tile_compression: GDALCompressionOptions,
     local_object_path: str,
     output_type: Optional[int] = None,
     range_adjustment: RangeAdjustmentType = RangeAdjustmentType.NONE,
 ) -> GDALTileFactory:
     """
-    This is a helper function which is to validate if we can execute an operation based on the
-    given status
+    This function will create a sensor model from a given imagery
 
     :param tile_format: current status of a viewpoint
-    :param compression: api operation
+    :param tile_compression: the output tile compression
     :param local_object_path: the path of an imagery
     :param output_type: the GDAL pixel type in the output tile
     :param range_adjustment: the type of scaling used to convert raw pixel values to the output range
@@ -51,7 +50,7 @@ def get_tile_factory(
     """
 
     ds, sensor_model = load_gdal_dataset(local_object_path)
-    return GDALTileFactory(ds, sensor_model, tile_format, compression, output_type, range_adjustment)
+    return GDALTileFactory(ds, sensor_model, tile_format, tile_compression, output_type, range_adjustment)
 
 
 async def validate_viewpoint_status(current_status: ViewpointStatus, api_operation: ViewpointApiNames) -> None:
