@@ -2,13 +2,11 @@ from functools import cache
 from typing import Dict, Optional
 from uuid import uuid4
 
-from fastapi import HTTPException
 from osgeo import gdal
 from osgeo.gdal import Dataset
 
 from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustmentType, load_gdal_dataset
 from aws.osml.image_processing import GDALTileFactory
-from aws.osml.tile_server.viewpoint.models import ViewpointApiNames, ViewpointStatus
 
 
 def get_media_type(tile_format: GDALImageFormats) -> str:
@@ -51,26 +49,6 @@ def get_tile_factory(
 
     ds, sensor_model = load_gdal_dataset(local_object_path)
     return GDALTileFactory(ds, sensor_model, tile_format, tile_compression, output_type, range_adjustment)
-
-
-async def validate_viewpoint_status(current_status: ViewpointStatus, api_operation: ViewpointApiNames) -> None:
-    """
-    This is a helper function which is to validate if we can execute an operation based on the
-    given status
-
-    :param current_status: current status of a viewpoint
-    :param api_operation: api operation
-
-    :return: viewpoint detail
-    """
-    if current_status == ViewpointStatus.DELETED:
-        raise HTTPException(
-            status_code=400, detail=f"Cannot view {api_operation} for this image since this has already been deleted."
-        )
-    elif current_status == ViewpointStatus.REQUESTED:
-        raise HTTPException(
-            status_code=400, detail="This viewpoint has been requested and not in READY state. Please try again later."
-        )
 
 
 def perform_gdal_translation(dataset: Dataset, gdal_options: Dict) -> Optional[bytearray]:

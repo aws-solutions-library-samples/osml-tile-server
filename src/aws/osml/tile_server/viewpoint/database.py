@@ -8,7 +8,8 @@ from botocore.exceptions import ClientError
 from fastapi import HTTPException
 
 from aws.osml.tile_server.app_config import ServerConfig
-from aws.osml.tile_server.viewpoint.models import ViewpointModel, ViewpointStatus
+
+from .models import ViewpointModel, ViewpointStatus
 
 
 class DecimalEncoder(json.JSONEncoder):

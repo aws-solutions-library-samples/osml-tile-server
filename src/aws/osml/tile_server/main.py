@@ -5,9 +5,9 @@ from botocore.exceptions import ClientError
 from fastapi import FastAPI
 from osgeo import gdal
 
-from aws.osml.tile_server.utils.aws_services import initialize_ddb, initialize_s3
-from aws.osml.tile_server.viewpoint.database import ViewpointStatusTable
-from aws.osml.tile_server.viewpoint.routers import ViewpointRouter
+from .utils.aws_services import initialize_ddb, initialize_s3
+from .viewpoint.database import ViewpointStatusTable
+from .viewpoint.routers import ViewpointRouter
 
 logger = logging.getLogger("uvicorn")
 
