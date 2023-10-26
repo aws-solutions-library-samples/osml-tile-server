@@ -73,7 +73,7 @@ async def validate_viewpoint_status(current_status: ViewpointStatus, api_operati
         )
 
 
-def generate_preview(dataset: Dataset, gdal_options: Dict) -> Optional[bytearray]:
+def perform_gdal_translation(dataset: Dataset, gdal_options: Dict) -> Optional[bytearray]:
     tmp_name = f"/vsimem/{uuid4()}"
 
     gdal.Translate(tmp_name, dataset, **gdal_options)
