@@ -1,4 +1,5 @@
 import json
+import os
 import unittest
 
 import boto3
@@ -48,21 +49,25 @@ VALID_UPDATE_TEST_BODY = {
 @mock_dynamodb
 class TestRouters(unittest.TestCase):
     def setUp(self):
-        from aws.osml.tile_server import app
+        from aws.osml.tile_server.app_config import BotoConfig
 
         # create virtual s3
-        self.s3_resource = boto3.resource("s3")
-        self.s3_resource.create_bucket(Bucket=TEST_BUCKET)
+        self.s3_resource = boto3.resource("s3", config=BotoConfig.default)
+        self.s3_resource.create_bucket(
+            Bucket=TEST_BUCKET, CreateBucketConfiguration={"LocationConstraint": os.environ["AWS_DEFAULT_REGION"]}
+        )
         self.s3_resource.meta.client.upload_file(TEST_FILE_PATH, TEST_BUCKET, TEST_OBJECT_KEY)
 
         # create virtual ddb
-        self.ddb = boto3.resource("dynamodb", region_name="us-west-2")
+        self.ddb = boto3.resource("dynamodb", config=BotoConfig.default)
         self.table = self.ddb.create_table(
             TableName="ViewpointStatusTable",
             KeySchema=TEST_VIEWPOINT_KEY_SCHEMA,
             AttributeDefinitions=TEST_VIEWPOINT_ATTRIBUTE_DEF,
             BillingMode="PAY_PER_REQUEST",
         )
+
+        from aws.osml.tile_server.main import app
 
         self.client = TestClient(app)
 

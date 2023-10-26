@@ -15,15 +15,10 @@ from starlette.responses import StreamingResponse
 from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustmentType, load_gdal_dataset
 from aws.osml.image_processing import GDALTileFactory
 from aws.osml.photogrammetry.coordinates import ImageCoordinate
-from aws.osml.tile_server.utils import get_media_type, get_tile_factory, perform_gdal_translation, validate_viewpoint_status
-from aws.osml.tile_server.viewpoint.database import ViewpointStatusTable
-from aws.osml.tile_server.viewpoint.models import (
-    ViewpointApiNames,
-    ViewpointModel,
-    ViewpointRequest,
-    ViewpointStatus,
-    ViewpointUpdate,
-)
+from aws.osml.tile_server.utils import get_media_type, get_tile_factory, perform_gdal_translation
+
+from .database import ViewpointStatusTable
+from .models import ViewpointApiNames, ViewpointModel, ViewpointRequest, ViewpointStatus, ViewpointUpdate
 
 FILESYSTEM_CACHE_ROOT = os.getenv("VIEWPOINT_FILESYSTEM_CACHE", "/tmp/viewpoint")
 
@@ -122,7 +117,7 @@ class ViewpointRouter:
             """
             viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
 
-            await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.UPDATE)
+            await self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.UPDATE)
 
             if viewpoint_item:
                 shutil.rmtree(Path(viewpoint_item.local_object_path).parent, ignore_errors=True)
@@ -143,7 +138,7 @@ class ViewpointRouter:
             """
             viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_request.viewpoint_id)
 
-            await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.UPDATE)
+            await self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.UPDATE)
 
             viewpoint_item.viewpoint_name = viewpoint_request.viewpoint_name
             viewpoint_item.tile_size = viewpoint_request.tile_size
@@ -174,7 +169,7 @@ class ViewpointRouter:
             """
             viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
 
-            await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.METADATA)
+            await self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.METADATA)
 
             viewpoint_path = viewpoint_item.local_object_path
 
@@ -197,7 +192,7 @@ class ViewpointRouter:
             """
             viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
 
-            await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.BOUNDS)
+            await self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.BOUNDS)
 
             viewpoint_path = viewpoint_item.local_object_path
 
@@ -222,7 +217,7 @@ class ViewpointRouter:
             """
             viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
 
-            await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.INFO)
+            await self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.INFO)
 
             viewpoint_path = viewpoint_item.local_object_path
 
@@ -249,7 +244,7 @@ class ViewpointRouter:
             """
             viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
 
-            await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.STATISTICS)
+            await self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.STATISTICS)
 
             viewpoint_path = viewpoint_item.local_object_path
 
@@ -285,7 +280,7 @@ class ViewpointRouter:
             :return: StreamingResponse of preview binary with the appropriate mime type based on the img_format
             """
             viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
-            await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
+            await self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
 
             ds, sensor_model = load_gdal_dataset(viewpoint_item.local_object_path)
             tile_factory = GDALTileFactory(
@@ -327,7 +322,7 @@ class ViewpointRouter:
             """
             viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
 
-            await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.TILE)
+            await self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.TILE)
 
             if viewpoint_item.range_adjustment is not RangeAdjustmentType.NONE:
                 tile_factory = get_tile_factory(
@@ -389,7 +384,7 @@ class ViewpointRouter:
             """
 
             viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
-            await validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
+            await self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
 
             tile_factory = get_tile_factory(
                 img_format,
@@ -405,3 +400,22 @@ class ViewpointRouter:
             return StreamingResponse(io.BytesIO(crop_bytes), media_type=get_media_type(img_format), status_code=200)
 
         return api_router
+
+    async def validate_viewpoint_status(self, current_status: ViewpointStatus, api_operation: ViewpointApiNames) -> None:
+        """
+        This is a helper function which is to validate if we can execute an operation based on the
+        given status
+
+        :param current_status: current status of a viewpoint
+        :param api_operation: api operation
+
+        :return: viewpoint detail
+        """
+        if current_status == ViewpointStatus.DELETED:
+            raise HTTPException(
+                status_code=400, detail=f"Cannot view {api_operation} for this image since this has already been deleted."
+            )
+        elif current_status == ViewpointStatus.REQUESTED:
+            raise HTTPException(
+                status_code=400, detail="This viewpoint has been requested and not in READY state. Please try again later."
+            )

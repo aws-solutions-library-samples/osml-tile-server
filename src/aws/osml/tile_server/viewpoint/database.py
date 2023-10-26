@@ -8,7 +8,8 @@ from botocore.exceptions import ClientError
 from fastapi import HTTPException
 
 from aws.osml.tile_server.app_config import ServerConfig
-from aws.osml.tile_server.viewpoint.models import ViewpointModel, ViewpointStatus
+
+from .models import ViewpointModel, ViewpointStatus
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -43,7 +44,13 @@ class ViewpointStatusTable:
         """
         try:
             response = self.table.scan()
-            return response.get("Items", [])
+            data = response["Items"]
+
+            while response.get("LastEvaluatedKey"):
+                response = self.table.scan(ExclusiveStartKey=response["LastEvaluatedKey"])
+                data.extend(response["Items"])
+
+            return data
         except ClientError as err:
             raise HTTPException(
                 status_code=err.response["Error"]["Code"],
