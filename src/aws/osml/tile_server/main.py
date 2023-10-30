@@ -1,16 +1,18 @@
+import asyncio
 import logging
 import sys
 
 from botocore.exceptions import ClientError
 from fastapi import FastAPI
-from osgeo import gdal
 
-from .utils.aws_services import initialize_ddb, initialize_s3
+from .app_config import ServerConfig
+from .utils.aws_services import initialize_ddb, initialize_s3, initialize_sqs
 from .viewpoint.database import ViewpointStatusTable
+from .viewpoint.queue import ViewpointRequestQueue
 from .viewpoint.routers import ViewpointRouter
+from .viewpoint.worker import ViewpointWorker
 
 logger = logging.getLogger("uvicorn")
-
 app = FastAPI(
     title="OSML Tile Server",
     description="A minimalistic tile server for imagery hosted in the cloud",
@@ -29,11 +31,10 @@ app = FastAPI(
     },
 )
 
-gdal.UseExceptions()
-
 # initialize aws services
 aws_ddb = initialize_ddb()
 aws_s3 = initialize_s3()
+aws_sqs = initialize_sqs()
 
 # viewpoint
 try:
@@ -41,10 +42,19 @@ try:
 except ClientError as err:
     logger.error("Fatal error occurred while initializing viewpoint database. Exception: {}".format(err))
     sys.exit("Fatal error occurred while initializing viewpoint database.  Exiting.")
-viewpoint_router = ViewpointRouter(viewpoint_database, aws_s3)
+
+viewpoint_request_queue = ViewpointRequestQueue(aws_sqs, ServerConfig.viewpoint_request_queue)
+viewpoint_router = ViewpointRouter(viewpoint_database, viewpoint_request_queue, aws_s3)
 
 # routers api
 app.include_router(viewpoint_router.router)
+
+
+@app.on_event("startup")
+async def run_viewpoint_worker():
+    viewpoint_worker = ViewpointWorker(viewpoint_request_queue, aws_s3, viewpoint_database)
+    loop = asyncio.get_event_loop()
+    loop.create_task(viewpoint_worker.run())
 
 
 @app.get("/")
@@ -56,3 +66,9 @@ async def root():
     The license of this product: {app.license_info["license"]}
     """
     return homepage_description
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=4557, reload=True, debug=True)

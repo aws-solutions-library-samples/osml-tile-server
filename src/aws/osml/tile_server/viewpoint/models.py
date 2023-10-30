@@ -47,6 +47,7 @@ class ViewpointModel(BaseModel):
     tile_size: int
     range_adjustment: RangeAdjustmentType
     local_object_path: str | None
+    internal_err: str | None
 
 
 class ViewpointUpdate(BaseModel):
