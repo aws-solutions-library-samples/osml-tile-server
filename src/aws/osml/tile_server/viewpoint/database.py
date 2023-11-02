@@ -9,7 +9,7 @@ from fastapi import HTTPException
 
 from aws.osml.tile_server.app_config import ServerConfig
 
-from .models import ViewpointModel, ViewpointStatus
+from .models import ViewpointModel
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -40,7 +40,7 @@ class ViewpointStatusTable:
         """
         Get all the viewpoint items from the dynamodb table
 
-        :returnsList[Dict[str, any]]: list of viewpoints
+        :returns List[Dict[str, any]]: list of viewpoints
         """
         try:
             response = self.table.scan()
@@ -97,9 +97,6 @@ class ViewpointStatusTable:
         :return ViewpointModel: details of a newly created viewpoint
         """
         viewpoint_request_dict = viewpoint_request.model_dump()  # converts to dict
-
-        # TODO remove when implemented a background task
-        viewpoint_request_dict["viewpoint_status"] = ViewpointStatus.READY
 
         try:
             self.table.put_item(Item=viewpoint_request_dict)
