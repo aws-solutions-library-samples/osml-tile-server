@@ -26,3 +26,4 @@ tox_conda_tmp*
 /htmlcov
 
 local_viewpoint_cache/
+.vscode/

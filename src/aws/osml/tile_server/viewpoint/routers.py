@@ -1,13 +1,11 @@
 import io
 import logging
-import os
 import shutil
 from pathlib import Path
 from secrets import token_hex
 from typing import Annotated, Any, Dict, List
 
 from boto3.resources.base import ServiceResource
-from botocore.exceptions import ClientError
 from fastapi import APIRouter, HTTPException, Query, Response
 from osgeo import gdal, gdalconst
 from starlette.responses import StreamingResponse
@@ -19,13 +17,15 @@ from aws.osml.tile_server.utils import get_media_type, get_tile_factory, perform
 
 from .database import ViewpointStatusTable
 from .models import ViewpointApiNames, ViewpointModel, ViewpointRequest, ViewpointStatus, ViewpointUpdate
-
-FILESYSTEM_CACHE_ROOT = os.getenv("VIEWPOINT_FILESYSTEM_CACHE", "/tmp/viewpoint")
+from .queue import ViewpointRequestQueue
 
 
 class ViewpointRouter:
-    def __init__(self, viewpoint_database: ViewpointStatusTable, aws_s3: ServiceResource) -> None:
+    def __init__(
+        self, viewpoint_database: ViewpointStatusTable, viewpoint_queue: ViewpointRequestQueue, aws_s3: ServiceResource
+    ) -> None:
         self.viewpoint_database = viewpoint_database
+        self.viewpoint_queue = viewpoint_queue
         self.s3 = aws_s3
         self.logger = logging.getLogger("uvicorn")
 
@@ -39,7 +39,7 @@ class ViewpointRouter:
         )
 
         @api_router.get("/")
-        def list_viewpoints() -> List[Dict[str, Any]]:
+        async def list_viewpoints() -> List[Dict[str, Any]]:
             """
             Get a list of viewpoints in the database
 
@@ -59,36 +59,11 @@ class ViewpointRouter:
 
             TODO
                 - utilize efs service
-                - utilize background tasks
 
             :return: success creation of viewpoint
             """
             # Create unique viewpoint_id
             viewpoint_id = token_hex(16)
-
-            file_name = viewpoint_request.object_key.split("/")[-1]
-
-            # TODO rename local to EFS (CDK changes required)
-            local_viewpoint_folder = Path(FILESYSTEM_CACHE_ROOT, viewpoint_id)
-            local_viewpoint_folder.mkdir(parents=True, exist_ok=True)
-            local_object_path = Path(local_viewpoint_folder, file_name)
-
-            try:
-                self.s3.meta.client.download_file(
-                    viewpoint_request.bucket_name, viewpoint_request.object_key, str(local_object_path.absolute())
-                )
-            except ClientError as err:
-                if err.response["Error"]["Code"] == "404":
-                    raise HTTPException(
-                        status_code=404, detail=f"The {viewpoint_request.bucket_name} bucket does not exist! Error={err}"
-                    )
-                elif err.response["Error"]["Code"] == "403":
-                    raise HTTPException(
-                        status_code=403,
-                        detail=f"You do not have permission to access {viewpoint_request.bucket_name} bucket! Error={err}",
-                    )
-
-                raise HTTPException(status_code=400, detail=f"Image Tile Server cannot process your S3 request! Error={err}")
 
             # these will be stored in ddb
             new_viewpoint_request = ViewpointModel(
@@ -99,10 +74,13 @@ class ViewpointRouter:
                 tile_size=viewpoint_request.tile_size,
                 range_adjustment=viewpoint_request.range_adjustment,
                 viewpoint_status=ViewpointStatus.REQUESTED,
-                local_object_path=str(local_object_path.absolute()),
+                local_object_path=None,
+                error_message=None,
             )
 
-            # TODO we need to integrate background task here and update the status to READY when its completed
+            # Place this request into SQS, then the worker will pick up in order to
+            # download the image from S3 to Local (TODO rename to EFS once implemented)
+            self.viewpoint_queue.send_request(new_viewpoint_request.model_dump())
 
             return self.viewpoint_database.create_viewpoint(new_viewpoint_request)
 

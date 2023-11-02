@@ -20,6 +20,7 @@ class ServerConfig:
     # optional env configuration with defaults
     aws_region: str = os.getenv("AWS_DEFAULT_REGION", "us-west-2")
     viewpoint_status_table: str = os.getenv("VIEWPOINT_STATUS_TABLE", "ViewpointStatusTable")
+    viewpoint_request_queue: str = os.getenv("VIEWPOINT_REQUEST_QUEUE", "ViewpointRequestQueue")
 
 
 @dataclass
