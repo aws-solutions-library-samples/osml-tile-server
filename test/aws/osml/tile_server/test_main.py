@@ -4,7 +4,7 @@ import unittest
 
 import boto3
 from fastapi.testclient import TestClient
-from moto import mock_dynamodb, mock_s3
+from moto import mock_dynamodb, mock_s3, mock_sqs
 
 # from aws.osml.tile_server.viewpoint.models import ViewpointStatus
 
@@ -22,6 +22,7 @@ TEST_VIEWPOINT_ATTRIBUTE_DEF = [{"AttributeName": "viewpoint_id", "AttributeType
 
 @mock_s3
 @mock_dynamodb
+@mock_sqs
 class TestTileServer(unittest.TestCase):
     def setUp(self):
         from aws.osml.tile_server.app_config import BotoConfig
@@ -41,6 +42,10 @@ class TestTileServer(unittest.TestCase):
             AttributeDefinitions=TEST_VIEWPOINT_ATTRIBUTE_DEF,
             BillingMode="PAY_PER_REQUEST",
         )
+
+        # create virtual queue
+        self.sqs = boto3.resource("sqs", config=BotoConfig.default)
+        self.queue = self.sqs.create_queue(QueueName="ViewpointRequestQueue")
 
         from aws.osml.tile_server.main import app
 

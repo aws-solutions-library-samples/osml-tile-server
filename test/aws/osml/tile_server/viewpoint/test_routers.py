@@ -3,8 +3,9 @@ import os
 import unittest
 
 import boto3
+import mock
 from fastapi.testclient import TestClient
-from moto import mock_dynamodb, mock_s3
+from moto import mock_dynamodb, mock_s3, mock_sqs
 
 from aws.osml.tile_server.viewpoint.models import ViewpointStatus
 
@@ -47,6 +48,7 @@ VALID_UPDATE_TEST_BODY = {
 
 @mock_s3
 @mock_dynamodb
+@mock_sqs
 class TestRouters(unittest.TestCase):
     def setUp(self):
         from aws.osml.tile_server.app_config import BotoConfig
@@ -66,6 +68,9 @@ class TestRouters(unittest.TestCase):
             AttributeDefinitions=TEST_VIEWPOINT_ATTRIBUTE_DEF,
             BillingMode="PAY_PER_REQUEST",
         )
+        # create virtual queue
+        self.sqs = boto3.resource("sqs", config=BotoConfig.default)
+        self.queue = self.sqs.create_queue(QueueName="ViewpointRequestQueue")
 
         from aws.osml.tile_server.main import app
 
@@ -76,8 +81,10 @@ class TestRouters(unittest.TestCase):
         self.s3_resource = None
         self.ddb = None
         self.table = None
+        self.queue = None
 
-    def test_create_viewpoint_valid(self):
+    @mock.patch("aws.osml.tile_server.viewpoint.worker", autospec=True)
+    def test_create_viewpoint_valid(self, mock_worker):
         response = self.client.post("/viewpoints/", data=json.dumps(TEST_BODY))
 
         assert response.status_code == 201

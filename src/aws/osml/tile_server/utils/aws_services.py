@@ -14,3 +14,9 @@ def initialize_s3() -> ServiceResource:
     s3 = boto3.resource("s3", config=BotoConfig.default)
 
     return s3
+
+
+def initialize_sqs() -> ServiceResource:
+    sqs = boto3.resource("sqs", config=BotoConfig.default)
+
+    return sqs
