@@ -22,15 +22,3 @@ class ViewpointRequestQueue:
             self.queue.send_message(MessageBody=json.dumps(request))
         except ClientError as error:
             self.logger.error("Unable to send message visibility: {}".format(error))
-
-    def finish_request(self, receipt_handle: str) -> None:
-        """
-        Delete the message from the SQS
-
-        :param receipt_handle: str = unique identifier of a message
-        :return: None
-        """
-        try:
-            self.queue.delete_message(ReceiptHandle=receipt_handle)
-        except ClientError as error:
-            self.logger.error("Unable to remove message from queue: {}".format(error))

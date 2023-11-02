@@ -39,7 +39,7 @@ class ViewpointRouter:
         )
 
         @api_router.get("/")
-        def list_viewpoints() -> List[Dict[str, Any]]:
+        async def list_viewpoints() -> List[Dict[str, Any]]:
             """
             Get a list of viewpoints in the database
 
@@ -50,7 +50,7 @@ class ViewpointRouter:
             return self.viewpoint_database.get_all_viewpoints()
 
         @api_router.post("/", status_code=201)
-        def create_viewpoint(viewpoint_request: ViewpointRequest) -> Dict[str, Any]:
+        async def create_viewpoint(viewpoint_request: ViewpointRequest) -> Dict[str, Any]:
             """
             Create a viewpoint item, then it copies the imagery file from S3 to EFS, then create a item into the database
 
@@ -75,7 +75,7 @@ class ViewpointRouter:
                 range_adjustment=viewpoint_request.range_adjustment,
                 viewpoint_status=ViewpointStatus.REQUESTED,
                 local_object_path=None,
-                internal_err=None,
+                error_message=None,
             )
 
             # Place this request into SQS, then the worker will pick up in order to

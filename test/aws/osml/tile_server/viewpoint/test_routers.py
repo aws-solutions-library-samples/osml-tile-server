@@ -3,6 +3,7 @@ import os
 import unittest
 
 import boto3
+import mock
 from fastapi.testclient import TestClient
 from moto import mock_dynamodb, mock_s3, mock_sqs
 
@@ -82,7 +83,8 @@ class TestRouters(unittest.TestCase):
         self.table = None
         self.queue = None
 
-    def test_create_viewpoint_valid(self):
+    @mock.patch("aws.osml.tile_server.viewpoint.worker", autospec=True)
+    def test_create_viewpoint_valid(self, mock_worker):
         response = self.client.post("/viewpoints/", data=json.dumps(TEST_BODY))
 
         assert response.status_code == 201

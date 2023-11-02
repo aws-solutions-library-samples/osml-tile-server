@@ -4,6 +4,7 @@ import sys
 
 from botocore.exceptions import ClientError
 from fastapi import FastAPI
+from osgeo import gdal
 
 from .app_config import ServerConfig
 from .utils.aws_services import initialize_ddb, initialize_s3, initialize_sqs
@@ -11,6 +12,8 @@ from .viewpoint.database import ViewpointStatusTable
 from .viewpoint.queue import ViewpointRequestQueue
 from .viewpoint.routers import ViewpointRouter
 from .viewpoint.worker import ViewpointWorker
+
+gdal.UseExceptions()
 
 logger = logging.getLogger("uvicorn")
 app = FastAPI(
