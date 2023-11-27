@@ -3,8 +3,9 @@ import logging
 import sys
 
 from botocore.exceptions import ClientError
-from fastapi import FastAPI
+from fastapi import FastAPI, status
 from osgeo import gdal
+from pydantic import BaseModel
 
 from .app_config import ServerConfig
 from .utils.aws_services import initialize_ddb, initialize_s3, initialize_sqs
@@ -12,6 +13,13 @@ from .viewpoint.database import ViewpointStatusTable
 from .viewpoint.queue import ViewpointRequestQueue
 from .viewpoint.routers import ViewpointRouter
 from .viewpoint.worker import ViewpointWorker
+
+
+class HealthCheck(BaseModel):
+    """Response model to return when performing a health check."""
+
+    status: str = "OK"
+
 
 gdal.UseExceptions()
 
@@ -69,6 +77,26 @@ async def root():
     The license of this product: {app.license_info["license"]}
     """
     return homepage_description
+
+
+@app.get("/ping",
+         tags=["healthcheck"],
+         summary="Perform a Health Check",
+         response_description="Return HTTP Status Code 200 (OK)",
+         status_code=status.HTTP_200_OK,
+         response_model=HealthCheck,
+         )
+async def healthcheck():
+    """
+    ## Perform a Health Check
+    Endpoint to perform a healthcheck on. This endpoint can primarily be used Docker
+    to ensure a robust container orchestration and management is in place. Other
+    services which rely on proper functioning of the API service will not deploy if this
+    endpoint returns any other HTTP status code except 200 (OK).
+    Returns:
+        HealthCheck: Returns a JSON response with the health status
+    """
+    return HealthCheck(status="OK")
 
 
 if __name__ == "__main__":
