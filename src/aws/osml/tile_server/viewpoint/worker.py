@@ -1,17 +1,16 @@
 import asyncio
 import json
 import logging
-import os
 from pathlib import Path
 
 from boto3.resources.base import ServiceResource
 from botocore.exceptions import ClientError
 
+from aws.osml.tile_server.app_config import ServerConfig
+
 from .database import DecimalEncoder, ViewpointStatusTable
 from .models import ViewpointModel, ViewpointStatus
 from .queue import ViewpointRequestQueue
-
-FILESYSTEM_CACHE_ROOT = os.getenv("VIEWPOINT_FILESYSTEM_CACHE", "/tmp/viewpoint")
 
 
 class ViewpointWorker:
@@ -36,7 +35,7 @@ class ViewpointWorker:
         :return: None
         """
         while True:
-            self.logger.info("Scanning for SQS messages")
+            self.logger.debug("Scanning for SQS messages")
             try:
                 messages = self.viewpoint_request_queue.queue.receive_messages(WaitTimeSeconds=5)
 
@@ -54,7 +53,7 @@ class ViewpointWorker:
 
                     if message_viewpoint_status == ViewpointStatus.REQUESTED:
                         # create a temp file
-                        local_viewpoint_folder = Path(FILESYSTEM_CACHE_ROOT, message_viewpoint_id)
+                        local_viewpoint_folder = Path("/" + ServerConfig.efs_mount_name, message_viewpoint_id)
                         local_viewpoint_folder.mkdir(parents=True, exist_ok=True)
                         local_object_path = Path(local_viewpoint_folder, message_object_key)
                         local_object_path_str = str(local_object_path.absolute())
@@ -113,7 +112,8 @@ class ViewpointWorker:
                         message.delete()
                     else:
                         self.logger.error(
-                            f"Cannot process {message_viewpoint_id} due to the incorrect Viewpoint Status {message_viewpoint_status}!"
+                            f"Cannot process {message_viewpoint_id} due to the incorrect "
+                            f"Viewpoint Status {message_viewpoint_status}!"
                         )
                         continue
 
