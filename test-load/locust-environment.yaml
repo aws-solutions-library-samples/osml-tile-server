@@ -1,0 +1,9 @@
+name: osml-ts-locust-env
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - locust
+      - boto3
