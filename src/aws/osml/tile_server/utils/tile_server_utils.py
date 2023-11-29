@@ -52,6 +52,32 @@ def get_tile_factory(
 
 
 def perform_gdal_translation(dataset: Dataset, gdal_options: Dict) -> Optional[bytearray]:
+    """
+    Performs GDAL (Geospatial Data Abstraction Library) translation and reads a VSIFile.
+
+    The GDAL translation is done on given dataset with gdal options. Then a VSIFile is read and returned from the
+    translated dataset.
+
+    Parameters
+    ----------
+    dataset : Dataset
+        The input dataset to be translated.
+    gdal_options : dict
+        The options for GDAL translation.
+
+    Returns
+    -------
+    vsibuf : bytearray, optional
+        The read VSIFile. If the VSIFile cannot be opened, returns None.
+
+    Raises
+    ------
+    GDALException
+        If the translation is not successful or VSIFile cannot be read.
+
+    Note ---- This function also takes care of cleaning up the temporary file memory in case of any exception by
+    using finally clause.
+    """
     tmp_name = f"/vsimem/{uuid4()}"
 
     gdal.Translate(tmp_name, dataset, **gdal_options)
@@ -64,7 +90,9 @@ def perform_gdal_translation(dataset: Dataset, gdal_options: Dict) -> Optional[b
             return None
         stat = gdal.VSIStatL(tmp_name, gdal.VSI_STAT_SIZE_FLAG)
         vsibuf = gdal.VSIFReadL(1, stat.size, vsifile_handle)
+
         return vsibuf
+
     finally:
         if vsifile_handle is not None:
             gdal.VSIFCloseL(vsifile_handle)

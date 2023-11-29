@@ -43,8 +43,6 @@ class ViewpointRouter:
             """
             Get a list of viewpoints in the database
 
-            :param viewpoint_status_table: Viewpoint Status Table
-
             :return: a list of viewpoints with details
             """
             return self.viewpoint_database.get_all_viewpoints()
@@ -52,11 +50,9 @@ class ViewpointRouter:
         @api_router.post("/", status_code=201)
         async def create_viewpoint(viewpoint_request: ViewpointRequest) -> Dict[str, Any]:
             """
-            Create a viewpoint item, then it copies the imagery file from S3 to EFS, then create a item into the database
+            Create a viewpoint item, then copy the imagery file from S3 to EFS, then create a item into the database
 
-            :param request: client's request which contains name, file source, and range type
-            :param viewpoint_status_table: Viewpoint Status Table
-
+            :param viewpoint_request: client's request which contains name, file source, and range type
             TODO
                 - utilize efs service
 
@@ -110,7 +106,7 @@ class ViewpointRouter:
             """
             Update the viewpoint item in DynamoDB based on the given viewpoint_id
 
-            :param request: client's request which contains name, file source, and range type
+            :param viewpoint_request: client's request which contains name, file source, and range type
 
             :return: updated viewpoint details
             """
@@ -227,12 +223,12 @@ class ViewpointRouter:
             viewpoint_path = viewpoint_item.local_object_path
 
             try:
-                gdalOptions = gdal.InfoOptions(format="json", showMetadata=False)
-                gdalInfo = gdal.Info(viewpoint_path, options=gdalOptions)
+                gdal_options = gdal.InfoOptions(format="json", showMetadata=False)
+                gdal_info = gdal.Info(viewpoint_path, options=gdal_options)
             except Exception as err:
                 raise HTTPException(status_code=400, detail=f"Failed to fetch statistics of an image. {err}")
 
-            return {"image_statistics": gdalInfo}
+            return {"image_statistics": gdal_info}
 
         @api_router.get("/{viewpoint_id}/preview.{img_format}/")
         async def get_preview(
@@ -338,10 +334,12 @@ class ViewpointRouter:
                 default=GDALCompressionOptions.NONE, description="GDAL compression algorithm for image."
             ),
             width: int = Query(
-                default=None, description="Optional. Width in px of the desired crop.  If provided, max_x will be ignored."
+                default=None,
+                description="Optional. Width in px of the desired crop.  If provided, max_x will be " "ignored.",
             ),
             height: int = Query(
-                default=None, description="Optional. Height in px of the desired crop.  If provided, max_y will be ignored."
+                default=None,
+                description="Optional. Height in px of the desired crop.  If provided, max_y will be " "ignored.",
             ),
         ) -> Response:
             """
@@ -391,9 +389,11 @@ class ViewpointRouter:
         """
         if current_status == ViewpointStatus.DELETED:
             raise HTTPException(
-                status_code=400, detail=f"Cannot view {api_operation} for this image since this has already been deleted."
+                status_code=400,
+                detail=f"Cannot view {api_operation} for this image since this has already been " f"deleted.",
             )
         elif current_status == ViewpointStatus.REQUESTED:
             raise HTTPException(
-                status_code=400, detail="This viewpoint has been requested and not in READY state. Please try again later."
+                status_code=400,
+                detail="This viewpoint has been requested and not in READY state. Please try again " "later.",
             )
