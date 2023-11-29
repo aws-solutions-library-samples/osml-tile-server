@@ -113,7 +113,8 @@ class ViewpointWorker:
                         message.delete()
                     else:
                         self.logger.error(
-                            f"Cannot process {message_viewpoint_id} due to the incorrect Viewpoint Status {message_viewpoint_status}!"
+                            f"Cannot process {message_viewpoint_id} due to the incorrect "
+                            f"Viewpoint Status {message_viewpoint_status}!"
                         )
                         continue
 
