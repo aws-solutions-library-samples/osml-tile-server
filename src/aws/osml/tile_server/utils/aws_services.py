@@ -5,18 +5,36 @@ from aws.osml.tile_server.app_config import BotoConfig, ServerConfig
 
 
 def initialize_ddb() -> ServiceResource:
+    """
+    Initialize DynamoDB service and return a service resource.
+
+    :return: DynamoDB service resource
+    :rtype: ServiceResource
+    """
     ddb = boto3.resource("dynamodb", config=BotoConfig.default, region_name=ServerConfig.aws_region)
 
     return ddb
 
 
 def initialize_s3() -> ServiceResource:
+    """
+    Initialize S3 service and return a service resource.
+
+    :return: S3 service resource
+    :rtype: ServiceResource
+    """
     s3 = boto3.resource("s3", config=BotoConfig.default)
 
     return s3
 
 
 def initialize_sqs() -> ServiceResource:
+    """
+    Initialize SQS service and return a service resource.
+
+    :return: SQS service resource
+    :rtype: ServiceResource
+    """
     sqs = boto3.resource("sqs", config=BotoConfig.default)
 
     return sqs

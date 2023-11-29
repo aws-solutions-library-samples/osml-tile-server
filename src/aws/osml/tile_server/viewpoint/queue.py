@@ -6,6 +6,13 @@ from botocore.exceptions import ClientError
 
 
 class ViewpointRequestQueue:
+    """
+    The class to send messages via Amazon's Simple Queue Service (SQS)
+
+    :param aws_sqs: AWS SQS client instance
+    :param queue_name: SQS Queue name to send messages to
+    """
+
     def __init__(self, aws_sqs, queue_name: str) -> None:
         self.sqs_client = aws_sqs
         self.queue = self.sqs_client.get_queue_by_name(QueueName=queue_name)
