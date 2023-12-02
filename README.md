@@ -75,7 +75,7 @@ docker build . -t osml-tile-server:latest
 To build the container in a build/test mode and work inside it.
 
 ```shell
-LATEST_IMAGE=$(docker images | grep osml-viewpoint | awk 'NR==1{print $1":"$2}')
+LATEST_IMAGE=$(docker images | grep osml-tile-server | awk 'NR==1{print $1":"$2}')
 
 docker run \
   -it \
