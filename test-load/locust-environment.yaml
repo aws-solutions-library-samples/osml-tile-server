@@ -7,3 +7,5 @@ dependencies:
   - pip:
       - locust
       - boto3
+      - hilbertcurve
+      - py-spy
