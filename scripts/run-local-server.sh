@@ -25,6 +25,7 @@ DOCKER_OPTS=(
   --env AWS_ACCESS_KEY_ID
   --env AWS_SECRET_ACCESS_KEY
   --env AWS_SESSION_TOKEN
+  --cap-add SYS_PTRACE \
   --restart "unless-stopped"
   --log-opt max-size=10m --log-opt max-file=3
   --cpus="0.5" --memory="500m"
