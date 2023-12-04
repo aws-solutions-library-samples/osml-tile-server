@@ -13,7 +13,7 @@ from starlette.responses import StreamingResponse
 from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustmentType, load_gdal_dataset
 from aws.osml.image_processing import GDALTileFactory
 from aws.osml.photogrammetry.coordinates import ImageCoordinate
-from aws.osml.tile_server.utils import get_media_type, get_tile_factory, perform_gdal_translation
+from aws.osml.tile_server.utils import get_media_type, get_tile_factory_pool, perform_gdal_translation
 
 from .database import ViewpointStatusTable
 from .models import ViewpointApiNames, ViewpointModel, ViewpointRequest, ViewpointStatus, ViewpointUpdate
@@ -39,7 +39,7 @@ class ViewpointRouter:
         )
 
         @api_router.get("/")
-        async def list_viewpoints() -> List[Dict[str, Any]]:
+        def list_viewpoints() -> List[Dict[str, Any]]:
             """
             Get a list of viewpoints in the database
 
@@ -48,7 +48,7 @@ class ViewpointRouter:
             return self.viewpoint_database.get_all_viewpoints()
 
         @api_router.post("/", status_code=201)
-        async def create_viewpoint(viewpoint_request: ViewpointRequest) -> Dict[str, Any]:
+        def create_viewpoint(viewpoint_request: ViewpointRequest) -> Dict[str, Any]:
             """
             Create a viewpoint item, then copy the imagery file from S3 to EFS, then create a item into the database
 
@@ -81,7 +81,7 @@ class ViewpointRouter:
             return self.viewpoint_database.create_viewpoint(new_viewpoint_request)
 
         @api_router.delete("/{viewpoint_id}")
-        async def delete_viewpoint(viewpoint_id: str) -> ViewpointModel:
+        def delete_viewpoint(viewpoint_id: str) -> ViewpointModel:
             """
             Remove the file from the EFS and update the database to indicate that it has been deleted
 
@@ -89,9 +89,9 @@ class ViewpointRouter:
 
             :return ViewpointModel: updated viewpoint item
             """
-            viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
+            viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
-            await self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.UPDATE)
+            self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.UPDATE)
 
             if viewpoint_item:
                 shutil.rmtree(Path(viewpoint_item.local_object_path).parent, ignore_errors=True)
@@ -102,7 +102,7 @@ class ViewpointRouter:
             return self.viewpoint_database.update_viewpoint(viewpoint_item)
 
         @api_router.put("/", status_code=201)
-        async def update_viewpoint(viewpoint_request: ViewpointUpdate) -> ViewpointModel:
+        def update_viewpoint(viewpoint_request: ViewpointUpdate) -> ViewpointModel:
             """
             Update the viewpoint item in DynamoDB based on the given viewpoint_id
 
@@ -110,9 +110,9 @@ class ViewpointRouter:
 
             :return: updated viewpoint details
             """
-            viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_request.viewpoint_id)
+            viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_request.viewpoint_id)
 
-            await self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.UPDATE)
+            self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.UPDATE)
 
             viewpoint_item.viewpoint_name = viewpoint_request.viewpoint_name
             viewpoint_item.tile_size = viewpoint_request.tile_size
@@ -121,7 +121,7 @@ class ViewpointRouter:
             return self.viewpoint_database.update_viewpoint(viewpoint_item)
 
         @api_router.get("/{viewpoint_id}")
-        async def describe_viewpoint(viewpoint_id: str) -> ViewpointModel:
+        def describe_viewpoint(viewpoint_id: str) -> ViewpointModel:
             """
             Get viewpoint details based on provided viewpoint id
 
@@ -129,11 +129,11 @@ class ViewpointRouter:
 
             :return ViewpointModel: viewpoint detail
             """
-            viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
+            viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
             return viewpoint_item
 
         @api_router.get("/{viewpoint_id}/metadata")
-        async def get_metadata(viewpoint_id: str) -> Dict[str, Any]:
+        def get_metadata(viewpoint_id: str) -> Dict[str, Any]:
             """
             Get viewpoint metadata based on provided viewpoint id
 
@@ -141,9 +141,9 @@ class ViewpointRouter:
 
             :return Dict[str, Any]: viewpoint metadata
             """
-            viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
+            viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
-            await self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.METADATA)
+            self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.METADATA)
 
             viewpoint_path = viewpoint_item.local_object_path
 
@@ -156,7 +156,7 @@ class ViewpointRouter:
             return {"metadata": metadata}
 
         @api_router.get("/{viewpoint_id}/bounds")
-        async def get_bounds(viewpoint_id: str) -> Dict[str, Any]:
+        def get_bounds(viewpoint_id: str) -> Dict[str, Any]:
             """
             Get viewpoint bounds based on provided viewpoint id
 
@@ -164,9 +164,9 @@ class ViewpointRouter:
 
             :return Dict[str, Any]: viewpoint bounds
             """
-            viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
+            viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
-            await self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.BOUNDS)
+            self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.BOUNDS)
 
             viewpoint_path = viewpoint_item.local_object_path
 
@@ -181,7 +181,7 @@ class ViewpointRouter:
             return {"bounds": world_coordinates}
 
         @api_router.get("/{viewpoint_id}/info")
-        async def get_info(viewpoint_id: str) -> Dict[str, Any]:
+        def get_info(viewpoint_id: str) -> Dict[str, Any]:
             """
             Get viewpoint info based on provided viewpoint id
 
@@ -189,9 +189,9 @@ class ViewpointRouter:
 
             :return Dict[str, Any]: viewpoint info
             """
-            viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
+            viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
-            await self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.INFO)
+            self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.INFO)
 
             viewpoint_path = viewpoint_item.local_object_path
 
@@ -208,7 +208,7 @@ class ViewpointRouter:
             return {"features": None}
 
         @api_router.get("/{viewpoint_id}/statistics")
-        async def get_statistics(viewpoint_id: str) -> Dict[str, Any]:
+        def get_statistics(viewpoint_id: str) -> Dict[str, Any]:
             """
             Get viewpoint statistics based on provided viewpoint id
 
@@ -216,9 +216,9 @@ class ViewpointRouter:
 
             :return Dict[str, Any]: viewpoint statistics
             """
-            viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
+            viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
-            await self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.STATISTICS)
+            self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.STATISTICS)
 
             viewpoint_path = viewpoint_item.local_object_path
 
@@ -231,7 +231,7 @@ class ViewpointRouter:
             return {"image_statistics": gdal_info}
 
         @api_router.get("/{viewpoint_id}/preview.{img_format}/")
-        async def get_preview(
+        def get_preview(
             viewpoint_id: str,
             img_format: GDALImageFormats = Path(GDALImageFormats.PNG, description="Output image type."),
             scale: Annotated[int, Query(gt=0, le=100)] = None,
@@ -253,8 +253,8 @@ class ViewpointRouter:
 
             :return: StreamingResponse of preview binary with the appropriate mime type based on the img_format
             """
-            viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
-            await self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
+            viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
+            self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
 
             ds, sensor_model = load_gdal_dataset(viewpoint_item.local_object_path)
             tile_factory = GDALTileFactory(
@@ -273,7 +273,7 @@ class ViewpointRouter:
             return StreamingResponse(io.BytesIO(preview_bytes), media_type=get_media_type(img_format), status_code=200)
 
         @api_router.get("/{viewpoint_id}/tiles/{z}/{x}/{y}.{tile_format}")
-        async def get_tile(
+        def get_tile(
             viewpoint_id: str,
             z: int,
             x: int,
@@ -294,33 +294,32 @@ class ViewpointRouter:
 
             :return: StreamingResponse of tile image binary
             """
-            viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
+            try:
+                viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
+                self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.TILE)
 
-            await self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.TILE)
+                output_type = None
+                if viewpoint_item.range_adjustment is not RangeAdjustmentType.NONE:
+                    output_type = gdalconst.GDT_Byte
 
-            if viewpoint_item.range_adjustment is not RangeAdjustmentType.NONE:
-                tile_factory = get_tile_factory(
-                    tile_format,
-                    compression,
-                    viewpoint_item.local_object_path,
-                    output_type=gdalconst.GDT_Byte,
-                    range_adjustment=viewpoint_item.range_adjustment,
+                tile_factory_pool = get_tile_factory_pool(
+                    tile_format, compression, viewpoint_item.local_object_path, output_type, viewpoint_item.range_adjustment
                 )
-            else:
-                tile_factory = get_tile_factory(tile_format, compression, viewpoint_item.local_object_path)
+                with tile_factory_pool.checkout_in_context() as tile_factory:
+                    if tile_factory is None:
+                        raise HTTPException(
+                            status_code=500, detail=f"Unable to read tiles from viewpoint {viewpoint_item.viewpoint_id}"
+                        )
 
-            if tile_factory is None:
-                raise HTTPException(
-                    status_code=500, detail=f"Unable to read tiles from viewpoint {viewpoint_item.viewpoint_id}"
-                )
+                    tile_size = viewpoint_item.tile_size
+                    image_bytes = tile_factory.create_encoded_tile([x * tile_size, y * tile_size, tile_size, tile_size])
 
-            tile_size = viewpoint_item.tile_size
-            image_bytes = tile_factory.create_encoded_tile([x * tile_size, y * tile_size, tile_size, tile_size])
-
-            return StreamingResponse(io.BytesIO(image_bytes), media_type=get_media_type(tile_format), status_code=200)
+                return StreamingResponse(io.BytesIO(image_bytes), media_type=get_media_type(tile_format), status_code=200)
+            except Exception as err:
+                raise HTTPException(status_code=500, detail=f"Failed to fetch tile for image. {err}")
 
         @api_router.get("/{viewpoint_id}/crop/{min_x},{min_y},{max_x},{max_y}.{img_format}")
-        async def get_crop(
+        def get_crop(
             viewpoint_id: str,
             min_x: int = Path(description="Unique viewpoint id"),
             min_y: int = Path(description="The left pixel coordinate of the desired crop."),
@@ -359,25 +358,26 @@ class ViewpointRouter:
             :return: StreamingResponse of cropped image binary with the appropriate mime type based on the img_format
             """
 
-            viewpoint_item = await self.viewpoint_database.get_viewpoint(viewpoint_id)
-            await self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
+            viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
+            self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
 
-            tile_factory = get_tile_factory(
+            tile_factory_pool = get_tile_factory_pool(
                 img_format,
                 compression,
                 viewpoint_item.local_object_path,
                 output_type=gdalconst.GDT_Byte,
                 range_adjustment=viewpoint_item.range_adjustment,
             )
-            crop_width = width if width is not None else max_x - min_x
-            crop_height = height if height is not None else max_y - min_y
+            with tile_factory_pool.checkout_in_context() as tile_factory:
+                crop_width = width if width is not None else max_x - min_x
+                crop_height = height if height is not None else max_y - min_y
 
-            crop_bytes = tile_factory.create_encoded_tile([min_x, min_y, crop_width, crop_height])
-            return StreamingResponse(io.BytesIO(crop_bytes), media_type=get_media_type(img_format), status_code=200)
+                crop_bytes = tile_factory.create_encoded_tile([min_x, min_y, crop_width, crop_height])
+                return StreamingResponse(io.BytesIO(crop_bytes), media_type=get_media_type(img_format), status_code=200)
 
         return api_router
 
-    async def validate_viewpoint_status(self, current_status: ViewpointStatus, api_operation: ViewpointApiNames) -> None:
+    def validate_viewpoint_status(self, current_status: ViewpointStatus, api_operation: ViewpointApiNames) -> None:
         """
         This is a helper function which is to validate if we can execute an operation based on the
         given status
