@@ -2,10 +2,15 @@ import asyncio
 import json
 import logging
 import os
+import time
 from pathlib import Path
 
 from boto3.resources.base import ServiceResource
 from botocore.exceptions import ClientError
+from osgeo import gdalconst
+
+from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustmentType
+from aws.osml.tile_server.utils import get_tile_factory_pool
 
 from .database import DecimalEncoder, ViewpointStatusTable
 from .models import ViewpointModel, ViewpointStatus
@@ -36,7 +41,7 @@ class ViewpointWorker:
         :return: None
         """
         while True:
-            self.logger.info("Scanning for SQS messages")
+            self.logger.debug("Scanning for SQS messages")
             try:
                 messages = self.viewpoint_request_queue.queue.receive_messages(WaitTimeSeconds=5)
 
@@ -56,7 +61,7 @@ class ViewpointWorker:
                         # create a temp file
                         local_viewpoint_folder = Path(FILESYSTEM_CACHE_ROOT, message_viewpoint_id)
                         local_viewpoint_folder.mkdir(parents=True, exist_ok=True)
-                        local_object_path = Path(local_viewpoint_folder, message_object_key)
+                        local_object_path = Path(local_viewpoint_folder, Path(message_object_key).name)
                         local_object_path_str = str(local_object_path.absolute())
 
                         # download file to temp local (TODO update when efs is implemented)
@@ -69,9 +74,7 @@ class ViewpointWorker:
                                 )
 
                                 viewpoint_new_status = ViewpointStatus.READY
-                                self.logger.info(
-                                    f"Successfully download to {local_object_path_str}. This Viewpoint is now READY!"
-                                )
+                                self.logger.info(f"Successfully download to {local_object_path_str}.")
 
                                 error_message = None
 
@@ -99,6 +102,44 @@ class ViewpointWorker:
                                 viewpoint_new_status = ViewpointStatus.FAILED
 
                             retry_count += 1
+
+                        try:
+                            self.logger.info(f"Verifying tile creation for {local_object_path_str}.")
+                            tile_format = GDALImageFormats.PNG
+                            compression = GDALCompressionOptions.NONE
+
+                            output_type = None
+                            if viewpoint_item.range_adjustment is not RangeAdjustmentType.NONE:
+                                output_type = gdalconst.GDT_Byte
+
+                            tile_factory_pool = get_tile_factory_pool(
+                                tile_format,
+                                compression,
+                                local_object_path_str,
+                                output_type,
+                                viewpoint_item.range_adjustment,
+                            )
+                            with tile_factory_pool.checkout_in_context() as tile_factory:
+                                start_time = time.perf_counter()
+                                tile_size = viewpoint_item.tile_size
+                                image_bytes = tile_factory.create_encoded_tile([0, 0, tile_size, tile_size])
+                                end_time = time.perf_counter()
+                                self.logger.info(
+                                    f"METRIC: Sample TileCreate Time: {end_time - start_time}"
+                                    f" for {local_object_path_str}"
+                                )
+
+                                if not image_bytes:
+                                    error_message = f"Unable to create valid tile for viewpoint: {message_viewpoint_id}"
+                                    self.logger.error(error_message)
+                                    viewpoint_new_status = ViewpointStatus.FAILED
+
+                        except Exception as err:
+                            error_message = (
+                                f"Unable to create sample tile for! Viewpoint_id: {message_viewpoint_id}! Error={err}"
+                            )
+                            self.logger.error(error_message)
+                            viewpoint_new_status = ViewpointStatus.FAILED
 
                         # update ddb
                         viewpoint_item.viewpoint_status = viewpoint_new_status

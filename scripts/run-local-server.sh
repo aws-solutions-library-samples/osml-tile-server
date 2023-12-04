@@ -21,13 +21,12 @@ fi
 DOCKER_OPTS=(
   --name "$CONTAINER_NAME"
   -p 80:80
-  -v "$(pwd)/local_viewpoint_cache:/tmp/viewpoint:rw"
+  -v "/tmp/local_viewpoint_cache:/tmp/viewpoint:rw"
   --env AWS_ACCESS_KEY_ID
   --env AWS_SECRET_ACCESS_KEY
   --env AWS_SESSION_TOKEN
   --restart "unless-stopped"
   --log-opt max-size=10m --log-opt max-file=3
-  --cpus="0.5" --memory="500m"
 )
 
 docker run "${DOCKER_OPTS[@]}" "${IMAGE_NAME}:${IMAGE_TAG}"
