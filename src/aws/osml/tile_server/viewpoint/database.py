@@ -89,7 +89,7 @@ class ViewpointStatusTable:
         except Exception as err:
             raise HTTPException(status_code=500, detail=f"Something went wrong with ViewpointStatusTable! Error: {err}")
 
-    async def get_viewpoint(self, viewpoint_id: str) -> ViewpointModel:
+    def get_viewpoint(self, viewpoint_id: str) -> ViewpointModel:
         """
         Get detail of a viewpoint based on a given viewpoint id
 
