@@ -66,6 +66,7 @@ class ViewpointModel(BaseModel):
     range_adjustment: RangeAdjustmentType
     local_object_path: str | None
     error_message: str | None
+    expire_time: int | None
 
 
 class ViewpointUpdate(BaseModel):
