@@ -37,6 +37,7 @@ app = FastAPI(
         This AWS Content is provided subject to the terms of the AWS Customer Agreement
         available at https://aws.amazon.com/agreement or other written agreement between
         Customer and either Amazon Web Services, Inc. or Amazon Web Services EMEA SARL or both.""",
+        "name": "TEST",
     },
 )
 
@@ -124,4 +125,4 @@ async def root() -> str:
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=4557, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=4557, reload=True, debug=True)
