@@ -1,4 +1,9 @@
-from functools import cache
+import logging
+import threading
+import time
+from contextlib import contextmanager
+from functools import lru_cache
+from threading import RLock
 from typing import Dict, Optional
 from uuid import uuid4
 
@@ -7,6 +12,8 @@ from osgeo.gdal import Dataset
 
 from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustmentType, load_gdal_dataset
 from aws.osml.image_processing import GDALTileFactory
+
+logger = logging.getLogger("uvicorn")
 
 
 def get_media_type(tile_format: GDALImageFormats) -> str:
@@ -27,31 +34,103 @@ def get_media_type(tile_format: GDALImageFormats) -> str:
     return supported_media_types.get(tile_format.lower(), default_media_type)
 
 
-@cache
-def get_tile_factory(
+class TileFactoryPool:
+    def __init__(
+        self,
+        tile_format: GDALImageFormats,
+        tile_compression: GDALCompressionOptions,
+        local_object_path: str,
+        output_type: Optional[int] = None,
+        range_adjustment: RangeAdjustmentType = RangeAdjustmentType.NONE,
+    ):
+        self.lock = RLock()
+        self.current_inventory = []
+        self.total_inventory = 0
+        self.tile_format = tile_format
+        self.tile_compression = tile_compression
+        self.local_object_path = local_object_path
+        self.output_type = output_type
+        self.range_adjustment = range_adjustment
+
+    def checkout(self) -> GDALTileFactory:
+        tf = None
+        with self.lock:
+            if self.current_inventory:
+                tf = self.current_inventory.pop(0)
+
+        if tf is None:
+            thread_id = threading.get_native_id()
+
+            start_time = time.perf_counter()
+            ds, sensor_model = load_gdal_dataset(self.local_object_path)
+            tf = GDALTileFactory(
+                ds, sensor_model, self.tile_format, self.tile_compression, self.output_type, self.range_adjustment
+            )
+            end_time = time.perf_counter()
+            logger.info(
+                f"New TileFactory for {self.local_object_path}"
+                f" created by thread {thread_id} in {end_time - start_time} seconds."
+            )
+
+            with self.lock:
+                self.total_inventory += 1
+                logger.info(f"Total TileFactory count for {self.local_object_path} is {self.total_inventory}")
+
+        return tf
+
+    def checkin(self, tf: GDALTileFactory) -> None:
+        with self.lock:
+            self.current_inventory.append(tf)
+
+    @contextmanager
+    def checkout_in_context(self):
+        tf = None
+        try:
+            tf = self.checkout()
+            yield tf
+        finally:
+            if tf:
+                self.checkin(tf)
+
+
+@lru_cache(maxsize=20)
+def get_tile_factory_pool(
     tile_format: GDALImageFormats,
     tile_compression: GDALCompressionOptions,
     local_object_path: str,
     output_type: Optional[int] = None,
     range_adjustment: RangeAdjustmentType = RangeAdjustmentType.NONE,
-) -> GDALTileFactory:
-    """
-    This function will create a sensor model from a given imagery
-
-    :param tile_format: current status of a viewpoint
-    :param tile_compression: the output tile compression
-    :param local_object_path: the path of an imagery
-    :param output_type: the GDAL pixel type in the output tile
-    :param range_adjustment: the type of scaling used to convert raw pixel values to the output range
-
-    :return: factory capable of producing tiles from a given GDAL raster dataset
-    """
-
-    ds, sensor_model = load_gdal_dataset(local_object_path)
-    return GDALTileFactory(ds, sensor_model, tile_format, tile_compression, output_type, range_adjustment)
+) -> TileFactoryPool:
+    return TileFactoryPool(tile_format, tile_compression, local_object_path, output_type, range_adjustment)
 
 
 def perform_gdal_translation(dataset: Dataset, gdal_options: Dict) -> Optional[bytearray]:
+    """
+    Performs GDAL (Geospatial Data Abstraction Library) translation and reads a VSIFile.
+
+    The GDAL translation is done on given dataset with gdal options. Then a VSIFile is read and returned from the
+    translated dataset.
+
+    Parameters
+    ----------
+    dataset : Dataset
+        The input dataset to be translated.
+    gdal_options : dict
+        The options for GDAL translation.
+
+    Returns
+    -------
+    vsibuf : bytearray, optional
+        The read VSIFile. If the VSIFile cannot be opened, returns None.
+
+    Raises
+    ------
+    GDALException
+        If the translation is not successful or VSIFile cannot be read.
+
+    Note ---- This function also takes care of cleaning up the temporary file memory in case of any exception by
+    using finally clause.
+    """
     tmp_name = f"/vsimem/{uuid4()}"
 
     gdal.Translate(tmp_name, dataset, **gdal_options)
@@ -64,7 +143,9 @@ def perform_gdal_translation(dataset: Dataset, gdal_options: Dict) -> Optional[b
             return None
         stat = gdal.VSIStatL(tmp_name, gdal.VSI_STAT_SIZE_FLAG)
         vsibuf = gdal.VSIFReadL(1, stat.size, vsifile_handle)
+
         return vsibuf
+
     finally:
         if vsifile_handle is not None:
             gdal.VSIFCloseL(vsifile_handle)

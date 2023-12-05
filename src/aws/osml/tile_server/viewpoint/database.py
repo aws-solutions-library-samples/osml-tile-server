@@ -14,17 +14,42 @@ from .models import ViewpointModel
 
 class DecimalEncoder(json.JSONEncoder):
     """
-    This is a workaround since DynamoDB returns some of the items as Decimal.
+    This is a helper class which extends json.JSONEncoder.
+    It's used to convert all Decimal instances to int
+    when we fetch data from DynamoDB (which can return some items as Decimal).
+
+    :param json.JSONEncoder: Inherited JSON Encoder class from json module
+    :type json.JSONEncoder: class:`json.JSONEncoder`
     """
 
     def default(self, obj):
+        """
+        Overriden default method from JSONEncoder class.
+        Converts all Decimal instances to int else returns default conversion.
+
+        :param obj: Object for JSON Encoding
+        :type obj: Object
+        :return: Integer representation of Decimal else default JSON Conversion
+        :rtype: `int` or as defined by `json.JSONEncoder`
+        """
         if isinstance(obj, Decimal):
             return int(obj)
-        return json.JSONEncoder.default(self, obj)
+        return super().default(obj)
 
 
 class ViewpointStatusTable:
+    """
+    A class used to represent the ViewpointStatusTable.
+
+    :param aws_ddb: An instance of a service resource of Boto3's DynamoDB
+    """
+
     def __init__(self, aws_ddb: ServiceResource) -> None:
+        """
+        Initialize the ViewpointStatusTable and validate the table status.
+
+        :raise Exception: If the table does not exist in the given region.
+        """
         self.ddb = aws_ddb
         self.table = self.ddb.Table(ServerConfig.viewpoint_status_table)
         self.logger = logging.getLogger("uvicorn")
@@ -64,7 +89,7 @@ class ViewpointStatusTable:
         except Exception as err:
             raise HTTPException(status_code=500, detail=f"Something went wrong with ViewpointStatusTable! Error: {err}")
 
-    async def get_viewpoint(self, viewpoint_id: str) -> ViewpointModel:
+    def get_viewpoint(self, viewpoint_id: str) -> ViewpointModel:
         """
         Get detail of a viewpoint based on a given viewpoint id
 
