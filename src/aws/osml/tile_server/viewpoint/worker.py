@@ -12,11 +12,11 @@ from osgeo import gdalconst
 from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustmentType
 from aws.osml.tile_server.utils import get_tile_factory_pool
 
+from aws.osml.tile_server.app_config import ServerConfig
+
 from .database import DecimalEncoder, ViewpointStatusTable
 from .models import ViewpointModel, ViewpointStatus
 from .queue import ViewpointRequestQueue
-
-FILESYSTEM_CACHE_ROOT = os.getenv("VIEWPOINT_FILESYSTEM_CACHE", "/tmp/viewpoint")
 
 
 class ViewpointWorker:
@@ -59,7 +59,7 @@ class ViewpointWorker:
 
                     if message_viewpoint_status == ViewpointStatus.REQUESTED:
                         # create a temp file
-                        local_viewpoint_folder = Path(FILESYSTEM_CACHE_ROOT, message_viewpoint_id)
+                        local_viewpoint_folder = Path("/" + ServerConfig.efs_mount_name, message_viewpoint_id)
                         local_viewpoint_folder.mkdir(parents=True, exist_ok=True)
                         local_object_path = Path(local_viewpoint_folder, Path(message_object_key).name)
                         local_object_path_str = str(local_object_path.absolute())
