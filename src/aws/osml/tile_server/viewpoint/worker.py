@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import time
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from boto3.resources.base import ServiceResource
@@ -143,6 +144,10 @@ class ViewpointWorker:
 
                         # update ddb
                         viewpoint_item.viewpoint_status = viewpoint_new_status
+                        if viewpoint_new_status is ViewpointStatus.FAILED:
+                            time_now = datetime.utcnow()
+                            expire_time = time_now + timedelta(1)
+                            viewpoint_item.expire_time = int(expire_time.timestamp())
                         viewpoint_item.local_object_path = local_object_path_str
 
                         if error_message:

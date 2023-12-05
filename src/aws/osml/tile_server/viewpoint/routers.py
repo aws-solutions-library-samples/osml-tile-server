@@ -1,6 +1,7 @@
 import io
 import logging
 import shutil
+from datetime import datetime, timedelta
 from pathlib import Path
 from secrets import token_hex
 from typing import Annotated, Any, Dict, List
@@ -72,6 +73,7 @@ class ViewpointRouter:
                 viewpoint_status=ViewpointStatus.REQUESTED,
                 local_object_path=None,
                 error_message=None,
+                expire_time=None,
             )
 
             # Place this request into SQS, then the worker will pick up in order to
@@ -98,6 +100,9 @@ class ViewpointRouter:
 
             viewpoint_item.viewpoint_status = ViewpointStatus.DELETED
             viewpoint_item.local_object_path = None
+            time_now = datetime.utcnow()
+            expire_time = time_now + timedelta(1)
+            viewpoint_item.expire_time = int(expire_time.timestamp())
 
             return self.viewpoint_database.update_viewpoint(viewpoint_item)
 
