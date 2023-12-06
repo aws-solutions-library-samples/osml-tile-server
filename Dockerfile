@@ -70,10 +70,13 @@ RUN conda clean -afy
 # Set up a health check at that port
 HEALTHCHECK NONE
 
+# Make sure we expose our ports
+EXPOSE 8080
+
 # Set up a user to run the container as and assume it
 RUN adduser tileserver
 RUN chown -R tileserver:tileserver osml-tile-server/
 USER tileserver
 
 # Set the entry point script
-ENTRYPOINT ["/entry.sh", "/bin/bash", "-c", "uvicorn --host 0.0.0.0 --port 80 aws.osml.tile_server.main:app"]
+ENTRYPOINT ["/entry.sh", "/bin/bash", "-c", "uvicorn --host 0.0.0.0 --port 8080 aws.osml.tile_server.main:app"]
