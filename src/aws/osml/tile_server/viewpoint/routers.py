@@ -54,13 +54,16 @@ class ViewpointRouter:
         )
 
         @api_router.get("/")
-        def list_viewpoints() -> List[Dict[str, Any]]:
+        def list_viewpoints(limit: int | None = None, next_token: str | None = None) -> Dict[str, Any]:
             """
             Get a list of viewpoints in the database
 
+            :param limit: Optional. max number of viewpoints requested
+            :param next_token: Optional. the token to begin a query from.  provided by the previous query response that
+                had more records available
             :return: a list of viewpoints with details
             """
-            return self.viewpoint_database.get_all_viewpoints()
+            return self.viewpoint_database.get_viewpoints(limit, next_token)
 
         @api_router.post("/", status_code=201)
         def create_viewpoint(viewpoint_request: ViewpointRequest) -> Dict[str, Any]:

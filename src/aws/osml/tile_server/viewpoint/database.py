@@ -61,21 +61,24 @@ class ViewpointStatusTable:
             )
             raise
 
-    def get_all_viewpoints(self) -> List[Dict[str, Any]]:
+    def get_viewpoints(self, limit: int = None, next_token: str = None) -> Dict[str, Any]:
         """
-        Get all the viewpoint items from the dynamodb table
+        Get viewpoint items from the dynamodb table.  If limit nor next_token are provided it returns all records.
 
-        :returns List[Dict[str, any]]: list of viewpoints
+        :param limit: Optional. max number of viewpoints requested from dynamodb
+        :param next_token: Optional. the token to begin a query from.  provided by the previous query response that
+                had more records available
+        :returns Dict[str, any]: {"Items": [list of viewpoints], <"nextToken">: string token to query for more results}
         """
+        query_params = {}
+        if limit:
+            query_params["Limit"] = limit
+        if next_token:
+            query_params["ExclusiveStartKey"] = {"string": next_token}
         try:
-            response = self.table.scan()
-            data = response["Items"]
-
-            while response.get("LastEvaluatedKey"):
-                response = self.table.scan(ExclusiveStartKey=response["LastEvaluatedKey"])
-                data.extend(response["Items"])
-
-            return data
+            if query_params:
+                return self.get_paged_viewpoints(query_params)
+            return self.get_all_viewpoints()
         except ClientError as err:
             raise HTTPException(
                 status_code=err.response["Error"]["Code"],
@@ -88,6 +91,31 @@ class ViewpointStatusTable:
             )
         except Exception as err:
             raise HTTPException(status_code=500, detail=f"Something went wrong with ViewpointStatusTable! Error: {err}")
+
+    def get_all_viewpoints(self) -> Dict[str, Any]:
+        """
+        Get all the viewpoint items from the dynamodb table
+
+        :returns Dict[str, any]: {"Items": [list of viewpoints]}
+        """
+        response = self.table.scan()
+        data = response["Items"]
+        while response.get("LastEvaluatedKey"):
+            response = self.table.scan(ExclusiveStartKey=response["LastEvaluatedKey"])
+            data.extend(response["Items"])
+        return {"Items": data}
+
+    def get_paged_viewpoints(self, query_params: Dict) -> Dict[str, Any]:
+        """
+        Get a page of viewpoint items from the dynamodb table
+
+        :returns Dict[str, any]: {"Items": [list of viewpoints], <"nextToken">: string token to query for more results}
+        """
+        response = self.table.scan(**query_params)
+        ret_val = {"Items": response["Items"]}
+        if response.get("LastEvaluatedKey"):
+            ret_val["nextToken"] = response["LastEvaluatedKey"]
+        return ret_val
 
     def get_viewpoint(self, viewpoint_id: str) -> ViewpointModel:
         """
