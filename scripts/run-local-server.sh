@@ -20,7 +20,7 @@ fi
 
 DOCKER_OPTS=(
   --name "$CONTAINER_NAME"
-  -p 80:80
+  -p 8080:8080
   -v "/tmp/local_viewpoint_cache:/tmp/viewpoint:rw"
   --env AWS_ACCESS_KEY_ID
   --env AWS_SECRET_ACCESS_KEY
