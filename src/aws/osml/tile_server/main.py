@@ -1,6 +1,6 @@
-import asyncio
 import logging
 import sys
+from contextlib import asynccontextmanager
 from typing import Any, Tuple
 
 import uvicorn
@@ -20,26 +20,6 @@ gdal.UseExceptions()
 
 # Configure logger
 logger = logging.getLogger("uvicorn")
-
-# Initialize FastAPI app
-app = FastAPI(
-    title="OSML Tile Server",
-    description="A minimalistic tile server for imagery hosted in the cloud",
-    version="0.1.0",
-    terms_of_service="https://example.com/terms/",
-    contact={
-        "name": "Amazon Web Services",
-        "email": "aws-osml-admin@amazon.com",
-        "url": "https://github.com/aws-solutions-library-samples/osml-tile-server/issues",
-    },
-    license_info={
-        "license": """© 2023 Amazon Web Services, Inc. or its affiliates. All Rights Reserved.
-        This AWS Content is provided subject to the terms of the AWS Customer Agreement
-        available at https://aws.amazon.com/agreement or other written agreement between
-        Customer and either Amazon Web Services, Inc. or Amazon Web Services EMEA SARL or both.""",
-        "name": "TEST",
-    },
-)
 
 
 def initialize_services() -> Tuple[Any, Any, Any]:
@@ -86,22 +66,43 @@ def initialize_viewpoint_components() -> Tuple[Any, Any, Any]:
     return database, request_queue, router
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Start the Viewpoint Worker as part of the FastAPI lifespan.
+    See: https://fastapi.tiangolo.com/advanced/events/
+    """
+    viewpoint_worker = ViewpointWorker(viewpoint_request_queue, aws_s3, viewpoint_database)
+    viewpoint_worker.start()
+    yield
+    viewpoint_worker.join(timeout=20)
+
+
+# Initialize FastAPI app
+app = FastAPI(
+    title="OSML Tile Server",
+    description="A minimalistic tile server for imagery hosted in the cloud",
+    version="0.1.0",
+    terms_of_service="https://example.com/terms/",
+    contact={
+        "name": "Amazon Web Services",
+        "email": "aws-osml-admin@amazon.com",
+        "url": "https://github.com/aws-solutions-library-samples/osml-tile-server/issues",
+    },
+    license_info={
+        "license": """© 2023 Amazon Web Services, Inc. or its affiliates. All Rights Reserved.
+        This AWS Content is provided subject to the terms of the AWS Customer Agreement
+        available at https://aws.amazon.com/agreement or other written agreement between
+        Customer and either Amazon Web Services, Inc. or Amazon Web Services EMEA SARL or both.""",
+        "name": "TEST",
+    },
+    lifespan=lifespan,
+)
+
 viewpoint_database, viewpoint_request_queue, viewpoint_router = initialize_viewpoint_components()
 
 # Include the viewpoint router in the FastAPI app
 app.include_router(viewpoint_router.router)
-
-
-@app.on_event("startup")
-async def run_viewpoint_worker() -> None:
-    """
-    Start the Viewpoint Worker on application startup.
-
-    This asynchronous function is executed when the FastAPI application starts.
-    It creates and runs the ViewpointWorker to process viewpoint requests.
-    """
-    viewpoint_worker = ViewpointWorker(viewpoint_request_queue, aws_s3, viewpoint_database)
-    asyncio.create_task(viewpoint_worker.run())
 
 
 @app.get("/")
