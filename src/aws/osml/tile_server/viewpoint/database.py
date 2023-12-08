@@ -74,7 +74,7 @@ class ViewpointStatusTable:
         if limit:
             query_params["Limit"] = limit
         if next_token:
-            query_params["ExclusiveStartKey"] = {"string": next_token}
+            query_params["ExclusiveStartKey"] = {"viewpoint_id": next_token}
         try:
             if query_params:
                 return self.get_paged_viewpoints(query_params)
@@ -114,7 +114,7 @@ class ViewpointStatusTable:
         response = self.table.scan(**query_params)
         ret_val = {"Items": response["Items"]}
         if response.get("LastEvaluatedKey"):
-            ret_val["nextToken"] = response["LastEvaluatedKey"]
+            ret_val["nextToken"] = response["LastEvaluatedKey"]["viewpoint_id"]
         return ret_val
 
     def get_viewpoint(self, viewpoint_id: str) -> ViewpointModel:

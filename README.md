@@ -61,7 +61,7 @@ curl -X 'POST' \
 Additionally, you can head over to FastAPI homepage and be able to execute various of API calls by visiting
 
 ```
-http://0.0.0.0:80/docs or http://0.0.0.0:80/redoc
+http://0.0.0.0:8080/docs or http://0.0.0.0:8080/redoc
 ```
 
 ### Development Environment
