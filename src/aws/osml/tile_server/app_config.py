@@ -21,7 +21,7 @@ class ServerConfig:
     aws_region: str = os.getenv("AWS_DEFAULT_REGION", "us-west-2")
     viewpoint_status_table: str = os.getenv("JOB_TABLE", "TSJobTable")
     viewpoint_request_queue: str = os.getenv("JOB_QUEUE", "TSJobQueue")
-    efs_mount_name: str = os.getenv("EFS_MOUNT_NAME", "tmp/viewpoint")
+    efs_mount_name: str = os.getenv("EFS_MOUNT_NAME", "ts-efs-volume")
 
 
 @dataclass
