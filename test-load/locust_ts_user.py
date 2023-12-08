@@ -64,6 +64,9 @@ class TileServerUser(FastHttpUser):
             PaginationConfig={"MaxItems": 200, "PageSize": 20},
         )
         for response in response_iterator:
+            if "Contents" not in response:
+                print(response)
+
             for item in response["Contents"]:
                 object_key = item["Key"]
                 object_suffix = Path(object_key).suffix.lower()
@@ -134,7 +137,7 @@ class TileServerUser(FastHttpUser):
 
     def wait_for_viewpoint_ready(self, viewpoint_id: str) -> str:
         done = False
-        num_retries = 30
+        num_retries = 120
         final_status = "NOT_FOUND"
         while not done and num_retries > 0:
             with self.rest("GET", f"/viewpoints/{viewpoint_id}", name="DescribeViewpoint") as response:
@@ -143,7 +146,11 @@ class TileServerUser(FastHttpUser):
                     if response.js[VIEWPOINT_STATUS] in ["READY", "FAILED", "DELETED"]:
                         done = True
                     else:
-                        time.sleep(2)
+                        time.sleep(5)
+                        num_retries -= 1
+        if not done:
+            response.failure(f"Gave up waiting for {viewpoint_id} to become ready. Final Status was {final_status}")
+
         return final_status
 
     def request_tiles(self, viewpoint_id: str, num_tiles: int = 100, batch_size: int = 5):
