@@ -25,6 +25,9 @@ DOCKER_OPTS=(
   --env AWS_ACCESS_KEY_ID
   --env AWS_SECRET_ACCESS_KEY
   --env AWS_SESSION_TOKEN
+  --env GDAL_CACHEMAX=2048
+  --env GDAL_NUM_THREADS=ALL_CPUS
+  --env WEB_CONCURRENCY=1
   --cap-add SYS_PTRACE \
   --restart "unless-stopped"
   --log-opt max-size=10m --log-opt max-file=3
