@@ -2,6 +2,7 @@ import json
 import logging
 import threading
 import time
+import traceback
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -88,11 +89,11 @@ class ViewpointWorker(threading.Thread):
                     message.delete()
 
             except ClientError as err:
-                self.logger.warning(f"[Worker Background Thread] {err}")
+                self.logger.error(f"[Worker Background Thread] {err} / {traceback.format_exc()}")
             except KeyError as err:
-                self.logger.warning(f"[Worker Background Thread] {err}")
+                self.logger.error(f"[Worker Background Thread] {err} / {traceback.format_exc()}")
             except Exception as err:
-                self.logger.warning(f"[Worker Background Thread] {err}")
+                self.logger.error(f"[Worker Background Thread] {err} / {traceback.format_exc()}")
 
     def download_image(self, viewpoint_item):
         message_viewpoint_id = viewpoint_item.viewpoint_id
