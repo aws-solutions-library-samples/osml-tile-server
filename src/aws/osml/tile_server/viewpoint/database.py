@@ -1,8 +1,9 @@
 import json
 import logging
 from decimal import Decimal
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Tuple
 
+from boto3.dynamodb.conditions import Attr
 from boto3.resources.base import ServiceResource
 from botocore.exceptions import ClientError
 from fastapi import HTTPException
@@ -70,7 +71,7 @@ class ViewpointStatusTable:
                 had more records available
         :returns Dict[str, any]: {"Items": [list of viewpoints], <"nextToken">: string token to query for more results}
         """
-        query_params = {}
+        query_params = {"FilterExpression": Attr("viewpoint_status").ne("DELETED")}
         if limit:
             query_params["Limit"] = limit
         if next_token:

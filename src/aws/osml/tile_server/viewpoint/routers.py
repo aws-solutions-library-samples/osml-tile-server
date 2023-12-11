@@ -1,10 +1,12 @@
+#  Copyright 2023 Amazon.com, Inc. or its affiliates.
+
 import io
 import logging
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
 from secrets import token_hex
-from typing import Annotated, Any, Dict, List
+from typing import Annotated, Any, Dict
 
 from boto3.resources.base import ServiceResource
 from fastapi import APIRouter, HTTPException, Query, Response

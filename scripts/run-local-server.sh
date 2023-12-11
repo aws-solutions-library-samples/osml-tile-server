@@ -33,4 +33,4 @@ DOCKER_OPTS=(
   --log-opt max-size=10m --log-opt max-file=3
 )
 
-docker run "${DOCKER_OPTS[@]}" "${IMAGE_NAME}:${IMAGE_TAG}"
+docker run "${DOCKER_OPTS[@]}" "${IMAGE_NAME}:${IMAGE_TAG}" --rm
