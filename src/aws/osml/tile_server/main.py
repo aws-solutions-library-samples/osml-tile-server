@@ -1,12 +1,13 @@
 import logging
 import sys
-from contextlib import asynccontextmanager
+from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from typing import Any, Tuple
 
 import uvicorn
 from botocore.exceptions import ClientError
-from fastapi import FastAPI
+from fastapi import FastAPI, status
 from osgeo import gdal
+from pydantic import BaseModel
 
 from .app_config import ServerConfig
 from .utils.aws_services import initialize_ddb, initialize_s3, initialize_sqs
@@ -67,10 +68,21 @@ def initialize_viewpoint_components() -> Tuple[Any, Any, Any]:
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AbstractAsyncContextManager[None] | FastAPI:
     """
     Start the Viewpoint Worker as part of the FastAPI lifespan.
-    See: https://fastapi.tiangolo.com/advanced/events/
+
+    :param app: Instance of FastAPI class
+    :type app: FastAPI
+
+    This function starts the Viewpoint Worker as part of the FastAPI lifespan,
+    and stops it after yield. For more information refer to FastAPI events
+    documentation at : https://fastapi.tiangolo.com/advanced/events/
+
+    Note:
+        aws_s3, viewpoint_database and viewpoint_request_queue should be predefined
+        before this function's call. They represent your AWS S3 bucket instance,
+        your database instance and a queue of requests respectively.
     """
     viewpoint_worker = ViewpointWorker(viewpoint_request_queue, aws_s3, viewpoint_database)
     viewpoint_worker.start()
@@ -105,6 +117,17 @@ viewpoint_database, viewpoint_request_queue, viewpoint_router = initialize_viewp
 app.include_router(viewpoint_router.router)
 
 
+class HealthCheck(BaseModel):
+    """
+    A Pydantic model for a health check response.
+
+    Attributes:
+        status (str): Status of the health check. Defaults is "OK".
+    """
+
+    status: str = "OK"
+
+
 @app.get("/")
 async def root() -> str:
     """
@@ -125,5 +148,26 @@ async def root() -> str:
     return homepage_description
 
 
+@app.get(
+    "/ping",
+    tags=["healthcheck"],
+    summary="Perform a Health Check",
+    response_description="Return HTTP Status Code 200 (OK)",
+    status_code=status.HTTP_200_OK,
+    response_model=HealthCheck,
+)
+async def healthcheck() -> HealthCheck:
+    """
+    Endpoint to perform a healthcheck on. This endpoint can primarily be used by Docker
+    to ensure robust container orchestration and management is in place. Other
+    services which rely on proper functioning of the API service will not deploy if this
+    endpoint returns any other HTTP status code except 200 (OK).
+
+    Returns:
+        HealthCheck: Returns a JSON response with the health status
+    """
+    return HealthCheck(status="OK")
+
+
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=4557, reload=True, debug=True)
+    uvicorn.run(app, host="0.0.0.0", port=4557, reload=True)
