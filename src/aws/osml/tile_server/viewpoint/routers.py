@@ -25,6 +25,15 @@ class ViewpointRouter:
     def __init__(
         self, viewpoint_database: ViewpointStatusTable, viewpoint_queue: ViewpointRequestQueue, aws_s3: ServiceResource
     ) -> None:
+        """
+        The `ViewpointRouter` class is responsible for handling API endpoints related to viewpoints.
+
+        :param viewpoint_database: Instance of the ViewpointStatusTable class representing the viewpoint database.
+        :param viewpoint_queue: Instance of the ViewpointRequestQueue class representing the viewpoint request queue.
+        :param aws_s3: Instance of the ServiceResource class representing the AWS S3 service.
+
+        :return: None
+        """
         self.viewpoint_database = viewpoint_database
         self.viewpoint_queue = viewpoint_queue
         self.s3 = aws_s3
@@ -32,6 +41,11 @@ class ViewpointRouter:
 
     @property
     def router(self):
+        """
+        Initializes a new instance of the ViewpointRouter class.
+
+        :return: None
+        """
         api_router = APIRouter(
             prefix="/viewpoints",
             tags=["viewpoints"],

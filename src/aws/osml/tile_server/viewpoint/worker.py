@@ -29,17 +29,33 @@ class ViewpointWorker(threading.Thread):
         aws_s3: ServiceResource,
         viewpoint_database: ViewpointStatusTable,
     ):
+        """
+        The `__init__` method of the `ViewpointWorker` class initializes a new instance of the `ViewpointWorker`.
+
+        :param viewpoint_request_queue: `ViewpointRequestQueue` class representing the queue for viewpoint requests.
+        :param aws_s3: An instance of the `ServiceResource` class representing the AWS S3 service.
+        :param viewpoint_database: `ViewpointStatusTable` class representing the database for viewpoint status.
+
+        :return: None
+        """
         super().__init__()
         self.daemon = True
         self.viewpoint_request_queue = viewpoint_request_queue
         self.s3 = aws_s3
         self.viewpoint_database = viewpoint_database
         self.logger = logging.getLogger("uvicorn")
-        self.stopevent = threading.Event()
+        self.stop_event = threading.Event()
 
     def join(self, timeout: float | None = ...) -> None:
+        """
+        Join the ViewpointWorker thread.
+
+        :param timeout: The maximum number of seconds to wait for the thread to finish execution. If `None`, the method
+            will block until the thread is finished. (default is `None`)
+        :return: None
+        """
         self.logger.info("ViewpointWorker Background Thread Stopping.")
-        self.stopevent.set()
+        self.stop_event.set()
         threading.Thread.join(self, timeout)
 
     def run(self) -> None:
@@ -52,7 +68,7 @@ class ViewpointWorker(threading.Thread):
         :return: None
         """
         self.logger.info("ViewpointWorker Background Thread Started.")
-        while not self.stopevent.is_set():
+        while not self.stop_event.is_set():
             self.logger.debug("Scanning for SQS messages")
             try:
                 messages = self.viewpoint_request_queue.queue.receive_messages(WaitTimeSeconds=5)
@@ -75,7 +91,7 @@ class ViewpointWorker(threading.Thread):
                     if viewpoint_item.viewpoint_status != ViewpointStatus.FAILED:
                         self.create_tile_pyramid(viewpoint_item)
 
-                    # update ddb
+                    # Update ddb table to reflect status change
                     if viewpoint_item.viewpoint_status == ViewpointStatus.FAILED:
                         time_now = datetime.utcnow()
                         expire_time = time_now + timedelta(1)
@@ -85,7 +101,7 @@ class ViewpointWorker(threading.Thread):
 
                     self.viewpoint_database.update_viewpoint(viewpoint_item)
 
-                    # remove message from the queue since it has been processed
+                    # Remove message from the queue since it has been processed
                     message.delete()
 
             except ClientError as err:
@@ -95,12 +111,23 @@ class ViewpointWorker(threading.Thread):
             except Exception as err:
                 self.logger.error(f"[Worker Background Thread] {err} / {traceback.format_exc()}")
 
-    def download_image(self, viewpoint_item):
+    def download_image(self, viewpoint_item: ViewpointModel):
+        """
+        This method downloads an image file from an S3 bucket using the bucket_name and object_key attributes of a
+        ViewpointModel instance. The downloaded image is saved under specific server configuration, and its path is
+        stored. The method also attempts to download optional files, logging their unavailability. Note: The method
+        assumes the existence of the following constants: OVERVIEW_FILE_EXTENSION and AUXXML_FILE_EXTENSION,
+        which represent the file extensions for the optional overview and aux files respectively.
+
+        :param viewpoint_item: Instance of ViewpointModel representing the viewpoint item to be downloaded.
+        :return: None
+
+        """
         message_viewpoint_id = viewpoint_item.viewpoint_id
         message_object_key = viewpoint_item.object_key
         message_bucket_name = viewpoint_item.bucket_name
 
-        # create a temp file
+        # Create a temp file
         self.logger.info(f"Creating local directory for {message_viewpoint_id} in /{ServerConfig.efs_mount_name}")
         local_viewpoint_folder = Path("/" + ServerConfig.efs_mount_name, message_viewpoint_id)
         local_viewpoint_folder.mkdir(parents=True, exist_ok=True)
@@ -108,7 +135,7 @@ class ViewpointWorker(threading.Thread):
         local_object_path_str = str(local_object_path.absolute())
         viewpoint_item.local_object_path = local_object_path_str
 
-        # download file to temp local (TODO update when efs is implemented)
+        # Download file to temp local (TODO update when efs is implemented)
         retry_count = 0
         while retry_count < 3:
             try:
@@ -162,7 +189,14 @@ class ViewpointWorker(threading.Thread):
             except ClientError:
                 self.logger.info(f"No aux file available for {message_viewpoint_id}")
 
-    def create_tile_pyramid(self, viewpoint_item):
+    def create_tile_pyramid(self, viewpoint_item: ViewpointModel):
+        """
+        Main tile pyramid creation function. It creates a tile pyramid for a specific viewpoint item
+        by considering its range adjustment and local object path.
+
+        :param: The viewpoint item object for which to create the tile pyramid.
+        :return: None
+        """
         try:
             tile_format = GDALImageFormats.PNG
             compression = GDALCompressionOptions.NONE
@@ -182,16 +216,14 @@ class ViewpointWorker(threading.Thread):
             aux_file_path = Path(viewpoint_item.local_object_path + AUXXML_FILE_EXTENSION)
             overview_file_path = Path(viewpoint_item.local_object_path + OVERVIEW_FILE_EXTENSION)
 
-            # This code forces GDAL to and compute the statistics / histograms for each band.
-            #
-            # This can be a time-consuming operation, so we want to only do this once. GDAL will write those
-            # statistics into a .aux.xml file associated with the dataset but it only appears to do so when the
-            # dataset object is cleaned up. So this code creates a temporary dataset, forces it to generate the
-            # statistics using the gdal.Info() command and then closes the dataset to ensure that the auxiliary
-            # file is created. This is somewhat of a hack but all future calls to gdal.Open (i.e. in the tile
-            # factory pool) should be able to read the .aux.xml file and skip the expensive work of generating
-            # the statistics.
-            if not self.stopevent.is_set() and not aux_file_path.is_file():
+            """NOTE: This code forces GDAL to and compute the statistics / histograms for each band. This can be a
+            time-consuming operation, so we want to only do this once. GDAL will write those statistics into a
+            .aux.xml file associated with the dataset, but it only appears to do so when the dataset object is
+            cleaned up. So this code creates a temporary dataset, forces it to generate the statistics using the
+            gdal.Info() command and then closes the dataset to ensure that the auxiliary file is created. This is
+            somewhat of a hack but all future calls to gdal.Open (i.e. in the tile factory pool) should be able to
+            read the .aux.xml file and skip the expensive work of generating the statistics."""
+            if not self.stop_event.is_set() and not aux_file_path.is_file():
                 self.logger.info(f"Calculating Image Statistics for {viewpoint_item.local_object_path}")
                 start_time = time.perf_counter()
                 temp_ds = gdal.Open(viewpoint_item.local_object_path)
@@ -209,7 +241,7 @@ class ViewpointWorker(threading.Thread):
                     f"METRIC: TileFactory Create Time: {end_time - start_time}" f" for {viewpoint_item.local_object_path}"
                 )
 
-                if not self.stopevent.is_set() and not overview_file_path.is_file():
+                if not self.stop_event.is_set() and not overview_file_path.is_file():
                     self.logger.info(f"Creating Image Pyramid for {viewpoint_item.local_object_path}")
                     start_time = time.perf_counter()
                     ds = tile_factory.raster_dataset
