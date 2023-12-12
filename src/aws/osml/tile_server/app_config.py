@@ -7,17 +7,20 @@ from botocore.config import Config
 @dataclass
 class ServerConfig:
     """
-    ServerConfig is a dataclass meant to house the high-level configuration settings required for OSML Tile Server to
-    operate that are provided through ENV variables. Note that required env parameters are enforced by the implied
-    schema validation as os.environ[] is used to fetch the values. Optional parameters are fetched using, os.getenv(),
+    ServerConfig class to house the high-level configuration settings.
+
+    The ServerConfig is a dataclass meant to house the high-level configuration settings
+    required for OSML Tile Server to operate that are provided through ENV variables. Note
+    that required env parameters are enforced by the implied schema validation as os.environ[]
+    is used to fetch the values. Optional parameters are fetched using, os.getenv(),
     which returns None.
 
-    The data schema is defined as follows:
-    region:  (str) The AWS region where the Tile Server is deployed.
-    viewpoint_table: (str) The name of the viewpoint status DDB table
+    :param aws_region: The AWS region, defaults to 'us-west-2'
+    :param viewpoint_status_table: The name of the viewpoint status DDB table, defaults to 'TSJobTable'
+    :param viewpoint_request_queue: The name of the viewpoint request queue, defaults to 'TSJobQueue'
+    :param efs_mount_name: The name of the EFS mount, defaults to 'ts-efs-volume'
     """
 
-    # optional env configuration with defaults
     aws_region: str = os.getenv("AWS_DEFAULT_REGION", "us-west-2")
     viewpoint_status_table: str = os.getenv("JOB_TABLE", "TSJobTable")
     viewpoint_request_queue: str = os.getenv("JOB_QUEUE", "TSJobQueue")
@@ -30,7 +33,7 @@ class BotoConfig:
     BotoConfig is a dataclass meant to vend our application the set of boto client configurations required for OSML
 
     The data schema is defined as follows:
-    default:  (Config) the standard boto client configuration
+    :param default:  Standard boto client configuration
     """
 
     # required env configuration
