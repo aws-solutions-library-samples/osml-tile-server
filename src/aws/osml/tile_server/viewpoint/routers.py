@@ -22,6 +22,10 @@ from .queue import ViewpointRequestQueue
 
 
 class ViewpointRouter:
+    """
+    A class used to represent the ViewpointRouter.
+    """
+
     def __init__(
         self, viewpoint_database: ViewpointStatusTable, viewpoint_queue: ViewpointRequestQueue, aws_s3: ServiceResource
     ) -> None:

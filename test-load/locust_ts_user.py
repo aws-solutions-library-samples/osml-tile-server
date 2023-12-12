@@ -19,6 +19,12 @@ VIEWPOINT_ID = "viewpoint_id"
 
 @events.init_command_line_parser.add_listener
 def _(parser):
+    """
+    This method does XYZ.
+
+    :param parser: The parser object used for parsing.
+    :return: The result of the method.
+    """
     parser.add_argument(
         "--test-images-bucket",
         type=str,
@@ -37,11 +43,46 @@ def _(parser):
 
 @events.test_start.add_listener
 def _(environment, **kwargs):
+    """
+    This method prints the test images bucket and object prefix from the given environment.
+
+    :param environment: The environment object containing parsed options.
+    :param kwargs: Additional keyword arguments (unused).
+    :return: None
+    """
     print(f"Using imagery from: {environment.parsed_options.test_images_bucket}")
     print(f"With object Prefix: {environment.parsed_options.test_images_prefix}")
 
 
 class TileServerUser(FastHttpUser):
+    """
+    :class:`TileServerUser` is a class representing a user that interacts with a tile server. It inherits from
+    `FastHttpUser` class provided by the `locust` library. The class provides methods for simulating user behavior on
+    the tile server, such as creating, retrieving, and discarding viewpoints, as well as querying metadata, bounds,
+    info, and statistics of existing viewpoints.
+
+    Examples:
+        Creating an instance of :class:`TileServerUser` and running a load test with Locust:
+
+        .. code-block:: python
+
+            from locust import User, TaskSet, constant, HttpUser, between
+            from tile.server.user import TileServerUser
+
+            class MyUser(HttpUser):
+                tasks = [TileServerUser]
+                wait_time = between(1, 2)
+
+    To run the locust file:
+    $res locust -f filename.py with python 3.8.5 and above; for old versions of python we may use locustio instead of locust
+    :class:`TileServerUser` provides the following instance variables:
+        - `test_images_bucket`: The S3 bucket name for test images.
+        - `test_images_prefix`: The prefix for filtering test images within the S3 bucket.
+        - `test_image_keys`: The list of test image keys in the S3 bucket.
+        - `wait_time`: The time interval (in seconds) between each task execution.
+
+    """
+
     # Establishes a 1-2 second wait between tasks
     wait_time = between(1, 2)
 
@@ -51,7 +92,7 @@ class TileServerUser(FastHttpUser):
         self.test_images_prefix = self.environment.parsed_options.test_images_prefix or None
         self.test_image_keys = []
 
-    def on_start(self):
+    def on_start(self) -> None:
         """
         Locust invokes this method when the user is created. It identifies the set of test imagery object keys
         from the S3 bucket provided.
@@ -116,6 +157,13 @@ class TileServerUser(FastHttpUser):
         pool.join()
 
     def create_viewpoint(self, test_images_bucket: str, test_image_key: str) -> Optional[str]:
+        """
+        Creates a viewpoint with specified parameters.
+
+        :param test_images_bucket: bucket containing test images
+        :param test_image_key: key of the test image
+        :return: ID of the created viewpoint or None
+        """
         with self.rest(
             "POST",
             "/viewpoints",
@@ -136,6 +184,12 @@ class TileServerUser(FastHttpUser):
         return None
 
     def wait_for_viewpoint_ready(self, viewpoint_id: str) -> str:
+        """
+        Waits for the viewpoint with specified ID to become ready.
+
+        :param viewpoint_id: ID of the viewpoint to wait for
+        :return: final status of the viewpoint
+        """
         done = False
         num_retries = 120
         final_status = "NOT_FOUND"
@@ -153,7 +207,15 @@ class TileServerUser(FastHttpUser):
 
         return final_status
 
-    def request_tiles(self, viewpoint_id: str, num_tiles: int = 100, batch_size: int = 5):
+    def request_tiles(self, viewpoint_id: str, num_tiles: int = 100, batch_size: int = 5) -> None:
+        """
+        Requests tiles for the viewpoint with specified ID.
+
+        :param viewpoint_id: ID of the viewpoint to request tiles for
+        :param num_tiles: number of tiles to request
+        :param batch_size: number of tiles to request in parallel
+        :return: None
+        """
         z = 0
         tile_format = "PNG"
         compression = "NONE"
@@ -175,7 +237,12 @@ class TileServerUser(FastHttpUser):
                 pool.spawn(concurrent_tile_request, tile)
             pool.join()
 
-    def cleanup_viewpoint(self, viewpoint_id: str):
+    def cleanup_viewpoint(self, viewpoint_id: str) -> None:
+        """
+        Deletes the viewpoint with specified ID.
+
+        :param viewpoint_id: ID of the viewpoint to delete
+        """
         with self.rest("DELETE", f"/viewpoints/{viewpoint_id}", name="DeleteViewpoint") as response:
             if response.js is not None:
                 if VIEWPOINT_STATUS not in response.js:
@@ -184,6 +251,11 @@ class TileServerUser(FastHttpUser):
                     response.failure(f"Unexpected status after viewpoint delete {response.text}")
 
     def list_ready_viewpoints(self) -> List[str]:
+        """
+        Lists all ready viewpoints.
+
+        :return: list of viewpoint IDs
+        """
         result = []
         with self.rest("GET", "/viewpoints", name="ListViewpoints") as response:
             if response.js is not None:
@@ -197,26 +269,51 @@ class TileServerUser(FastHttpUser):
         return result
 
     def get_viewpoint_metadata(self, viewpoint_id: str):
+        """
+        Fetches metadata for the viewpoint with specified ID.
+
+        :param viewpoint_id: ID of the viewpoint to fetch metadata for
+        """
         with self.rest("GET", f"/viewpoints/{viewpoint_id}/metadata", name="GetMetadata") as response:
             if response.js is not None and "metadata" not in response.js:
                 response.failure(f"'metadata' missing from response {response.text}")
 
     def get_viewpoint_bounds(self, viewpoint_id: str):
+        """
+        Fetches bounds for the viewpoint with specified ID.
+
+        :param viewpoint_id: ID of the viewpoint to fetch bounds for
+        """
         with self.rest("GET", f"/viewpoints/{viewpoint_id}/bounds", name="GetBounds") as response:
             if response.js is not None and "bounds" not in response.js:
                 response.failure(f"'bounds' missing from response {response.text}")
 
     def get_viewpoint_info(self, viewpoint_id: str):
+        """
+        Fetches info for the viewpoint with specified ID.
+
+        :param viewpoint_id: ID of the viewpoint to fetch info for
+        """
         with self.rest("GET", f"/viewpoints/{viewpoint_id}/info", name="GetInfo") as response:
             if response.js is not None and "features" not in response.js:
                 response.failure(f"'features' missing from response {response.text}")
 
     def get_viewpoint_statistics(self, viewpoint_id: str):
+        """
+        Fetches statistics for the viewpoint with specified ID.
+
+        :param viewpoint_id: ID of the viewpoint to fetch statistics for
+        """
         with self.rest("GET", f"/viewpoints/{viewpoint_id}/statistics", name="GetStatistics") as response:
             if response.js is not None and "image_statistics" not in response.js:
                 response.failure(f"'image_statistics' missing from response {response.text}")
 
     def get_viewpoint_preview(self, viewpoint_id: str):
+        """
+        Fetches preview for the viewpoint with specified ID.
+
+        :param viewpoint_id: ID of the viewpoint to fetch preview for
+        """
         tile_format = "PNG"
         with self.client.get(f"/viewpoints/{viewpoint_id}/preview.{tile_format}", name="GetPreview") as response:
             if not response.content:
