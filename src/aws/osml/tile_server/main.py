@@ -1,9 +1,10 @@
 import logging
 import sys
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
-from typing import Any, Tuple
+from typing import Tuple
 
 import uvicorn
+from boto3.resources.base import ServiceResource
 from botocore.exceptions import ClientError
 from fastapi import FastAPI, status
 from osgeo import gdal
@@ -23,14 +24,16 @@ gdal.UseExceptions()
 logger = logging.getLogger("uvicorn")
 
 
-def initialize_services() -> Tuple[Any, Any, Any]:
+def initialize_services() -> Tuple[ServiceResource, ServiceResource, ServiceResource]:
     """
     Initialize AWS services required by the application.
 
     This function initializes DynamoDB, S3, and SQS services,
     handling any exceptions that occur during the process.
 
-    :raises SystemExit: If any service fails to initialize.
+    :return: Tuple containing the initialized service resources for ddb, s3, and sqs clients.
+
+    :raises: SystemExit if any service fails to initialize.
     """
     try:
         ddb = initialize_ddb()
@@ -46,7 +49,7 @@ def initialize_services() -> Tuple[Any, Any, Any]:
 aws_ddb, aws_s3, aws_sqs = initialize_services()
 
 
-def initialize_viewpoint_components() -> Tuple[Any, Any, Any]:
+def initialize_viewpoint_components() -> Tuple[ViewpointStatusTable, ViewpointRequestQueue, ViewpointRouter]:
     """
     Initialize viewpoint-related components.
 
@@ -54,7 +57,8 @@ def initialize_viewpoint_components() -> Tuple[Any, Any, Any]:
     ViewpointRequestQueue, and ViewpointRouter using initialized AWS services.
 
     :return: Tuple containing initialized viewpoint components.
-    :rtype: Tuple
+
+    :raises: ClientError if the database client failed to initialize
     """
     try:
         database = ViewpointStatusTable(aws_ddb)
@@ -68,12 +72,11 @@ def initialize_viewpoint_components() -> Tuple[Any, Any, Any]:
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AbstractAsyncContextManager[None] | FastAPI:
+async def lifespan() -> AbstractAsyncContextManager[None] | FastAPI:
     """
     Start the Viewpoint Worker as part of the FastAPI lifespan.
 
-    :param app: Instance of FastAPI class
-    :type app: FastAPI
+    :return: The lifespan construct associated with the fast API
 
     This function starts the Viewpoint Worker as part of the FastAPI lifespan,
     and stops it after yield. For more information refer to FastAPI events
@@ -137,7 +140,6 @@ async def root() -> str:
     contact and license details.
 
     :return: Welcome message with application information.
-    :rtype: str
     """
     homepage_description = f"""Hello! Welcome to {app.title} - {app.version}! {app.description}.
 
@@ -163,8 +165,7 @@ async def healthcheck() -> HealthCheck:
     services which rely on proper functioning of the API service will not deploy if this
     endpoint returns any other HTTP status code except 200 (OK).
 
-    Returns:
-        HealthCheck: Returns a JSON response with the health status
+    :return: JSON response with the health status, 200
     """
     return HealthCheck(status="OK")
 
