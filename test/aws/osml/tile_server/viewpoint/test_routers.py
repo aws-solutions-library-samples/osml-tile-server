@@ -79,7 +79,7 @@ class TestRouters(unittest.TestCase):
 
     @mock.patch("aws.osml.tile_server.viewpoint.worker", autospec=True)
     def test_create_viewpoint_valid(self, mock_worker):
-        response = self.client.post("/viewpoints/", data=json.dumps(TEST_BODY))
+        response = self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
 
         assert response.status_code == 201
 
@@ -95,66 +95,66 @@ class TestRouters(unittest.TestCase):
 
     def test_create_viewpoint_invalid(self):
         with self.assertRaises(Exception):
-            response = self.client.post("/viewpoints/", data=json.dumps(INVALID_TEST_BODY))
+            response = self.client.post("/latest/viewpoints/", data=json.dumps(INVALID_TEST_BODY))
             assert response.status_code == 402
 
     def test_describe_viewpoint_valid(self):
-        viewpoint_data = self.client.post("/viewpoints/", data=json.dumps(TEST_BODY))
+        viewpoint_data = self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
         viewpoint_data = viewpoint_data.json()
 
         # describe api
-        response = self.client.get(f"/viewpoints/{viewpoint_data['viewpoint_id']}")
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_data['viewpoint_id']}")
 
         assert response.status_code == 200
         assert response.json() == viewpoint_data
 
     def test_describe_viewpoint_invalid(self):
-        self.client.post("/viewpoints/", data=json.dumps(TEST_BODY))
+        self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
 
         with self.assertRaises(Exception):
-            response = self.client.get(f"/viewpoints/{TEST_INVALID_VIEWPOINT_ID}")
+            response = self.client.get(f"/latest/viewpoints/{TEST_INVALID_VIEWPOINT_ID}")
             assert response.status_code == 402
 
     def test_update_viewpoint_valid(self):
-        viewpoint_data = self.client.post("/viewpoints/", data=json.dumps(TEST_BODY))
+        viewpoint_data = self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
         viewpoint_data = viewpoint_data.json()
 
         update_data_body = VALID_UPDATE_TEST_BODY
         update_data_body["viewpoint_id"] = viewpoint_data["viewpoint_id"]
 
         # update api
-        response = self.client.put("/viewpoints/", data=json.dumps(update_data_body))
+        response = self.client.put("/latest/viewpoints/", data=json.dumps(update_data_body))
 
         assert response.status_code == 201
         assert response.json()["viewpoint_name"] is not viewpoint_data["viewpoint_name"]
 
     def test_delete_viewpoint_valid(self):
-        viewpoint_data = self.client.post("/viewpoints/", data=json.dumps(TEST_BODY))
+        viewpoint_data = self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
         viewpoint_data = viewpoint_data.json()
 
-        response = self.client.delete(f"/viewpoints/{viewpoint_data['viewpoint_id']}")
+        response = self.client.delete(f"/latest/viewpoints/{viewpoint_data['viewpoint_id']}")
 
         assert response.status_code == 200
         assert response.json()["viewpoint_status"] == ViewpointStatus.DELETED
         assert response.json()["local_object_path"] is None
 
     def test_list_viewpoints_valid(self):
-        self.client.post("/viewpoints/", data=json.dumps(TEST_BODY))
-        self.client.post("/viewpoints/", data=json.dumps(TEST_BODY))
-        self.client.post("/viewpoints/", data=json.dumps(TEST_BODY))
+        self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
+        self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
+        self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
 
         # get list of viewpoints api
-        response = self.client.get("/viewpoints/")
+        response = self.client.get("/latest/viewpoints/")
 
         assert response.status_code == 200
         assert len(response.json()) == 3
 
     def test_get_metadata_valid(self):
-        viewpoint_data = self.client.post("/viewpoints/", data=json.dumps(TEST_BODY))
+        viewpoint_data = self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
         viewpoint_data = viewpoint_data.json()
 
         # metadata api
-        response = self.client.get(f"/viewpoints/{viewpoint_data['viewpoint_id']}/metadata")
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_data['viewpoint_id']}/metadata")
 
         assert response.status_code == 200
 
@@ -163,38 +163,38 @@ class TestRouters(unittest.TestCase):
             assert response.json() == expected_json_result
 
     def test_get_data_invalid(self):
-        self.client.post("/viewpoints/", data=json.dumps(TEST_BODY))
+        self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
 
         with self.assertRaises(Exception):
-            response = self.client.get(f"/viewpoints/{TEST_INVALID_VIEWPOINT_ID}/metadata")
+            response = self.client.get(f"/latest/viewpoints/{TEST_INVALID_VIEWPOINT_ID}/metadata")
             assert response.status_code == 402
 
     def test_get_bounds_valid(self):
-        viewpoint_data = self.client.post("/viewpoints/", data=json.dumps(TEST_BODY))
+        viewpoint_data = self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
         viewpoint_data = viewpoint_data.json()
 
         # bounds api
-        response = self.client.get(f"/viewpoints/{viewpoint_data['viewpoint_id']}/bounds")
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_data['viewpoint_id']}/bounds")
 
         assert response.status_code == 200
         assert response.json()["bounds"] == ["325860N0846000E", "325859N0846000E", "325859N0850001E", "325859N0850000E"]
 
     def test_get_info_valid(self):
-        viewpoint_data = self.client.post("/viewpoints/", data=json.dumps(TEST_BODY))
+        viewpoint_data = self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
         viewpoint_data = viewpoint_data.json()
 
         # info api
-        response = self.client.get(f"/viewpoints/{viewpoint_data['viewpoint_id']}/info")
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_data['viewpoint_id']}/info")
 
         assert response.status_code == 200
         assert response.json() is not None
 
     def test_get_statistics_valid(self):
-        viewpoint_data = self.client.post("/viewpoints/", data=json.dumps(TEST_BODY))
+        viewpoint_data = self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
         viewpoint_data = viewpoint_data.json()
 
         # statistics api
-        response = self.client.get(f"/viewpoints/{viewpoint_data['viewpoint_id']}/statistics")
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_data['viewpoint_id']}/statistics")
 
         assert response.status_code == 200
         response_data = response.json()
@@ -208,19 +208,19 @@ class TestRouters(unittest.TestCase):
             assert response_data == expected_json_result
 
     def test_get_tile_valid(self):
-        viewpoint_data = self.client.post("/viewpoints/", data=json.dumps(TEST_BODY))
+        viewpoint_data = self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
         viewpoint_data = viewpoint_data.json()
 
         # tiles api
-        response = self.client.get(f"/viewpoints/{viewpoint_data['viewpoint_id']}/tiles/10/10/10.NITF")
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_data['viewpoint_id']}/tiles/10/10/10.NITF")
         assert response.status_code == 200
 
     def test_get_tile_invalid(self):
-        viewpoint_data = self.client.post("/viewpoints/", data=json.dumps(TEST_BODY))
+        viewpoint_data = self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
         viewpoint_data = viewpoint_data.json()
 
         # tiles api
-        response = self.client.get(f"/viewpoints/{viewpoint_data['viewpoint_id']}/tiles/10/10/10.bad")
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_data['viewpoint_id']}/tiles/10/10/10.bad")
 
         assert response.status_code == 422
 

@@ -48,7 +48,12 @@ class TestTileServer(unittest.TestCase):
     def test_main(self):
         response = self.client.get("/")
         assert response.status_code == 200
-        self.assertIn("Hello! Welcome to OSML Tile Server - 0.1.0!", response.json())
+        self.assertIn("OSML Tile Server", response.text)
+
+    def test_ping(self):
+        response = self.client.get("/ping")
+        assert response.status_code == 200
+        assert response.json() == {"status": "OK"}
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@ services:
   tile-server:
     build:
       context: .
+    container_name: "osml-tile-server"
     ports:
       - '8080:8080'
     environment:

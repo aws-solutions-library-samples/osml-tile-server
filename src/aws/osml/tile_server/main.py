@@ -6,7 +6,10 @@ from typing import Tuple
 import uvicorn
 from boto3.resources.base import ServiceResource
 from botocore.exceptions import ClientError
+from cryptography.fernet import Fernet
 from fastapi import FastAPI, status
+from fastapi.responses import HTMLResponse
+from fastapi_versioning import VersionedFastAPI
 from osgeo import gdal
 from pydantic import BaseModel
 
@@ -22,6 +25,17 @@ gdal.UseExceptions()
 
 # Configure logger
 logger = logging.getLogger("uvicorn")
+
+
+class HealthCheck(BaseModel):
+    """
+    A Pydantic model for a health check response.
+
+    Attributes:
+        status (str): Status of the health check. Defaults is "OK".
+    """
+
+    status: str = "OK"
 
 
 def initialize_services() -> Tuple[ServiceResource, ServiceResource, ServiceResource]:
@@ -67,12 +81,13 @@ def initialize_viewpoint_components() -> Tuple[ViewpointStatusTable, ViewpointRe
         sys.exit("Fatal error occurred while initializing viewpoint database. Exiting.")
 
     request_queue = ViewpointRequestQueue(aws_sqs, ServerConfig.viewpoint_request_queue)
-    router = ViewpointRouter(database, request_queue, aws_s3)
+    encryptor = Fernet(Fernet.generate_key())
+    router = ViewpointRouter(database, request_queue, aws_s3, encryptor)
     return database, request_queue, router
 
 
 @asynccontextmanager
-async def lifespan() -> AbstractAsyncContextManager[None] | FastAPI:
+async def lifespan(app: FastAPI) -> AbstractAsyncContextManager[None] | FastAPI:
     """
     Start the Viewpoint Worker as part of the FastAPI lifespan.
 
@@ -94,10 +109,18 @@ async def lifespan() -> AbstractAsyncContextManager[None] | FastAPI:
 
 
 # Initialize FastAPI app
-app = FastAPI(
-    title="OSML Tile Server",
+app = FastAPI(title="OSML Tile Server")
+
+viewpoint_database, viewpoint_request_queue, viewpoint_router = initialize_viewpoint_components()
+
+# Include the viewpoint router in the FastAPI app
+app.include_router(viewpoint_router.router)
+
+# Apply API versioning
+app = VersionedFastAPI(
+    app,
+    enable_latest=True,
     description="A minimalistic tile server for imagery hosted in the cloud",
-    version="0.1.0",
     terms_of_service="https://example.com/terms/",
     contact={
         "name": "Amazon Web Services",
@@ -109,29 +132,13 @@ app = FastAPI(
         This AWS Content is provided subject to the terms of the AWS Customer Agreement
         available at https://aws.amazon.com/agreement or other written agreement between
         Customer and either Amazon Web Services, Inc. or Amazon Web Services EMEA SARL or both.""",
-        "name": "TEST",
+        "name": "Amazon Web Services",
     },
     lifespan=lifespan,
 )
 
-viewpoint_database, viewpoint_request_queue, viewpoint_router = initialize_viewpoint_components()
 
-# Include the viewpoint router in the FastAPI app
-app.include_router(viewpoint_router.router)
-
-
-class HealthCheck(BaseModel):
-    """
-    A Pydantic model for a health check response.
-
-    Attributes:
-        status (str): Status of the health check. Defaults is "OK".
-    """
-
-    status: str = "OK"
-
-
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root() -> str:
     """
     Root endpoint for the application.
@@ -140,12 +147,23 @@ async def root() -> str:
     contact and license details.
 
     :return: Welcome message with application information.
+    :rtype: str
     """
-    homepage_description = f"""Hello! Welcome to {app.title} - {app.version}! {app.description}.
-
-    If you need help or support, please cut an issue ticket of this product - {app.contact["url"]}.
-
-    The license of this product: {app.license_info["license"]}
+    homepage_description = f"""
+    <html>
+        <head>
+            <title>{app.title}</title>
+        </head>
+        <body>
+            <h1>{app.title} - {app.version}</h1>
+            <p>{app.description}.</p>
+            <p>If you need help or support,
+                please cut an issue ticket <a href="{app.contact["url"]}">in our github project</a>.</p>
+            <p><a href="/latest/docs">Swagger</a></p>
+            <p><a href="/latest/redoc">ReDoc</a></p>
+            <p>The license of this product: {app.license_info["license"]}</p>
+        </body>
+    </html>
     """
     return homepage_description
 
