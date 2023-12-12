@@ -18,8 +18,7 @@ class DecimalEncoder(json.JSONEncoder):
     It's used to convert all Decimal instances to int
     when we fetch data from DynamoDB (which can return some items as Decimal).
 
-    :param json.JSONEncoder: Inherited JSON Encoder class from json module
-    :type json.JSONEncoder: class:`json.JSONEncoder`
+    :param json.JSONEncoder: Inherited JSON Encoder class from json module.
     """
 
     def default(self, obj):
@@ -27,11 +26,10 @@ class DecimalEncoder(json.JSONEncoder):
         Overriden default method from JSONEncoder class.
         Converts all Decimal instances to int else returns default conversion.
 
-        :param obj: Object for JSON Encoding
-        :type obj: Object
+        :param obj: Object for JSON Encoding.
         :return: Integer representation of Decimal else default JSON Conversion
-        :rtype: `int` or as defined by `json.JSONEncoder`
         """
+
         if isinstance(obj, Decimal):
             return int(obj)
         return super().default(obj)
@@ -40,15 +38,14 @@ class DecimalEncoder(json.JSONEncoder):
 class ViewpointStatusTable:
     """
     A class used to represent the ViewpointStatusTable.
-
-    :param aws_ddb: An instance of a service resource of Boto3's DynamoDB
     """
 
     def __init__(self, aws_ddb: ServiceResource) -> None:
         """
         Initialize the ViewpointStatusTable and validate the table status.
 
-        :raise Exception: If the table does not exist in the given region.
+        :param aws_ddb: An instance of the AWS DynamoDB service resource.
+        :raises ClientError: If the table does not exist in the specified AWS region.
         """
         self.ddb = aws_ddb
         self.table = self.ddb.Table(ServerConfig.viewpoint_status_table)
@@ -63,9 +60,9 @@ class ViewpointStatusTable:
 
     def get_all_viewpoints(self) -> List[Dict[str, Any]]:
         """
-        Get all the viewpoint items from the dynamodb table
+        Get all the viewpoint items from the dynamodb table.
 
-        :returns List[Dict[str, any]]: list of viewpoints
+        :returns: List of viewpoints found in the table.
         """
         try:
             response = self.table.scan()
@@ -91,11 +88,12 @@ class ViewpointStatusTable:
 
     def get_viewpoint(self, viewpoint_id: str) -> ViewpointModel:
         """
-        Get detail of a viewpoint based on a given viewpoint id
+        Get detail of a viewpoint based on a given viewpoint id from the table.
 
-        :param viewpoint_id: unique viewpoint id
+        :param viewpoint_id: The viewpoint_id you want to get from the table.
 
-        :return ViewpointModel: Viewpoint details
+        :return Viewpoint details associated with the requested viewpoint_id.
+        :raises: HTTPException if it cannot fetch a viewpoint item from the ViewpointStatusTable.
         """
         try:
             response = self.table.get_item(Key={"viewpoint_id": viewpoint_id})["Item"]
@@ -117,9 +115,11 @@ class ViewpointStatusTable:
         """
         Create a viewpoint item and store them in a DynamoDB table
 
-        :param viewpoint_request: user given viewpoint details
+        :param viewpoint_request: The provided request to create a new viewpoint in the table.
 
-        :return ViewpointModel: details of a newly created viewpoint
+        :return ViewpointModel: Details of the newly created viewpoint item.
+        :raises: HTTPException if it cannot create a viewpoint item from the ViewpointStatusTable.
+
         """
         viewpoint_request_dict = viewpoint_request.model_dump()  # converts to dict
 
@@ -136,9 +136,11 @@ class ViewpointStatusTable:
         """
         Update viewpoint item in a dynamodb table
 
-        :param viewpoint_request: user given viewpoint details
+        :param viewpoint_item: Viewpoint item to be updated in the table.
 
-        :return ViewpointModel: details of a updated viewpoint
+        :return Updated viewpoint item in the table.
+        :raises: HTTPException if it cannot update a viewpoint item from the ViewpointStatusTable.
+
         """
         self.logger.info(viewpoint_item.model_dump())
 
@@ -164,13 +166,14 @@ class ViewpointStatusTable:
                 status_code=500, detail=f"Something went wrong when updating an item in ViewpointStatusTable! Error: {err}"
             )
 
-    def get_update_params(self, body: Dict) -> Tuple[str, Dict[str, Any]]:
+    @staticmethod
+    def get_update_params(body: Dict) -> Tuple[str, Dict[str, Any]]:
         """
         Generate an update expression and a dict of values to update a dynamodb table.
 
-        :param body: Dict = the body of the request that contains the updated data
+        :param body: Body of the request that contains the updated data.
 
-        :return: Tuple[str, Dict[str, Any]] = the generated update expression and attributes
+        :return: Generated update expression and attributes.
         """
         update_expr = ["SET "]
         update_attr = dict()

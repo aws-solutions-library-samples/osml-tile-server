@@ -21,9 +21,9 @@ def get_media_type(tile_format: GDALImageFormats) -> str:
     """
     Obtain the meta type based on the given tile format
 
-    :param tile_format: tile format
+    :param tile_format: GDAL Image format associated with the tile.
 
-    :return: image format
+    :return: The associated image format in plain text.
     """
     supported_media_types = {
         GDALImageFormats.PNG.value.lower(): "image/png",
@@ -56,6 +56,10 @@ def get_standard_overviews(width: int, height: int, preview_size: int) -> List[i
 
 
 class TileFactoryPool:
+    """
+    Class representing a pool of GDALTileFactory objects.
+    """
+
     def __init__(
         self,
         tile_format: GDALImageFormats,
@@ -63,7 +67,21 @@ class TileFactoryPool:
         local_object_path: str,
         output_type: Optional[int] = None,
         range_adjustment: RangeAdjustmentType = RangeAdjustmentType.NONE,
-    ):
+    ) -> None:
+        """
+        This initializes a TileFactoryPool, representing a pool of GDALTileFactory objects. The purpose
+        of this class is to manage resources (the GDALTileFactory objects) efficiently, typically for a
+        multithreaded environment.
+
+
+        :param tile_format: The image format of the tiles.
+        :param tile_compression: The compression options for the tiles.
+        :param local_object_path: The local path to the object.
+        :param output_type: The output type. Defaults to None.
+        :param range_adjustment: The range adjustment type, defaults to RangeAdjustmentType.NONE.
+
+        :return None
+        """
         self.lock = RLock()
         self.current_inventory = []
         self.total_inventory = 0
@@ -74,6 +92,13 @@ class TileFactoryPool:
         self.range_adjustment = range_adjustment
 
     def checkout(self) -> GDALTileFactory:
+        """
+        Handles the checkout process. If the current inventory is not empty,
+        it pops out the first GDALTileFactory object. If the inventory is empty,
+        a new GDALTileFactory object is created, added to the inventory, and returned.
+
+        :return: an instance of the GDALTileFactory
+        """
         tf = None
         with self.lock:
             if self.current_inventory:
@@ -100,11 +125,25 @@ class TileFactoryPool:
         return tf
 
     def checkin(self, tf: GDALTileFactory) -> None:
+        """
+        Adds a GDALTileFactory object to the current inventory.
+
+        :param tf: GDALTileFactory object
+        :return: None
+        """
+
         with self.lock:
             self.current_inventory.append(tf)
 
     @contextmanager
-    def checkout_in_context(self):
+    def checkout_in_context(self) -> None:
+        """
+        A context manager for using the `checkout` method in a `with` statement. Exception safe - resources are
+        guaranteed to be `checkin`ed. It yields the resource obtained from `checkout` for use inside the `with`
+        statement.
+        :return: None
+        :raise Exception: Any exceptions raised within the `with` block or by `checkout` and `checkin` methods
+        """
         tf = None
         try:
             tf = self.checkout()
@@ -122,35 +161,27 @@ def get_tile_factory_pool(
     output_type: Optional[int] = None,
     range_adjustment: RangeAdjustmentType = RangeAdjustmentType.NONE,
 ) -> TileFactoryPool:
+    """
+    Create and return a pool of tile factories.
+
+    :param tile_format: The format of the tiles to be created.
+    :param tile_compression: The compression options for the tiles.
+    :param local_object_path: The path to the local object storage.
+    :param output_type: The optional output type for the tiles.
+    :param range_adjustment: The range adjustment type for the tiles.
+    :return: The tile factory pool.
+
+    """
     return TileFactoryPool(tile_format, tile_compression, local_object_path, output_type, range_adjustment)
 
 
 def perform_gdal_translation(dataset: Dataset, gdal_options: Dict) -> Optional[bytearray]:
     """
-    Performs GDAL (Geospatial Data Abstraction Library) translation and reads a VSIFile.
+    Perform GDAL translation on a dataset with given GDAL options.
 
-    The GDAL translation is done on given dataset with gdal options. Then a VSIFile is read and returned from the
-    translated dataset.
-
-    Parameters
-    ----------
-    dataset : Dataset
-        The input dataset to be translated.
-    gdal_options : dict
-        The options for GDAL translation.
-
-    Returns
-    -------
-    vsibuf : bytearray, optional
-        The read VSIFile. If the VSIFile cannot be opened, returns None.
-
-    Raises
-    ------
-    GDALException
-        If the translation is not successful or VSIFile cannot be read.
-
-    Note ---- This function also takes care of cleaning up the temporary file memory in case of any exception by
-    using finally clause.
+    :param dataset: The input GDAL dataset to be translated.
+    :param gdal_options: Options for the GDAL translation.
+    :return: A bytearray containing the translated data, or None if translation fails.
     """
     tmp_name = f"/vsimem/{uuid4()}"
 
