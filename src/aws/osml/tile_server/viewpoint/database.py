@@ -1,15 +1,16 @@
 import json
 import logging
 from decimal import Decimal
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Tuple
 
+from boto3.dynamodb.conditions import Attr
 from boto3.resources.base import ServiceResource
 from botocore.exceptions import ClientError
 from fastapi import HTTPException
 
 from aws.osml.tile_server.app_config import ServerConfig
 
-from .models import ViewpointModel
+from .models import ViewpointListResponse, ViewpointModel
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -58,21 +59,24 @@ class ViewpointStatusTable:
             )
             raise
 
-    def get_all_viewpoints(self) -> List[Dict[str, Any]]:
+    def get_viewpoints(self, limit: int = None, next_token: str = None) -> ViewpointListResponse:
         """
-        Get all the viewpoint items from the dynamodb table.
+        Get viewpoint items from the dynamodb table.  If limit nor next_token are provided it returns all records.
 
-        :returns: List of viewpoints found in the table.
+        :param limit: Optional. max number of viewpoints requested from dynamodb
+        :param next_token: Optional. the token to begin a query from.  provided by the previous query response that
+                had more records available
+        :returns ViewpointListResponse
         """
+        query_params = {"FilterExpression": Attr("viewpoint_status").ne("DELETED")}
+        if limit:
+            query_params["Limit"] = limit
+        if next_token:
+            query_params["ExclusiveStartKey"] = {"viewpoint_id": next_token}
         try:
-            response = self.table.scan()
-            data = response["Items"]
-
-            while response.get("LastEvaluatedKey"):
-                response = self.table.scan(ExclusiveStartKey=response["LastEvaluatedKey"])
-                data.extend(response["Items"])
-
-            return data
+            if {"Limit", "ExclusiveStartKey"}.intersection(set(query_params.keys())):
+                return self.get_paged_viewpoints(query_params)
+            return self.get_all_viewpoints(query_params)
         except ClientError as err:
             raise HTTPException(
                 status_code=err.response["Error"]["Code"],
@@ -85,6 +89,32 @@ class ViewpointStatusTable:
             )
         except Exception as err:
             raise HTTPException(status_code=500, detail=f"Something went wrong with ViewpointStatusTable! Error: {err}")
+
+    def get_all_viewpoints(self, query_params: Dict) -> ViewpointListResponse:
+        """
+        Get all the viewpoint items from the dynamodb table
+
+        :returns ViewpointListResponse
+        """
+        response = self.table.scan(**query_params)
+        data = response["Items"]
+        while response.get("LastEvaluatedKey"):
+            query_params["ExclusiveStartKey"] = response["LastEvaluatedKey"]
+            response = self.table.scan(**query_params)
+            data.extend(response["Items"])
+        return ViewpointListResponse(items=data)
+
+    def get_paged_viewpoints(self, query_params: Dict) -> ViewpointListResponse:
+        """
+        Get a page of viewpoint items from the dynamodb table
+
+        :returns ViewpointListResponse
+        """
+        response = self.table.scan(**query_params)
+        ret_val = ViewpointListResponse(items=response["Items"])
+        if response.get("LastEvaluatedKey"):
+            ret_val = ViewpointListResponse(items=response["Items"], next_token=response["LastEvaluatedKey"]["viewpoint_id"])
+        return ret_val
 
     def get_viewpoint(self, viewpoint_id: str) -> ViewpointModel:
         """

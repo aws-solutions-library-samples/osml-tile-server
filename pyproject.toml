@@ -18,5 +18,6 @@ addopts = "-ra -q"
 testpaths = [
     "test"
 ]
+pythonpath = "test/aws/osml/tile_server"
 
 # Note Flake8 can't currently be configured in pyproject.toml. See .flake8 for the configuration settings.

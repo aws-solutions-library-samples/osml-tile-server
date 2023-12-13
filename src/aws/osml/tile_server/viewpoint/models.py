@@ -1,5 +1,6 @@
 import logging
 from enum import auto
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -106,6 +107,15 @@ class ViewpointModel(BaseModel):
     local_object_path: str | None
     error_message: str | None
     expire_time: int | None
+
+
+class ViewpointListResponse(BaseModel):
+    """
+    Represents the return structure of a request for viewpoints
+    """
+
+    items: List[ViewpointModel]
+    next_token: Optional[str] = None
 
 
 class ViewpointUpdate(BaseModel):

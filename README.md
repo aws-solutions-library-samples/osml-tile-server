@@ -25,28 +25,37 @@ The OversightML Tile Server is a lightweight, cloud-based tile server which allo
 
 First, ensure you have installed the following tools locally
 
-- [docker](https://nodejs.org/en)
+- [docker](https://www.docker.com/)
+- [docker compose](https://docs.docker.com/compose/)
 - [tox](https://tox.wiki/en/latest/installation.html)
 
-### Running Tile Server
+### Running Tile Server Locally
 
-Build the Tile Server container
-
+The Tile Server is designed to be able to be run locally using docker compose for development and testing purposes. Start the Tile Server using
 ```shell
-docker build . -t osml-tile-server:latest
+docker compose up -d
 ```
 
-To boot up the Tile Server, ensure you have the AWS credentials loaded!
-
+To view the live log output while the server is running
 ```shell
-./scripts/run-local-server.sh
+docker logs -f osml-tile-server
+```
+
+To stop the tile server
+```shell
+docker compose down
+```
+
+To rebuild the docker image after making a code change, use
+```shell
+docker compose up -d --build
 ```
 
 In another terminal to invoke the rest server and return the viewpoint on a single image, run the following command:
 
 ```bash
 curl -X 'POST' \
-  'http://localhost:80/viewpoints/' \
+  'http://localhost:8080/latest/viewpoints/' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -61,29 +70,7 @@ curl -X 'POST' \
 Additionally, you can head over to FastAPI homepage and be able to execute various of API calls by visiting
 
 ```
-http://0.0.0.0:80/docs or http://0.0.0.0:80/redoc
-```
-
-### Development Environment
-
-Build the Tile Server container
-
-```shell
-docker build . -t osml-tile-server:latest
-```
-
-To build the container in a build/test mode and work inside it.
-
-```shell
-LATEST_IMAGE=$(docker images | grep osml-tile-server | awk 'NR==1{print $1":"$2}')
-
-docker run \
-  -it \
-  --entrypoint /bin/bash \
-  -v `pwd`/:/work:rw \
-  -v `pwd`/local_viewpoint_cache:/tmp/viewpoint:rw \
-  --env AWS_ACCESS_KEY_ID --env AWS_SECRET_ACCESS_KEY --env AWS_SESSION_TOKEN \
-  ${LATEST_IMAGE}
+http://0.0.0.0:8080/latest/docs or http://0.0.0.0:8080/latest/redoc
 ```
 
 ## Support & Feedback
