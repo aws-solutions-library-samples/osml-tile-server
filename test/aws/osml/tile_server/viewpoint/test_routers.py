@@ -3,9 +3,11 @@
 import json
 import os
 import unittest
+from unittest.mock import patch
 
 import boto3
 import mock
+from cryptography.fernet import Fernet
 from fastapi.testclient import TestClient
 from moto import mock_dynamodb, mock_s3, mock_sqs
 from test_config import TestConfig
@@ -42,7 +44,9 @@ VALID_UPDATE_TEST_BODY = {
 @mock_dynamodb
 @mock_sqs
 class TestRouters(unittest.TestCase):
-    def setUp(self):
+    @patch("aws.osml.tile_server.utils.initialize_token_key")
+    @patch("aws.osml.tile_server.utils.read_token_key", return_value=Fernet.generate_key())
+    def setUp(self, mock_read_token, mock_init_token):
         from aws.osml.tile_server.app_config import BotoConfig
 
         # create virtual s3

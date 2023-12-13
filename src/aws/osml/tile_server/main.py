@@ -1,6 +1,7 @@
 import logging
 import sys
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
+from time import sleep
 from typing import Tuple
 
 import uvicorn
@@ -14,6 +15,7 @@ from osgeo import gdal
 from pydantic import BaseModel
 
 from .app_config import ServerConfig
+from .utils import initialize_token_key, read_token_key
 from .utils.aws_services import initialize_ddb, initialize_s3, initialize_sqs
 from .viewpoint.database import ViewpointStatusTable
 from .viewpoint.queue import ViewpointRequestQueue
@@ -74,6 +76,9 @@ def initialize_viewpoint_components() -> Tuple[ViewpointStatusTable, ViewpointRe
 
     :raises: ClientError if the database client failed to initialize
     """
+    initialize_token_key()
+    sleep(1)
+
     try:
         database = ViewpointStatusTable(aws_ddb)
     except ClientError as err:
@@ -81,7 +86,7 @@ def initialize_viewpoint_components() -> Tuple[ViewpointStatusTable, ViewpointRe
         sys.exit("Fatal error occurred while initializing viewpoint database. Exiting.")
 
     request_queue = ViewpointRequestQueue(aws_sqs, ServerConfig.viewpoint_request_queue)
-    encryptor = Fernet(Fernet.generate_key())
+    encryptor = Fernet(read_token_key())
     router = ViewpointRouter(database, request_queue, aws_s3, encryptor)
     return database, request_queue, router
 

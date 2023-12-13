@@ -1,5 +1,5 @@
 #  Copyright 2023 Amazon.com, Inc. or its affiliates.
-
+import inspect
 import io
 import logging
 import shutil
@@ -81,24 +81,34 @@ class ViewpointRouter:
                 had more records available
             :return: a list of viewpoints with details
             """
+            current_function_name = inspect.stack()[0].function
+            current_route = [route for route in api_router.routes if route.name == current_function_name][0]
+            current_endpoint = current_route.endpoint
+            endpoint_major_version, endpoint_minor_version = getattr(current_endpoint, "_api_version", (0, 0))
+            endpoint_version = f"{endpoint_major_version}.{endpoint_minor_version}"
+
             if next_token:
                 try:
                     decrypted_token = self.encryptor.decrypt(next_token.encode("utf-8")).decode("utf-8")
-                    decrypted_next_token, expiration_iso = decrypted_token.split("|")
+                    decrypted_next_token, expiration_iso, decrypted_endpoint_version = decrypted_token.split("|")
                     expiration_dt = dateutil.parser.isoparse(expiration_iso)
                     now = datetime.now(UTC)
                 except Exception as err:
                     raise HTTPException(status_code=400, detail=f"Invalid next_token. {err}")
                 if expiration_dt < now:
                     raise HTTPException(status_code=400, detail="next_token expired. Please submit a new request.")
-
+                if decrypted_endpoint_version != endpoint_version:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="next_token is not compatible with this endpoint version. Please submit a new request.",
+                    )
             else:
                 decrypted_next_token = None
 
             results = self.viewpoint_database.get_viewpoints(max_results, decrypted_next_token)
             if results.next_token:
                 expiration = datetime.now(UTC) + timedelta(days=1)
-                token_string = f"{results.next_token}|{expiration.isoformat()}"
+                token_string = f"{results.next_token}|{expiration.isoformat()}|{endpoint_version}"
                 encrypted_token = self.encryptor.encrypt(token_string.encode("utf-8")).decode("utf-8")
                 results.next_token = encrypted_token
             return results
