@@ -1,10 +1,12 @@
 {
     "viewpoint_id": "0d20d551a974ea01da691724799ac801",
     "viewpoint_name": "test-name",
-    "viewpoint_status": "READY",
+    "viewpoint_status": "REQUESTED",
     "bucket_name": "test-bucket",
     "object_key": "test-sample.nitf",
     "tile_size": 512,
     "range_adjustment": "NONE",
-    "local_object_path": "/tmp/viewpoint/0d20d551a974ea01da691724799ac801/sample.nitf"
-  }
+    "local_object_path": "/tmp/viewpoint/0d20d551a974ea01da691724799ac801/sample.nitf",
+    "error_message": null,
+    "expire_time": null
+}

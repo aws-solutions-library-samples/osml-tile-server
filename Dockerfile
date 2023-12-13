@@ -58,8 +58,8 @@ SHELL ["/entry.sh", "/bin/bash", "-c"]
 # Configure .bashrc to drop into a conda env and immediately activate our TARGET env
 RUN conda init && echo 'conda activate "${CONDA_TARGET_ENV:-base}"' >>  ~/.bashrc
 
-# Copy our lcoal application source into the container
-ADD . osml-tile-server
+# Copy our local application source into the container
+COPY . osml-tile-server
 
 # Install the model runner application from source
 RUN python3 -m pip install osml-tile-server/
