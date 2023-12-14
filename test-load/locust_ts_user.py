@@ -216,26 +216,27 @@ class TileServerUser(FastHttpUser):
         :param batch_size: number of tiles to request in parallel
         :return: None
         """
-        z = 0
         tile_format = "PNG"
         compression = "NONE"
 
-        def concurrent_tile_request(tile: [int, int]):
-            url = f"/viewpoints/{viewpoint_id}/tiles/{z}/{tile[0]}/{tile[1]}.{tile_format}?compression={compression}"
+        def concurrent_tile_request(tile: (int, int, int)):
+            url = f"/viewpoints/{viewpoint_id}/tiles/{tile[2]}/{tile[0]}/{tile[1]}.{tile_format}?compression={compression}"
             with self.client.get(url, name="GetTile") as response:
                 if not response.content:
                     response.failure("GetTile response contained no content")
 
-        p = ceil(log(num_tiles) / (2 * log(2)))
-        n = 2
-        hilbert_curve = HilbertCurve(p, n)
-        for i in range(0, num_tiles, batch_size):
-            distances = list(range(i, i + batch_size))
-            tiles = hilbert_curve.points_from_distances(distances)
-            pool = gevent.pool.Pool()
-            for tile in tiles:
-                pool.spawn(concurrent_tile_request, tile)
-            pool.join()
+        for z in [3, 2, 1, 0]:
+            num_tiles_at_zoom = ceil(num_tiles / (4**z)) 
+            p = ceil(log(num_tiles_at_zoom) / (2 * log(2)))
+            n = 2
+            hilbert_curve = HilbertCurve(p, n)
+            for i in range(0, num_tiles_at_zoom, batch_size):
+                distances = list(range(i, min(i + batch_size, num_tiles_at_zoom)))
+                tiles = [(p[0], p[1], z) for p in hilbert_curve.points_from_distances(distances)]
+                pool = gevent.pool.Pool()
+                for tile in tiles:
+                    pool.spawn(concurrent_tile_request, tile)
+                pool.join()
 
     def cleanup_viewpoint(self, viewpoint_id: str) -> None:
         """

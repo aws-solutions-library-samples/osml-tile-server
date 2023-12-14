@@ -13,7 +13,7 @@ locustfile contains simulated users of the tile server resources.
 cd test-load
 conda env create -f locust-environment.yaml
 conda activate osml-ts-locust-env
-locust -f locust_ts_user.py -H http://localhost
+locust -f locust_ts_user.py -H http://localhost:8080/v1_0
 ```
 
 ## References:
