@@ -226,7 +226,7 @@ class TileServerUser(FastHttpUser):
                     response.failure("GetTile response contained no content")
 
         for z in [3, 2, 1, 0]:
-            num_tiles_at_zoom = ceil(num_tiles / (4**z)) 
+            num_tiles_at_zoom = ceil(num_tiles / (4**z))
             p = ceil(log(num_tiles_at_zoom) / (2 * log(2)))
             n = 2
             hilbert_curve = HilbertCurve(p, n)
