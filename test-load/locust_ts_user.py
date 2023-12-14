@@ -148,7 +148,7 @@ class TileServerUser(FastHttpUser):
             self.get_viewpoint_metadata(viewpoint_id)
             self.get_viewpoint_info(viewpoint_id)
             self.get_viewpoint_bounds(viewpoint_id)
-            # self.get_viewpoint_preview(viewpoint_id)  # TODO: Reenable Preview once it isn't super slow
+            self.get_viewpoint_preview(viewpoint_id)
             self.get_viewpoint_statistics(viewpoint_id)
 
         pool = gevent.pool.Pool()
@@ -260,7 +260,7 @@ class TileServerUser(FastHttpUser):
         result = []
         with self.rest("GET", "/viewpoints", name="ListViewpoints") as response:
             if response.js is not None:
-                for viewpoint in response.js:
+                for viewpoint in response.js["items"]:
                     if (
                         VIEWPOINT_ID in viewpoint
                         and VIEWPOINT_STATUS in viewpoint
