@@ -304,13 +304,13 @@ class ViewpointRouter:
 
             return {"image_statistics": gdal_info}
 
-        @api_router.get("/{viewpoint_id}/preview.{img_format}/")
+        @api_router.get("/{viewpoint_id}/preview.{img_format}")
         def get_preview(
             viewpoint_id: str,
             img_format: GDALImageFormats = Path(GDALImageFormats.PNG, description="Output image type."),
-            scale: Annotated[int, Query(gt=0, le=100)] = None,
-            x_px: int = 0,
-            y_px: int = 0,
+            max_size: int = 1024,
+            width: int = 0,
+            height: int = 0,
             compression: GDALCompressionOptions = Query(
                 GDALCompressionOptions.NONE, description="Compression Algorithm for image."
             ),
@@ -320,9 +320,9 @@ class ViewpointRouter:
 
             :param viewpoint_id: Unique viewpoint id
             :param img_format: Desired format for preview output. Valid options are defined by GDALImageFormats
-            :param scale: Preview scale in percentage or original image. (0-100%)
-            :param x_px: Preview width (px).  Supercedes scale if > 0.
-            :param y_px: Preview height (px).  Supercedes scale if > 0.
+            :param max_size: Maximum size of the preview. Defaults to 1024
+            :param width: Forced output width
+            :param height: Forced output height
             :param compression: GDAL image compression
 
             :return: StreamingResponse of preview binary with the appropriate mime type based on the img_format
@@ -330,21 +330,28 @@ class ViewpointRouter:
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
             self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
 
-            ds, sensor_model = load_gdal_dataset(viewpoint_item.local_object_path)
-            tile_factory = GDALTileFactory(
-                ds, sensor_model, img_format, compression, gdalconst.GDT_Byte, viewpoint_item.range_adjustment
+            output_type = None
+            if viewpoint_item.range_adjustment is not RangeAdjustmentType.NONE:
+                output_type = gdalconst.GDT_Byte
+
+            tile_factory_pool = get_tile_factory_pool(
+                img_format, compression, viewpoint_item.local_object_path, output_type, viewpoint_item.range_adjustment
             )
-            preview_options = tile_factory.default_gdal_translate_kwargs.copy()
+            with tile_factory_pool.checkout_in_context() as tile_factory:
+                preview_options = tile_factory.default_gdal_translate_kwargs.copy()
 
-            if x_px > 0 or y_px > 0:
-                preview_options["width"] = x_px
-                preview_options["height"] = y_px
-            elif scale:
-                preview_options["widthPct"] = scale
-                preview_options["heightPct"] = scale
+                if tile_factory.raster_dataset.RasterXSize >= tile_factory.raster_dataset.RasterYSize:
+                    preview_options["width"] = max_size
+                else:
+                    preview_options["height"] = max_size
 
-            preview_bytes = perform_gdal_translation(ds, preview_options)
-            return StreamingResponse(io.BytesIO(preview_bytes), media_type=get_media_type(img_format), status_code=200)
+                if width > 0:
+                    preview_options["width"] = width
+                if height > 0:
+                    preview_options["height"] = height
+
+                preview_bytes = perform_gdal_translation(tile_factory.raster_dataset, preview_options)
+                return StreamingResponse(io.BytesIO(preview_bytes), media_type=get_media_type(img_format), status_code=200)
 
         @api_router.get("/{viewpoint_id}/tiles/{z}/{x}/{y}.{tile_format}")
         def get_tile(
