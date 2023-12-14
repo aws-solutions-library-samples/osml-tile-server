@@ -394,7 +394,7 @@ class ViewpointRouter:
                     src_tile_size = 2**z * tile_size
                     image_bytes = tile_factory.create_encoded_tile(
                         src_window=[x * src_tile_size, y * src_tile_size, src_tile_size, src_tile_size],
-                        output_size=(tile_size, tile_size)
+                        output_size=(tile_size, tile_size),
                     )
 
                 return StreamingResponse(io.BytesIO(image_bytes), media_type=get_media_type(tile_format), status_code=200)

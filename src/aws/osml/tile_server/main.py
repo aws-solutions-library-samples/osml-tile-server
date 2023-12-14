@@ -1,6 +1,5 @@
 import logging
 import sys
-import traceback
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from time import sleep
 from typing import Tuple
