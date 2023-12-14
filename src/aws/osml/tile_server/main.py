@@ -1,5 +1,6 @@
 import logging
 import sys
+import traceback
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from time import sleep
 from typing import Tuple
@@ -83,9 +84,9 @@ def initialize_viewpoint_components() -> Tuple[ViewpointStatusTable, ViewpointRe
 
     try:
         database = ViewpointStatusTable(aws_ddb)
-    except ClientError as err:
-        logger.error(f"Fatal error occurred while initializing viewpoint database. Exception: {err}")
-        sys.exit("Fatal error occurred while initializing viewpoint database. Exiting.")
+    except Exception as err:
+        logger.error(f"Fatal error occurred while initializing AWS services. Check your credentials! Exception: {err}")
+        sys.exit("Fatal error occurred while initializing AWS services. Exiting.")
 
     request_queue = ViewpointRequestQueue(aws_sqs, ServerConfig.viewpoint_request_queue)
     encryptor = Fernet(read_token_key())

@@ -64,6 +64,7 @@ class RefreshableBotoSession:
                     "expiry_time": datetime.fromtimestamp(time() + 3600, timezone.utc).isoformat(),
                 }
                 self.logger.error(f"Error has occurred when setting up the STS session - {err} / {traceback.format_exc()}")
+
         return credentials
 
     def refreshable_session(self) -> Session:
