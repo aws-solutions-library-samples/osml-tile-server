@@ -25,6 +25,7 @@ class ServerConfig:
     viewpoint_status_table: str = os.getenv("JOB_TABLE", "TSJobTable")
     viewpoint_request_queue: str = os.getenv("JOB_QUEUE", "TSJobQueue")
     efs_mount_name: str = os.getenv("EFS_MOUNT_NAME", "ts-efs-volume")
+    sts_arn: str = os.getenv("STS_ARN", None)
 
 
 @dataclass

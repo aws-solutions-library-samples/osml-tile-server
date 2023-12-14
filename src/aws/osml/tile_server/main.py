@@ -1,5 +1,6 @@
 import logging
 import sys
+import traceback
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from time import sleep
 from typing import Tuple
@@ -16,7 +17,7 @@ from pydantic import BaseModel
 
 from .app_config import ServerConfig
 from .utils import initialize_token_key, read_token_key
-from .utils.aws_services import initialize_ddb, initialize_s3, initialize_sqs
+from .utils.aws_services import RefreshableBotoSession, initialize_ddb, initialize_s3, initialize_sqs
 from .viewpoint.database import ViewpointStatusTable
 from .viewpoint.queue import ViewpointRequestQueue
 from .viewpoint.routers import ViewpointRouter
@@ -52,9 +53,11 @@ def initialize_services() -> Tuple[ServiceResource, ServiceResource, ServiceReso
     :raises: SystemExit if any service fails to initialize.
     """
     try:
-        ddb = initialize_ddb()
-        s3 = initialize_s3()
-        sqs = initialize_sqs()
+        session = RefreshableBotoSession().refreshable_session()
+
+        ddb = initialize_ddb(session)
+        s3 = initialize_s3(session)
+        sqs = initialize_sqs(session)
     except ClientError as err:
         logger.error(f"Fatal error occurred while initializing AWS services. Exception: {err}")
         sys.exit("Fatal error occurred while initializing AWS services. Exiting.")
@@ -81,9 +84,9 @@ def initialize_viewpoint_components() -> Tuple[ViewpointStatusTable, ViewpointRe
 
     try:
         database = ViewpointStatusTable(aws_ddb)
-    except ClientError as err:
-        logger.error(f"Fatal error occurred while initializing viewpoint database. Exception: {err}")
-        sys.exit("Fatal error occurred while initializing viewpoint database. Exiting.")
+    except Exception as err:
+        logger.error(f"Fatal error occurred while initializing AWS services. Check your credentials! Exception: {err}")
+        sys.exit("Fatal error occurred while initializing AWS services. Exiting.")
 
     request_queue = ViewpointRequestQueue(aws_sqs, ServerConfig.viewpoint_request_queue)
     encryptor = Fernet(read_token_key())
