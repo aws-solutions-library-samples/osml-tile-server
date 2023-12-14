@@ -360,7 +360,7 @@ class ViewpointRouter:
             """
 
             :param viewpoint_id: Unique viewpoint id
-            :param z: r-level
+            :param z: resolution-level in the image pyramid 0 = full resolution, 1 = full/2, 2 = full/4, ...
             :param x: tile row (px)
             :param y: tile column(px)
             :param tile_format: Desired format for tile output. Valid options are defined by GDALImageFormats
@@ -368,6 +368,11 @@ class ViewpointRouter:
 
             :return: StreamingResponse of tile image binary
             """
+            if z < 0:
+                raise HTTPException(
+                    status_code=400, detail=f"Resolution Level for get tile request must be >= 0. Requested z={z}"
+                )
+
             try:
                 viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
                 self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.TILE)
@@ -386,7 +391,11 @@ class ViewpointRouter:
                         )
 
                     tile_size = viewpoint_item.tile_size
-                    image_bytes = tile_factory.create_encoded_tile([x * tile_size, y * tile_size, tile_size, tile_size])
+                    src_tile_size = 2**z * tile_size
+                    image_bytes = tile_factory.create_encoded_tile(
+                        src_window=[x * src_tile_size, y * src_tile_size, src_tile_size, src_tile_size],
+                        output_size=(tile_size, tile_size)
+                    )
 
                 return StreamingResponse(io.BytesIO(image_bytes), media_type=get_media_type(tile_format), status_code=200)
             except Exception as err:
