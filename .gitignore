@@ -24,6 +24,7 @@ tox_conda_tmp*
 /build
 /dist
 /htmlcov
+/test_tmp
 
 local_viewpoint_cache/
 .vscode/
