@@ -6,7 +6,7 @@ import shutil
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from secrets import token_hex
-from typing import Annotated, Any, Dict
+from typing import Any, Dict
 
 import dateutil.parser
 from boto3.resources.base import ServiceResource
@@ -17,7 +17,6 @@ from osgeo import gdal, gdalconst
 from starlette.responses import StreamingResponse
 
 from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustmentType, load_gdal_dataset
-from aws.osml.image_processing import GDALTileFactory
 from aws.osml.photogrammetry.coordinates import ImageCoordinate
 from aws.osml.tile_server.utils import get_media_type, get_tile_factory_pool, perform_gdal_translation
 
@@ -78,12 +77,11 @@ class ViewpointRouter:
         @version(1, 0)
         def list_viewpoints(max_results: int | None = None, next_token: str | None = None) -> ViewpointListResponse:
             """
-            Get a list of viewpoints in the database
+            Get a list of viewpoints in the database.
 
-            :param max_results: Optional. max number of viewpoints requested
-            :param next_token: Optional. the token to begin a query from.  provided by the previous query response that
-                had more records available
-            :return: a list of viewpoints with details
+            :param max_results: Optional max number of viewpoints requested
+            :param next_token: Optional token to begin a query from provided by the previous query response.
+            :return: List of viewpoints with details from the table.
             """
             current_function_name = inspect.stack()[0].function
             current_route = [route for route in api_router.routes if route.name == current_function_name][0]
@@ -120,18 +118,18 @@ class ViewpointRouter:
         @api_router.post("/", status_code=201)
         def create_viewpoint(viewpoint_request: ViewpointRequest) -> Dict[str, Any]:
             """
-            Create a viewpoint item, then copy the imagery file from S3 to EFS, then create a item into the database
+            Create a viewpoint item, then copy the imagery file from S3 to EFS, then create a item into the database.
 
-            :param viewpoint_request: client's request which contains name, file source, and range type
+            :param viewpoint_request: Client's request which contains name, file source, and range type.
             TODO
                 - utilize efs service
 
-            :return: success creation of viewpoint
+            :return: Status associated with the request to create the viewpoint in the table.
             """
             # Create unique viewpoint_id
             viewpoint_id = token_hex(16)
 
-            # these will be stored in ddb
+            # These will be stored in ddb
             new_viewpoint_request = ViewpointModel(
                 viewpoint_id=viewpoint_id,
                 viewpoint_name=viewpoint_request.viewpoint_name,
@@ -154,11 +152,11 @@ class ViewpointRouter:
         @api_router.delete("/{viewpoint_id}")
         def delete_viewpoint(viewpoint_id: str) -> ViewpointModel:
             """
-            Remove the file from the EFS and update the database to indicate that it has been deleted
+            Remove the file from the EFS and update the database to indicate that it has been deleted.
 
-            :param viewpoint_id: unique viewpoint id
+            :param viewpoint_id: Unique viewpoint id to get from the table.
 
-            :return ViewpointModel: updated viewpoint item
+            :return ViewpointModel: Updated viewpoint item details from the table.
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
@@ -178,11 +176,11 @@ class ViewpointRouter:
         @api_router.put("/", status_code=201)
         def update_viewpoint(viewpoint_request: ViewpointUpdate) -> ViewpointModel:
             """
-            Update the viewpoint item in DynamoDB based on the given viewpoint_id
+            Update the viewpoint item in DynamoDB based on the given viewpoint_id.
 
-            :param viewpoint_request: client's request which contains name, file source, and range type
+            :param viewpoint_request: Client's request, which contains name, file source, and range type.
 
-            :return: updated viewpoint details
+            :return: Updated viewpoint item details from the table.
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_request.viewpoint_id)
 
@@ -197,11 +195,11 @@ class ViewpointRouter:
         @api_router.get("/{viewpoint_id}")
         def describe_viewpoint(viewpoint_id: str) -> ViewpointModel:
             """
-            Get viewpoint details based on provided viewpoint id
+            Get viewpoint details based on provided viewpoint id.
 
-            :param viewpoint_id: Unique viewpoint id
+            :param viewpoint_id: Unique viewpoint id to get from the table.
 
-            :return ViewpointModel: viewpoint detail
+            :return: Details from the viewpoint item in the table.
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
             return viewpoint_item
@@ -209,11 +207,11 @@ class ViewpointRouter:
         @api_router.get("/{viewpoint_id}/metadata")
         def get_metadata(viewpoint_id: str) -> Dict[str, Any]:
             """
-            Get viewpoint metadata based on provided viewpoint id
+            Get viewpoint metadata based on provided viewpoint id.
 
-            :param viewpoint_id: Unique viewpoint id
+            :param viewpoint_id: Unique viewpoint id to get from the table.
 
-            :return Dict[str, Any]: viewpoint metadata
+            :return: Viewpoint metadata associated with the viewpoint item from the table.
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
@@ -232,11 +230,11 @@ class ViewpointRouter:
         @api_router.get("/{viewpoint_id}/bounds")
         def get_bounds(viewpoint_id: str) -> Dict[str, Any]:
             """
-            Get viewpoint bounds based on provided viewpoint id
+            Get viewpoint bounds based on provided viewpoint id.
 
-            :param viewpoint_id: Unique viewpoint id
+            :param viewpoint_id: Unique viewpoint id to get from the table.
 
-            :return Dict[str, Any]: viewpoint bounds
+            :return: Viewpoint bounds for the given table item.
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
@@ -257,11 +255,11 @@ class ViewpointRouter:
         @api_router.get("/{viewpoint_id}/info")
         def get_info(viewpoint_id: str) -> Dict[str, Any]:
             """
-            Get viewpoint info based on provided viewpoint id
+            Get viewpoint info based on provided viewpoint id.
 
-            :param viewpoint_id: Unique viewpoint id
+            :param viewpoint_id: Unique viewpoint id to get from the table.
 
-            :return Dict[str, Any]: viewpoint info
+            :return: Viewpoint info associated with the given id.
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
@@ -284,11 +282,11 @@ class ViewpointRouter:
         @api_router.get("/{viewpoint_id}/statistics")
         def get_statistics(viewpoint_id: str) -> Dict[str, Any]:
             """
-            Get viewpoint statistics based on provided viewpoint id
+            Get viewpoint statistics based on provided viewpoint id.
 
-            :param viewpoint_id: Unique viewpoint id
+            :param viewpoint_id: Unique viewpoint id to get from the table.
 
-            :return Dict[str, Any]: viewpoint statistics
+            :return: Viewpoint statistics associated with the id.
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
@@ -317,13 +315,12 @@ class ViewpointRouter:
         ) -> Response:
             """
             Get preview of viewpoint in the requested format
-
-            :param viewpoint_id: Unique viewpoint id
-            :param img_format: Desired format for preview output. Valid options are defined by GDALImageFormats
-            :param max_size: Maximum size of the preview. Defaults to 1024
-            :param width: Forced output width
-            :param height: Forced output height
-            :param compression: GDAL image compression
+            :param viewpoint_id: Unique viewpoint id to get from the table.
+            :param img_format: The Desired format for preview output, valid options are defined by GDALImageFormats.
+            :param max_size: Max size of the preview image, defaults to 1024 pixels.
+            :param width: Preview width in pixels that supersedes scale if > 0.
+            :param height: Preview height in pixels that supersedes scale if > 0.
+            :param compression: GDAL image compression format to use.
 
             :return: StreamingResponse of preview binary with the appropriate mime type based on the img_format
             """
@@ -366,14 +363,14 @@ class ViewpointRouter:
         ) -> Response:
             """
 
-            :param viewpoint_id: Unique viewpoint id
-            :param z: resolution-level in the image pyramid 0 = full resolution, 1 = full/2, 2 = full/4, ...
-            :param x: tile row (px)
-            :param y: tile column(px)
-            :param tile_format: Desired format for tile output. Valid options are defined by GDALImageFormats
-            :param compression: GDAL tile compression
+            :param viewpoint_id: Unique viewpoint id to get from the table.
+            :param z: Resolution-level in the image pyramid 0 = full resolution, 1 = full/2, 2 = full/4, ...
+            :param x: Tile row location in pixels for the given tile.
+            :param y: Tile column location in pixels for the given tile.
+            :param tile_format: Desired format for tile output, valid options are defined by GDALImageFormats.
+            :param compression: GDAL tile compression format.
 
-            :return: StreamingResponse of tile image binary
+            :return: StreamingResponse of tile image binary payload.
             """
             if z < 0:
                 raise HTTPException(
@@ -435,15 +432,15 @@ class ViewpointRouter:
             \f
             Crop a portion of the viewpoint.
 
-            :param viewpoint_id: Unique viewpoint id
+            :param viewpoint_id: Unique viewpoint id to get from the table as a crop.
             :param min_x: The left pixel coordinate of the desired crop.
             :param min_y: The upper pixel coordinate of the desired crop.
             :param max_x: The right pixel coordinate of the desired crop.
             :param max_y: The lower pixel coordinate of the pixel crop.
             :param img_format: Desired format for cropped output. Valid options are defined by GDALImageFormats.
             :param compression: GDAL compression algorithm for image.
-            :param width: Optional. Width in px of the desired crop.  If provided, max_x will be ignored.
-            :param height: Optional. Height in px of the desired crop.  If provided, max_y will be ignored.
+            :param width: Optional width in px of the desired crop, if provided, max_x will be ignored.
+            :param height: Optional height in px of the desired crop, if provided, max_y will be ignored.
 
             :return: StreamingResponse of cropped image binary with the appropriate mime type based on the img_format
             """
@@ -467,15 +464,16 @@ class ViewpointRouter:
 
         return api_router
 
-    def validate_viewpoint_status(self, current_status: ViewpointStatus, api_operation: ViewpointApiNames) -> None:
+    @staticmethod
+    def validate_viewpoint_status(current_status: ViewpointStatus, api_operation: ViewpointApiNames) -> None:
         """
-        This is a helper function which is to validate if we can execute an operation based on the
+        This is a helper function that is to validate if we can execute an operation based on the
         given status
 
-        :param current_status: current status of a viewpoint
-        :param api_operation: api operation
+        :param current_status: Current status of a viewpoint in the table.
+        :param api_operation: The associated API operation being used on the viewpoint.
 
-        :return: viewpoint detail
+        :return: Viewpoint detail
         """
         if current_status == ViewpointStatus.DELETED:
             raise HTTPException(

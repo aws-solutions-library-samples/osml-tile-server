@@ -34,7 +34,7 @@ class HealthCheck(BaseModel):
     A Pydantic model for a health check response.
 
     Attributes:
-        status (str): Status of the health check. Defaults is "OK".
+        status (str): Status of the health check, defaults to "OK".
     """
 
     status: str = "OK"
@@ -101,12 +101,14 @@ async def lifespan(app: FastAPI) -> AbstractAsyncContextManager[None] | FastAPI:
     :return: The lifespan construct associated with the fast API
 
     This function starts the Viewpoint Worker as part of the FastAPI lifespan,
-    and stops it after yield. For more information refer to FastAPI events
+    and stops it after yield.
+    For more information, refer to FastAPI events
     documentation at : https://fastapi.tiangolo.com/advanced/events/
 
     Note:
         aws_s3, viewpoint_database and viewpoint_request_queue should be predefined
-        before this function's call. They represent your AWS S3 bucket instance,
+        before this function's call.
+        They represent your AWS S3 bucket instance,
         your database instance and a queue of requests respectively.
     """
     viewpoint_worker = ViewpointWorker(viewpoint_request_queue, aws_s3, viewpoint_database)
@@ -154,7 +156,6 @@ async def root() -> str:
     contact and license details.
 
     :return: Welcome message with application information.
-    :rtype: str
     """
     homepage_description = f"""
     <html>

@@ -14,8 +14,8 @@ from aws.osml.tile_server.app_config import BotoConfig, ServerConfig
 
 class RefreshableBotoSession:
     """
-    RefreshableBotoSession is a Boto3 helper class which allows us to create a refreshable session such that none of the
-    client/resources we want to call against will never expire.
+    RefreshableBotoSession is a Boto3 helper class that allows for the creation of a refreshable session such that none
+    of the client/resources we want to call against will expire.
     """
 
     def __init__(self):
@@ -26,12 +26,11 @@ class RefreshableBotoSession:
 
     def _refresh(self) -> Dict[str, str]:
         """
-        Get session credentials
+        Refresh the AWS credentials for the current session.
 
-        :return: session credentials
+        :return: Session credentials that were refreshed.
         """
         session = Session(region_name=ServerConfig.aws_region)
-        credentials = {}
 
         if self.sts_arn:
             sts_client = session.client(service_name="sts", region_name=ServerConfig.aws_region)
@@ -63,7 +62,7 @@ class RefreshableBotoSession:
                     "token": None,
                     "expiry_time": datetime.fromtimestamp(time() + 3600, timezone.utc).isoformat(),
                 }
-                self.logger.error(f"Error has occurred when setting up the STS session - {err} / {traceback.format_exc()}")
+                self.logger.error(f"Error has occurred when setting up STS session - {err} / {traceback.format_exc()}")
 
         return credentials
 
@@ -71,7 +70,7 @@ class RefreshableBotoSession:
         """
         Create a refreshable session which will automatically renew credentials when the credential expired.
 
-        :return: Refreshable Session
+        :return: Refreshable credentials session to use for the task user.
         """
         session_credentials = RefreshableCredentials.create_from_metadata(
             metadata=self._refresh(),
@@ -84,39 +83,37 @@ class RefreshableBotoSession:
         session._credentials = session_credentials
         session.set_config_variable("region", ServerConfig.aws_region)
 
-        autorefresh_session = Session(botocore_session=session)
-
-        return autorefresh_session
+        return Session(botocore_session=session)
 
 
 def initialize_ddb(session: Session) -> ServiceResource:
     """
     Initialize DynamoDB service and return a service resource.
 
-    :return: DynamoDB service resource
+    :param: session: The credential session to use for the ServiceResource.
+    :return: DynamoDB service resource for consumption.
     """
-    ddb = session.resource("dynamodb", config=BotoConfig.default, region_name=ServerConfig.aws_region)
 
-    return ddb
+    return session.resource("dynamodb", config=BotoConfig.default, region_name=ServerConfig.aws_region)
 
 
 def initialize_s3(session: Session) -> ServiceResource:
     """
     Initialize S3 service and return a service resource.
 
-    :return: S3 service resource
+    :param: session: The credential session to use for the ServiceResource.
+    :return: S3 service resource for consumption.
     """
-    s3 = session.resource("s3", config=BotoConfig.default)
 
-    return s3
+    return session.resource("s3", config=BotoConfig.default)
 
 
 def initialize_sqs(session: Session) -> ServiceResource:
     """
     Initialize SQS service and return a service resource.
 
-    :return: SQS service resource
+    :param: session: The credential session to use for the ServiceResource.
+    :return: SQS service resource for consumption.
     """
-    sqs = session.resource("sqs", config=BotoConfig.default)
 
-    return sqs
+    return session.resource("sqs", config=BotoConfig.default)

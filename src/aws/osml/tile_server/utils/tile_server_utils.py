@@ -19,7 +19,7 @@ logger = logging.getLogger("uvicorn")
 
 def get_media_type(tile_format: GDALImageFormats) -> str:
     """
-    Obtain the meta type based on the given tile format
+    Obtain the meta-type based on the given tile format.
 
     :param tile_format: GDAL Image format associated with the tile.
 
@@ -40,10 +40,10 @@ def get_standard_overviews(width: int, height: int, preview_size: int) -> List[i
     This utility computes a list of reduced resolution scales that define a standard image pyramid for a given
     image and desired final preview size.
 
-    :param width: width of the full image at highest resolution
-    :param height: height of the full image at highest resolution
-    :param preview_size: the desired size of the lowest resolution / thumbnail image.
-    :return: The list of scale factors needed for each level in the tile pyramid e.g. [2, 4, 8, 16 ...]
+    :param width: Width of the full image at the highest resolution.
+    :param height: Height of the full image at the highest resolution.
+    :param preview_size: The desired size of the lowest resolution / thumbnail image.
+    :return: The list of scale factors needed for each level in the tile pyramid, e.g. [2, 4, 8, 16 ...]
     """
     min_side = min(width, height)
     num_overviews = ceil(log(min_side / preview_size) / log(2))
@@ -71,7 +71,7 @@ class TileFactoryPool:
         """
         This initializes a TileFactoryPool, representing a pool of GDALTileFactory objects. The purpose
         of this class is to manage resources (the GDALTileFactory objects) efficiently, typically for a
-        multithreaded environment.
+        multithreading environment.
 
 
         :param tile_format: The image format of the tiles.
@@ -80,7 +80,7 @@ class TileFactoryPool:
         :param output_type: The output type. Defaults to None.
         :param range_adjustment: The range adjustment type, defaults to RangeAdjustmentType.NONE.
 
-        :return None
+        :return: None
         """
         self.lock = RLock()
         self.current_inventory = []
@@ -97,7 +97,7 @@ class TileFactoryPool:
         it pops out the first GDALTileFactory object. If the inventory is empty,
         a new GDALTileFactory object is created, added to the inventory, and returned.
 
-        :return: an instance of the GDALTileFactory
+        :return: Instance of the GDALTileFactory class.
         """
         tf = None
         with self.lock:
@@ -128,7 +128,7 @@ class TileFactoryPool:
         """
         Adds a GDALTileFactory object to the current inventory.
 
-        :param tf: GDALTileFactory object
+        :param tf: GDALTileFactory object to be checked in to the index.
         :return: None
         """
 
@@ -194,9 +194,8 @@ def perform_gdal_translation(dataset: Dataset, gdal_options: Dict) -> Optional[b
         if vsifile_handle is None:
             return None
         stat = gdal.VSIStatL(tmp_name, gdal.VSI_STAT_SIZE_FLAG)
-        vsibuf = gdal.VSIFReadL(1, stat.size, vsifile_handle)
 
-        return vsibuf
+        return gdal.VSIFReadL(1, stat.size, vsifile_handle)
 
     finally:
         if vsifile_handle is not None:

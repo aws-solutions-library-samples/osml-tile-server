@@ -27,11 +27,11 @@ class ViewpointRequestQueue:
 
     def send_request(self, request: Dict) -> None:
         """
-        Send the message via SQS
+        Send the message to an associated SQS queue.
 
-        :param request: Unique identifier to assign the SQS message sent.
+        :param request: A JSON request to assign the SQS message sent.
         :return: None
-        :raises ClientError: if unable to send message.
+        :raises ClientError: if unable to send a message.
         """
         try:
             self.queue.send_message(MessageBody=json.dumps(request))
