@@ -64,18 +64,16 @@ class ViewpointRequest(BaseModel):
     """
     Represents a request to create or update a viewpoint.
 
-    All fields are required.
-
+    :param viewpoint_name: The name of the viewpoint. Minimum length is 1.
     :param bucket_name: The name of the bucket. Minimum length is 1.
     :param object_key: The key of the object. Minimum length is 1.
-    :param viewpoint_name: The name of the viewpoint. Minimum length is 1.
     :param tile_size: The tile size. Should be greater than 0.
     :param range_adjustment: The range adjustment type. Minimum string length is 1.
     """
 
+    viewpoint_name: str = Field(min_length=1)
     bucket_name: str = Field(min_length=1)
     object_key: str = Field(min_length=1)
-    viewpoint_name: str = Field(min_length=1)
     tile_size: int = Field(gt=0)
     range_adjustment: RangeAdjustmentType = Field(min_length=1)
 

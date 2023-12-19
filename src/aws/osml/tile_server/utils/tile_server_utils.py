@@ -1,3 +1,5 @@
+#  Copyright 2023 Amazon.com, Inc. or its affiliates.
+
 import logging
 import threading
 import time
@@ -15,44 +17,6 @@ from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustm
 from aws.osml.image_processing import GDALTileFactory
 
 logger = logging.getLogger("uvicorn")
-
-
-def get_media_type(tile_format: GDALImageFormats) -> str:
-    """
-    Obtain the meta type based on the given tile format
-
-    :param tile_format: GDAL Image format associated with the tile.
-
-    :return: The associated image format in plain text.
-    """
-    supported_media_types = {
-        GDALImageFormats.PNG.value.lower(): "image/png",
-        GDALImageFormats.NITF.value.lower(): "image/nitf",
-        GDALImageFormats.JPEG.value.lower(): "image/jpeg",
-        GDALImageFormats.GTIFF.value.lower(): "image/tiff",
-    }
-    default_media_type = "image"
-    return supported_media_types.get(tile_format.lower(), default_media_type)
-
-
-def get_standard_overviews(width: int, height: int, preview_size: int) -> List[int]:
-    """
-    This utility computes a list of reduced resolution scales that define a standard image pyramid for a given
-    image and desired final preview size.
-
-    :param width: width of the full image at highest resolution
-    :param height: height of the full image at highest resolution
-    :param preview_size: the desired size of the lowest resolution / thumbnail image.
-    :return: The list of scale factors needed for each level in the tile pyramid e.g. [2, 4, 8, 16 ...]
-    """
-    min_side = min(width, height)
-    num_overviews = ceil(log(min_side / preview_size) / log(2))
-    if num_overviews > 0:
-        result = []
-        for i in range(1, num_overviews + 1):
-            result.append(2**i)
-        return result
-    return []
 
 
 class TileFactoryPool:
@@ -153,6 +117,44 @@ class TileFactoryPool:
                 self.checkin(tf)
 
 
+def get_media_type(tile_format: GDALImageFormats) -> str:
+    """
+    Obtain the meta type based on the given tile format
+
+    :param tile_format: GDAL Image format associated with the tile.
+
+    :return: The associated image format in plain text.
+    """
+    supported_media_types = {
+        GDALImageFormats.PNG.value.lower(): "image/png",
+        GDALImageFormats.NITF.value.lower(): "image/nitf",
+        GDALImageFormats.JPEG.value.lower(): "image/jpeg",
+        GDALImageFormats.GTIFF.value.lower(): "image/tiff",
+    }
+    default_media_type = "image"
+    return supported_media_types.get(tile_format.lower(), default_media_type)
+
+
+def get_standard_overviews(width: int, height: int, preview_size: int) -> List[int]:
+    """
+    This utility computes a list of reduced resolution scales that define a standard image pyramid for a given
+    image and desired final preview size.
+
+    :param width: width of the full image at highest resolution
+    :param height: height of the full image at highest resolution
+    :param preview_size: the desired size of the lowest resolution / thumbnail image.
+    :return: The list of scale factors needed for each level in the tile pyramid e.g. [2, 4, 8, 16 ...]
+    """
+    min_side = min(width, height)
+    num_overviews = ceil(log(min_side / preview_size) / log(2))
+    if num_overviews > 0:
+        result = []
+        for i in range(1, num_overviews + 1):
+            result.append(2**i)
+        return result
+    return []
+
+
 @lru_cache(maxsize=20)
 def get_tile_factory_pool(
     tile_format: GDALImageFormats,
@@ -183,22 +185,25 @@ def perform_gdal_translation(dataset: Dataset, gdal_options: Dict) -> Optional[b
     :param gdal_options: Options for the GDAL translation.
     :return: A bytearray containing the translated data, or None if translation fails.
     """
-    tmp_name = f"/vsimem/{uuid4()}"
+    if "format" in gdal_options and isinstance(gdal_options.get("format"), GDALImageFormats):
+        tmp_name = f"/vsimem/{uuid4()}"
 
-    gdal.Translate(tmp_name, dataset, **gdal_options)
+        gdal.Translate(tmp_name, dataset, **gdal_options)
 
-    # Read the VSIFile
-    vsifile_handle = None
-    try:
-        vsifile_handle = gdal.VSIFOpenL(tmp_name, "r")
-        if vsifile_handle is None:
-            return None
-        stat = gdal.VSIStatL(tmp_name, gdal.VSI_STAT_SIZE_FLAG)
-        vsibuf = gdal.VSIFReadL(1, stat.size, vsifile_handle)
+        # Read the VSIFile
+        vsifile_handle = None
+        try:
+            vsifile_handle = gdal.VSIFOpenL(tmp_name, "r")
+            if vsifile_handle is None:
+                return None
+            stat = gdal.VSIStatL(tmp_name, gdal.VSI_STAT_SIZE_FLAG)
+            vsibuf = gdal.VSIFReadL(1, stat.size, vsifile_handle)
 
-        return vsibuf
+            return vsibuf
 
-    finally:
-        if vsifile_handle is not None:
-            gdal.VSIFCloseL(vsifile_handle)
-        gdal.GetDriverByName(gdal_options.get("format")).Delete(tmp_name)
+        finally:
+            if vsifile_handle is not None:
+                gdal.VSIFCloseL(vsifile_handle)
+            gdal.GetDriverByName(gdal_options.get("format")).Delete(tmp_name)
+    else:
+        raise ValueError("gdal_options missing format key ({'format': <GDALImageFormats object>})")
