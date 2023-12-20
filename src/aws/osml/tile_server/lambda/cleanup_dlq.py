@@ -16,7 +16,7 @@ def lambda_handler(event: Dict[Any, Any], context: Any):
     This Lambda function processes SQS queue messages, retrieving and updating the associated items from a DynamoDB
     table. It expects an event object with a "Records" list which includes a 'viewpoint_id'. If viewpoint_id is missing
     or item is not found in the table, it returns a 404 response. If the item is found, its status is updated as
-    'FAILED' with an expiry time of current time plus 1 day. If an exception occurs, it's logged and a 500 status code
+    'FAILED' with an expiry time of current time plus 1 day. If an exception occurs, it's logged and a 500-status code
     is returned with the error message.
 
     Example usage:

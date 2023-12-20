@@ -15,7 +15,7 @@ from .models import ViewpointListResponse, ViewpointModel
 
 class DecimalEncoder(json.JSONEncoder):
     """
-    This is a helper class which extends json.JSONEncoder.
+    This is a helper class that extends json.JSONEncoder.
     It's used to convert all Decimal instances to int
     when we fetch data from DynamoDB (which can return some items as Decimal).
 
@@ -46,6 +46,7 @@ class ViewpointStatusTable:
         Initialize the ViewpointStatusTable and validate the table status.
 
         :param aws_ddb: An instance of the AWS DynamoDB service resource.
+        :return: None
         :raises ClientError: If the table does not exist in the specified AWS region.
         """
         self.ddb = aws_ddb
@@ -61,12 +62,12 @@ class ViewpointStatusTable:
 
     def get_viewpoints(self, limit: int = None, next_token: str = None) -> ViewpointListResponse:
         """
-        Get viewpoint items from the dynamodb table.  If limit nor next_token are provided it returns all records.
+        Get viewpoint items from the dynamodb table, if limit nor next_token are provided, it returns all records.
 
-        :param limit: Optional. max number of viewpoints requested from dynamodb
-        :param next_token: Optional. the token to begin a query from.  provided by the previous query response that
+        :param limit: Optional max number of viewpoints requested from dynamodb
+        :param next_token: Optional token to begin a query from provided by the previous query response that
                 had more records available
-        :returns ViewpointListResponse
+        :returns The list of available viewpoints in the table.
         """
         query_params = {"FilterExpression": Attr("viewpoint_status").ne("DELETED")}
         if limit:
@@ -92,9 +93,10 @@ class ViewpointStatusTable:
 
     def get_all_viewpoints(self, query_params: Dict) -> ViewpointListResponse:
         """
-        Get all the viewpoint items from the dynamodb table
+        Get all the viewpoint items from the dynamodb table.
 
-        :returns ViewpointListResponse
+        :param: query_params: A query to get all the viewpoints from the table.
+        :return: A list of all the viewpoints found in the table.
         """
         response = self.table.scan(**query_params)
         data = response["Items"]
@@ -108,7 +110,8 @@ class ViewpointStatusTable:
         """
         Get a page of viewpoint items from the dynamodb table
 
-        :returns ViewpointListResponse
+        :param: The query parameters to use for constructing the page of viewpoints.
+        :return: Page of viewpoints associated with the query parameters.
         """
         response = self.table.scan(**query_params)
         ret_val = ViewpointListResponse(items=response["Items"])
@@ -121,8 +124,7 @@ class ViewpointStatusTable:
         Get detail of a viewpoint based on a given viewpoint id from the table.
 
         :param viewpoint_id: The viewpoint_id you want to get from the table.
-
-        :return Viewpoint details associated with the requested viewpoint_id.
+        :return: Viewpoint details associated with the requested viewpoint_id.
         :raises: HTTPException if it cannot fetch a viewpoint item from the ViewpointStatusTable.
         """
         try:
@@ -143,11 +145,10 @@ class ViewpointStatusTable:
 
     def create_viewpoint(self, viewpoint_request: ViewpointModel) -> Dict:
         """
-        Create a viewpoint item and store them in a DynamoDB table
+        Create a viewpoint item and store them in a DynamoDB table.
 
         :param viewpoint_request: The provided request to create a new viewpoint in the table.
-
-        :return ViewpointModel: Details of the newly created viewpoint item.
+        :return: Details of the newly created viewpoint item.
         :raises: HTTPException if it cannot create a viewpoint item from the ViewpointStatusTable.
 
         """
@@ -164,11 +165,10 @@ class ViewpointStatusTable:
 
     def update_viewpoint(self, viewpoint_item: ViewpointModel) -> ViewpointModel:
         """
-        Update viewpoint item in a dynamodb table
+        Update viewpoint item in a dynamodb table.
 
         :param viewpoint_item: Viewpoint item to be updated in the table.
-
-        :return Updated viewpoint item in the table.
+        :return: Updated viewpoint item in the table.
         :raises: HTTPException if it cannot update a viewpoint item from the ViewpointStatusTable.
 
         """
@@ -202,7 +202,6 @@ class ViewpointStatusTable:
         Generate an update expression and a dict of values to update a dynamodb table.
 
         :param body: Body of the request that contains the updated data.
-
         :return: Generated update expression and attributes.
         """
         update_expr = ["SET "]

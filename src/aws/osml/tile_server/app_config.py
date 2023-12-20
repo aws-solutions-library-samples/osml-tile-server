@@ -12,7 +12,7 @@ class ServerConfig:
     The ServerConfig is a dataclass meant to house the high-level configuration settings
     required for OSML Tile Server to operate that are provided through ENV variables. Note
     that required env parameters are enforced by the implied schema validation as os.environ[]
-    is used to fetch the values. Optional parameters are fetched using, os.getenv(),
+    is used to fetch the values. Optional parameters are fetched using os.getenv(),
     which returns None.
 
     :param aws_region: The AWS region, defaults to 'us-west-2'
@@ -37,5 +37,5 @@ class BotoConfig:
     :param default:  Standard boto client configuration
     """
 
-    # required env configuration
+    # Required env configuration
     default: Config = Config(region_name=ServerConfig.aws_region, retries={"max_attempts": 15, "mode": "standard"})

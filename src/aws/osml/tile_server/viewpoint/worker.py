@@ -48,10 +48,10 @@ class ViewpointWorker(threading.Thread):
 
     def join(self, timeout: float | None = ...) -> None:
         """
-        Join the ViewpointWorker thread.
+        Join the ViewpointWorker threads together.
 
         :param timeout: The maximum number of seconds to wait for the thread to finish execution. If `None`, the method
-            will block until the thread is finished. (default is `None`)
+            will block until the thread is finished. (Default is `None`)
         :return: None
         """
         self.logger.info("ViewpointWorker Background Thread Stopping.")
