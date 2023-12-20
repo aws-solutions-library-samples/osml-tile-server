@@ -73,9 +73,9 @@ class ViewpointRequest(BaseModel):
     :param range_adjustment: The range adjustment type, the Minimum string length is 1.
     """
 
+    viewpoint_name: str = Field(min_length=1)
     bucket_name: str = Field(min_length=1)
     object_key: str = Field(min_length=1)
-    viewpoint_name: str = Field(min_length=1)
     tile_size: int = Field(gt=0)
     range_adjustment: RangeAdjustmentType = Field(min_length=1)
 

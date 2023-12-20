@@ -1,3 +1,5 @@
+#  Copyright 2023 Amazon.com, Inc. or its affiliates.
+
 import logging
 import sys
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
@@ -5,18 +7,15 @@ from time import sleep
 from typing import Tuple
 
 import uvicorn
-from boto3.resources.base import ServiceResource
 from botocore.exceptions import ClientError
 from cryptography.fernet import Fernet
 from fastapi import FastAPI, status
 from fastapi.responses import HTMLResponse
 from fastapi_versioning import VersionedFastAPI
 from osgeo import gdal
-from pydantic import BaseModel
 
 from .app_config import ServerConfig
-from .utils import initialize_token_key, read_token_key
-from .utils.aws_services import RefreshableBotoSession, initialize_ddb, initialize_s3, initialize_sqs
+from .utils import HealthCheck, initialize_aws_services, initialize_token_key, read_token_key
 from .viewpoint.database import ViewpointStatusTable
 from .viewpoint.queue import ViewpointRequestQueue
 from .viewpoint.routers import ViewpointRouter
@@ -64,7 +63,11 @@ def initialize_services() -> Tuple[ServiceResource, ServiceResource, ServiceReso
     return ddb, s3, sqs
 
 
-aws_ddb, aws_s3, aws_sqs = initialize_services()
+try:
+    aws_ddb, aws_s3, aws_sqs = initialize_aws_services()
+except ClientError as err:
+    logger.error(f"Fatal error occurred while initializing AWS services. Exception: {err}")
+    sys.exit("Fatal error occurred while initializing AWS services. Exiting.")
 
 
 def initialize_viewpoint_components() -> Tuple[ViewpointStatusTable, ViewpointRequestQueue, ViewpointRouter]:

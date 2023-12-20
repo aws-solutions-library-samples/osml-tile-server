@@ -1,8 +1,10 @@
+#  Copyright 2023 Amazon.com, Inc. or its affiliates.
+
 import logging
 import traceback
 from datetime import datetime, timezone
 from time import time
-from typing import Dict
+from typing import Dict, Tuple
 
 from boto3 import Session
 from boto3.resources.base import ServiceResource
@@ -115,5 +117,26 @@ def initialize_sqs(session: Session) -> ServiceResource:
     :param: session: The credential session to use for the ServiceResource.
     :return: SQS service resource for consumption.
     """
-
+    
     return session.resource("sqs", config=BotoConfig.default)
+
+
+def initialize_aws_services() -> Tuple[ServiceResource, ServiceResource, ServiceResource]:
+    """
+    Initialize AWS services required by the application.
+
+    This function initializes DynamoDB, S3, and SQS services,
+    handling any exceptions that occur during the process.
+
+    :return: Tuple containing the initialized service resources for ddb, s3, and sqs clients.
+
+    :raises: SystemExit if any service fails to initialize.
+    """
+
+    session = RefreshableBotoSession().refreshable_session()
+
+    ddb = initialize_ddb(session)
+    s3 = initialize_s3(session)
+    sqs = initialize_sqs(session)
+
+    return ddb, s3, sqs

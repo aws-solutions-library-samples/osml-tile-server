@@ -1,4 +1,5 @@
 #  Copyright 2023 Amazon.com, Inc. or its affiliates.
+
 import inspect
 import io
 import logging
@@ -119,11 +120,8 @@ class ViewpointRouter:
         def create_viewpoint(viewpoint_request: ViewpointRequest) -> Dict[str, Any]:
             """
             Create a viewpoint item, then copy the imagery file from S3 to EFS, then create a item into the database.
-
-            :param viewpoint_request: Client's request which contains name, file source, and range type.
-            TODO
-                - utilize efs service
-
+            
+            :param viewpoint_request: client's request which contains name, file source, and range type
             :return: Status associated with the request to create the viewpoint in the table.
             """
             # Create unique viewpoint_id
@@ -160,7 +158,7 @@ class ViewpointRouter:
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
-            self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.UPDATE)
+            self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.UPDATE)
 
             if viewpoint_item:
                 shutil.rmtree(Path(viewpoint_item.local_object_path).parent, ignore_errors=True)
@@ -184,7 +182,7 @@ class ViewpointRouter:
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_request.viewpoint_id)
 
-            self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.UPDATE)
+            self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.UPDATE)
 
             viewpoint_item.viewpoint_name = viewpoint_request.viewpoint_name
             viewpoint_item.tile_size = viewpoint_request.tile_size
@@ -215,7 +213,7 @@ class ViewpointRouter:
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
-            self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.METADATA)
+            self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.METADATA)
 
             viewpoint_path = viewpoint_item.local_object_path
 
@@ -238,7 +236,7 @@ class ViewpointRouter:
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
-            self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.BOUNDS)
+            self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.BOUNDS)
 
             viewpoint_path = viewpoint_item.local_object_path
 
@@ -263,7 +261,7 @@ class ViewpointRouter:
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
-            self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.INFO)
+            self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.INFO)
 
             viewpoint_path = viewpoint_item.local_object_path
 
@@ -290,7 +288,7 @@ class ViewpointRouter:
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
-            self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.STATISTICS)
+            self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.STATISTICS)
 
             viewpoint_path = viewpoint_item.local_object_path
 
@@ -325,7 +323,7 @@ class ViewpointRouter:
             :return: StreamingResponse of preview binary with the appropriate mime type based on the img_format
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
-            self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
+            self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
 
             output_type = None
             if viewpoint_item.range_adjustment is not RangeAdjustmentType.NONE:
@@ -379,7 +377,7 @@ class ViewpointRouter:
 
             try:
                 viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
-                self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.TILE)
+                self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.TILE)
 
                 output_type = None
                 if viewpoint_item.range_adjustment is not RangeAdjustmentType.NONE:
@@ -446,7 +444,7 @@ class ViewpointRouter:
             """
 
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
-            self.validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
+            self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
 
             tile_factory_pool = get_tile_factory_pool(
                 img_format,
@@ -465,7 +463,7 @@ class ViewpointRouter:
         return api_router
 
     @staticmethod
-    def validate_viewpoint_status(current_status: ViewpointStatus, api_operation: ViewpointApiNames) -> None:
+    def _validate_viewpoint_status(current_status: ViewpointStatus, api_operation: ViewpointApiNames) -> None:
         """
         This is a helper function that is to validate if we can execute an operation based on the
         given status
