@@ -4,6 +4,7 @@ import json
 import os
 import shutil
 import unittest
+from glob import glob
 from unittest.mock import patch
 
 import boto3
@@ -146,6 +147,9 @@ class TestRoutersE2E(unittest.TestCase):
         self.ddb = None
         self.table = None
         self.queue = None
+        tmp_test_files = glob(os.path.join("test_tmp", "viewpoints", "*"))
+        for tmp_test_file in tmp_test_files:
+            os.remove(tmp_test_file)
 
     def mock_set_ready(self, viewpoint_id):
         return self.table.update_item(
@@ -179,6 +183,13 @@ class TestRoutersE2E(unittest.TestCase):
         shutil.copy(TestConfig.test_file_path, local_path)
         self.mock_set_local_path(viewpoint_id, local_path)
 
+    def mock_create_viewpoint(self) -> str:
+        viewpoint_data_res = self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
+        viewpoint_data = viewpoint_data_res.json()
+        self.mock_set_ready(viewpoint_data["viewpoint_id"])
+        self.mock_download(viewpoint_data["viewpoint_id"])
+        return viewpoint_data["viewpoint_id"]
+
     def test_e2e_list_viewpoints_valid(self):
         self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
         self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
@@ -211,11 +222,8 @@ class TestRoutersE2E(unittest.TestCase):
             assert response.status_code == 402
 
     def test_e2e_delete_viewpoint_valid(self):
-        viewpoint_data_res = self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
-        viewpoint_data = viewpoint_data_res.json()
-        self.mock_set_ready(viewpoint_data["viewpoint_id"])
-        self.mock_download(viewpoint_data["viewpoint_id"])
-        response = self.client.delete(f"/latest/viewpoints/{viewpoint_data['viewpoint_id']}")
+        viewpoint_id = self.mock_create_viewpoint()
+        response = self.client.delete(f"/latest/viewpoints/{viewpoint_id}")
 
         assert response.status_code == 200
         assert response.json()["viewpoint_status"] == ViewpointStatus.DELETED
@@ -250,11 +258,8 @@ class TestRoutersE2E(unittest.TestCase):
             assert response.status_code == 402
 
     def test_e2e_get_metadata_valid(self):
-        viewpoint_data_res = self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
-        viewpoint_data = viewpoint_data_res.json()
-        self.mock_set_ready(viewpoint_data["viewpoint_id"])
-        self.mock_download(viewpoint_data["viewpoint_id"])
-        response = self.client.get(f"/latest/viewpoints/{viewpoint_data['viewpoint_id']}/metadata")
+        viewpoint_id = self.mock_create_viewpoint()
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/metadata")
 
         assert response.status_code == 200
 
@@ -263,40 +268,28 @@ class TestRoutersE2E(unittest.TestCase):
             assert response.json() == expected_json_result
 
     def test_e2e_get_metadata_invalid(self):
-        viewpoint_data_res = self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
-        viewpoint_data = viewpoint_data_res.json()
-        self.mock_set_ready(viewpoint_data["viewpoint_id"])
-        self.mock_download(viewpoint_data["viewpoint_id"])
+        self.mock_create_viewpoint()
         with self.assertRaises(Exception):
             response = self.client.get(f"/latest/viewpoints/{TEST_INVALID_VIEWPOINT_ID}/metadata")
             assert response.status_code == 402
 
     def test_e2e_get_bounds_valid(self):
-        viewpoint_data_res = self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
-        viewpoint_data = viewpoint_data_res.json()
-        self.mock_set_ready(viewpoint_data["viewpoint_id"])
-        self.mock_download(viewpoint_data["viewpoint_id"])
-        response = self.client.get(f"/latest/viewpoints/{viewpoint_data['viewpoint_id']}/bounds")
+        viewpoint_id = self.mock_create_viewpoint()
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/bounds")
 
         assert response.status_code == 200
         assert response.json()["bounds"] == ["325860N0846000E", "325859N0846000E", "325859N0850001E", "325859N0850000E"]
 
     def test_e2e_get_info_valid(self):
-        viewpoint_data_res = self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
-        viewpoint_data = viewpoint_data_res.json()
-        self.mock_set_ready(viewpoint_data["viewpoint_id"])
-        self.mock_download(viewpoint_data["viewpoint_id"])
-        response = self.client.get(f"/latest/viewpoints/{viewpoint_data['viewpoint_id']}/info")
+        viewpoint_id = self.mock_create_viewpoint()
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/info")
 
         assert response.status_code == 200
         assert response.json() is not None
 
     def test_e2e_get_statistics_valid(self):
-        viewpoint_data_res = self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
-        viewpoint_data = viewpoint_data_res.json()
-        self.mock_set_ready(viewpoint_data["viewpoint_id"])
-        self.mock_download(viewpoint_data["viewpoint_id"])
-        response = self.client.get(f"/latest/viewpoints/{viewpoint_data['viewpoint_id']}/statistics")
+        viewpoint_id = self.mock_create_viewpoint()
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/statistics")
 
         assert response.status_code == 200
         response_data = response.json()
@@ -309,30 +302,38 @@ class TestRoutersE2E(unittest.TestCase):
             expected_json_result["image_statistics"]["files"] = response_data["image_statistics"]["files"]
             assert response_data == expected_json_result
 
-    @pytest.mark.skip(reason="Test pending")
     def test_e2e_get_preview(self):
-        pass
+        viewpoint_id = self.mock_create_viewpoint()
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/preview.JPEG")
+        assert response.status_code == 200
+        assert response.headers.get("content-type") == "image/jpeg"
+        assert len(response.content) == 250282
 
     def test_e2e_get_tile_valid(self):
-        viewpoint_data_res = self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
-        viewpoint_data = viewpoint_data_res.json()
-        self.mock_set_ready(viewpoint_data["viewpoint_id"])
-        self.mock_download(viewpoint_data["viewpoint_id"])
-        response = self.client.get(f"/latest/viewpoints/{viewpoint_data['viewpoint_id']}/tiles/10/10/10.NITF")
+        viewpoint_id = self.mock_create_viewpoint()
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/tiles/10/10/10.NITF")
         assert response.status_code == 200
 
     def test_e2e_get_tile_invalid(self):
-        viewpoint_data_res = self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
-        viewpoint_data = viewpoint_data_res.json()
-        self.mock_set_ready(viewpoint_data["viewpoint_id"])
-        self.mock_download(viewpoint_data["viewpoint_id"])
-        response = self.client.get(f"/latest/viewpoints/{viewpoint_data['viewpoint_id']}/tiles/10/10/10.bad")
+        viewpoint_id = self.mock_create_viewpoint()
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/tiles/10/10/10.bad")
 
         assert response.status_code == 422
 
-    @pytest.mark.skip(reason="Test pending")
-    def test_e2e_get_crop(self):
-        pass
+    def test_e2e_get_crop_min_max(self):
+        viewpoint_id = self.mock_create_viewpoint()
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/crop/32,32,64,64.PNG")
+        assert response.status_code == 200
+        assert response.headers.get("content-type") == "image/png"
+        assert len(response.content) == 748
+
+    def test_e2e_get_crop_height_width(self):
+        viewpoint_id = self.mock_create_viewpoint()
+        query_params = {"width": 32, "height": 32}
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/crop/32,32,128,128.PNG", params=query_params)
+        assert response.status_code == 200
+        assert response.headers.get("content-type") == "image/png"
+        assert len(response.content) == 748
 
 
 if __name__ == "__main__":
