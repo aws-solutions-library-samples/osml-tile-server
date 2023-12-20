@@ -155,44 +155,6 @@ class TileFactoryPool:
                 self.checkin(tf)
 
 
-def get_media_type(tile_format: GDALImageFormats) -> str:
-    """
-    Obtain the meta type based on the given tile format
-
-    :param tile_format: GDAL Image format associated with the tile.
-
-    :return: The associated image format in plain text.
-    """
-    supported_media_types = {
-        GDALImageFormats.PNG.value.lower(): "image/png",
-        GDALImageFormats.NITF.value.lower(): "image/nitf",
-        GDALImageFormats.JPEG.value.lower(): "image/jpeg",
-        GDALImageFormats.GTIFF.value.lower(): "image/tiff",
-    }
-    default_media_type = "image"
-    return supported_media_types.get(tile_format.lower(), default_media_type)
-
-
-def get_standard_overviews(width: int, height: int, preview_size: int) -> List[int]:
-    """
-    This utility computes a list of reduced resolution scales that define a standard image pyramid for a given
-    image and desired final preview size.
-
-    :param width: width of the full image at highest resolution
-    :param height: height of the full image at highest resolution
-    :param preview_size: the desired size of the lowest resolution / thumbnail image.
-    :return: The list of scale factors needed for each level in the tile pyramid e.g. [2, 4, 8, 16 ...]
-    """
-    min_side = min(width, height)
-    num_overviews = ceil(log(min_side / preview_size) / log(2))
-    if num_overviews > 0:
-        result = []
-        for i in range(1, num_overviews + 1):
-            result.append(2**i)
-        return result
-    return []
-
-
 @lru_cache(maxsize=20)
 def get_tile_factory_pool(
     tile_format: GDALImageFormats,

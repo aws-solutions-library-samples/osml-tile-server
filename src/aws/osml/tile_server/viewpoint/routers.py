@@ -120,7 +120,7 @@ class ViewpointRouter:
         def create_viewpoint(viewpoint_request: ViewpointRequest) -> Dict[str, Any]:
             """
             Create a viewpoint item, then copy the imagery file from S3 to EFS, then create a item into the database.
-            
+
             :param viewpoint_request: client's request which contains name, file source, and range type
             :return: Status associated with the request to create the viewpoint in the table.
             """

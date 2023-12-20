@@ -117,7 +117,7 @@ def initialize_sqs(session: Session) -> ServiceResource:
     :param: session: The credential session to use for the ServiceResource.
     :return: SQS service resource for consumption.
     """
-    
+
     return session.resource("sqs", config=BotoConfig.default)
 
 

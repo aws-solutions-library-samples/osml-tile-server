@@ -30,7 +30,7 @@ def lambda_handler(event: Dict[Any, Any], context: Any):
         context = {}
         result = lambda_handler(event, context)
 
-        Print(result)
+        print(result)
 
     :param event: The event object that triggered the Lambda function. It contains information about the event source
         and any data associated with the event.

@@ -27,42 +27,6 @@ gdal.UseExceptions()
 # Configure logger
 logger = logging.getLogger("uvicorn")
 
-
-class HealthCheck(BaseModel):
-    """
-    A Pydantic model for a health check response.
-
-    Attributes:
-        status (str): Status of the health check, defaults to "OK".
-    """
-
-    status: str = "OK"
-
-
-def initialize_services() -> Tuple[ServiceResource, ServiceResource, ServiceResource]:
-    """
-    Initialize AWS services required by the application.
-
-    This function initializes DynamoDB, S3, and SQS services,
-    handling any exceptions that occur during the process.
-
-    :return: Tuple containing the initialized service resources for ddb, s3, and sqs clients.
-
-    :raises: SystemExit if any service fails to initialize.
-    """
-    try:
-        session = RefreshableBotoSession().refreshable_session()
-
-        ddb = initialize_ddb(session)
-        s3 = initialize_s3(session)
-        sqs = initialize_sqs(session)
-    except ClientError as err:
-        logger.error(f"Fatal error occurred while initializing AWS services. Exception: {err}")
-        sys.exit("Fatal error occurred while initializing AWS services. Exiting.")
-
-    return ddb, s3, sqs
-
-
 try:
     aws_ddb, aws_s3, aws_sqs = initialize_aws_services()
 except ClientError as err:
