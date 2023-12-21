@@ -54,55 +54,55 @@ class TestRouters(unittest.TestCase):
     def tearDown(self):
         self.client = None
 
-    @pytest.mark.skip(reason="Test pending")
+    @pytest.mark.skip(reason="Test not implemented")
     def test_list_viewpoints(self):
         pass
 
-    @pytest.mark.skip(reason="Test pending")
+    @pytest.mark.skip(reason="Test not implemented")
     def test_create_viewpoint(self):
         pass
 
-    @pytest.mark.skip(reason="Test pending")
+    @pytest.mark.skip(reason="Test not implemented")
     def test_delete_viewpoint(self):
         pass
 
-    @pytest.mark.skip(reason="Test pending")
+    @pytest.mark.skip(reason="Test not implemented")
     def test_update_viewpoint(self):
         pass
 
-    @pytest.mark.skip(reason="Test pending")
+    @pytest.mark.skip(reason="Test not implemented")
     def test_describe_viewpoint(self):
         pass
 
-    @pytest.mark.skip(reason="Test pending")
+    @pytest.mark.skip(reason="Test not implemented")
     def test_get_metadata(self):
         pass
 
-    @pytest.mark.skip(reason="Test pending")
+    @pytest.mark.skip(reason="Test not implemented")
     def test_get_bounds(self):
         pass
 
-    @pytest.mark.skip(reason="Test pending")
+    @pytest.mark.skip(reason="Test not implemented")
     def test_get_info(self):
         pass
 
-    @pytest.mark.skip(reason="Test pending")
+    @pytest.mark.skip(reason="Test not implemented")
     def test_get_statistics(self):
         pass
 
-    @pytest.mark.skip(reason="Test pending")
+    @pytest.mark.skip(reason="Test not implemented")
     def test_get_preview(self):
         pass
 
-    @pytest.mark.skip(reason="Test pending")
+    @pytest.mark.skip(reason="Test not implemented")
     def test_get_tile(self):
         pass
 
-    @pytest.mark.skip(reason="Test pending")
+    @pytest.mark.skip(reason="Test not implemented")
     def test_get_crop(self):
         pass
 
-    @pytest.mark.skip(reason="Test pending")
+    @pytest.mark.skip(reason="Test not implemented")
     def test_validate_viewpoint_status(self):
         pass
 
@@ -146,6 +146,7 @@ class TestRoutersE2E(unittest.TestCase):
         self.s3_resource = None
         self.ddb = None
         self.table = None
+        self.sqs = None
         self.queue = None
         tmp_test_files = glob(os.path.join("test_tmp", "viewpoints", "*"))
         for tmp_test_file in tmp_test_files:
