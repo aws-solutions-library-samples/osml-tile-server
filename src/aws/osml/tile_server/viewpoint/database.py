@@ -204,7 +204,7 @@ class ViewpointStatusTable:
         :param body: Body of the request that contains the updated data.
         :return: Generated update expression and attributes.
         """
-        update_expr = ["SET "]
+        update_expr = ["SET"]
         update_attr = dict()
 
         for key, val in body.items():
