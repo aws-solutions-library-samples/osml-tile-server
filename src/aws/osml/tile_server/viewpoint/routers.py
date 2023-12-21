@@ -49,7 +49,9 @@ class ViewpointRouter:
         The `ViewpointRouter` class is responsible for handling API endpoints related to viewpoints.
 
         :param viewpoint_database: Instance of the ViewpointStatusTable class representing the viewpoint database.
+
         :param viewpoint_queue: Instance of the ViewpointRequestQueue class representing the viewpoint request queue.
+
         :param aws_s3: Instance of the ServiceResource class representing the AWS S3 service.
 
         :return: None
@@ -81,7 +83,9 @@ class ViewpointRouter:
             Get a list of viewpoints in the database.
 
             :param max_results: Optional max number of viewpoints requested
+
             :param next_token: Optional token to begin a query from provided by the previous query response.
+
             :return: List of viewpoints with details from the table.
             """
             current_function_name = inspect.stack()[0].function
@@ -119,9 +123,10 @@ class ViewpointRouter:
         @api_router.post("/", status_code=201)
         def create_viewpoint(viewpoint_request: ViewpointRequest) -> Dict[str, Any]:
             """
-            Create a viewpoint item, then copy the imagery file from S3 to EFS, then create a item into the database.
+            Create a viewpoint item, then copy the imagery file from S3 to EFS, then create an item into the database.
 
-            :param viewpoint_request: client's request which contains name, file source, and range type
+            :param viewpoint_request: client's request which contains name, file source, and range type.
+
             :return: Status associated with the request to create the viewpoint in the table.
             """
             # Create unique viewpoint_id
@@ -313,11 +318,17 @@ class ViewpointRouter:
         ) -> Response:
             """
             Get preview of viewpoint in the requested format
+
             :param viewpoint_id: Unique viewpoint id to get from the table.
+
             :param img_format: The Desired format for preview output, valid options are defined by GDALImageFormats.
+
             :param max_size: Max size of the preview image, defaults to 1024 pixels.
+
             :param width: Preview width in pixels that supersedes scale if > 0.
+
             :param height: Preview height in pixels that supersedes scale if > 0.
+
             :param compression: GDAL image compression format to use.
 
             :return: StreamingResponse of preview binary with the appropriate mime type based on the img_format
@@ -362,10 +373,15 @@ class ViewpointRouter:
             """
 
             :param viewpoint_id: Unique viewpoint id to get from the table.
+
             :param z: Resolution-level in the image pyramid 0 = full resolution, 1 = full/2, 2 = full/4, ...
+
             :param x: Tile row location in pixels for the given tile.
+
             :param y: Tile column location in pixels for the given tile.
+
             :param tile_format: Desired format for tile output, valid options are defined by GDALImageFormats.
+
             :param compression: GDAL tile compression format.
 
             :return: StreamingResponse of tile image binary payload.
@@ -427,17 +443,24 @@ class ViewpointRouter:
             ),
         ) -> Response:
             """
-            \f
             Crop a portion of the viewpoint.
 
             :param viewpoint_id: Unique viewpoint id to get from the table as a crop.
+
             :param min_x: The left pixel coordinate of the desired crop.
+
             :param min_y: The upper pixel coordinate of the desired crop.
+
             :param max_x: The right pixel coordinate of the desired crop.
+
             :param max_y: The lower pixel coordinate of the pixel crop.
+
             :param img_format: Desired format for cropped output. Valid options are defined by GDALImageFormats.
+
             :param compression: GDAL compression algorithm for image.
+
             :param width: Optional width in px of the desired crop, if provided, max_x will be ignored.
+
             :param height: Optional height in px of the desired crop, if provided, max_y will be ignored.
 
             :return: StreamingResponse of cropped image binary with the appropriate mime type based on the img_format
@@ -469,6 +492,7 @@ class ViewpointRouter:
         given status
 
         :param current_status: Current status of a viewpoint in the table.
+
         :param api_operation: The associated API operation being used on the viewpoint.
 
         :return: Viewpoint detail
