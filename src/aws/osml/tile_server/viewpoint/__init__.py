@@ -9,4 +9,4 @@ from .models import (
 )
 from .queue import ViewpointRequestQueue
 from .routers import ViewpointRouter
-from .worker import ViewpointWorker
+from .worker import SupplementaryFileType, ViewpointWorker
