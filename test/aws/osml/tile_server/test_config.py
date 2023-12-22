@@ -1,5 +1,5 @@
 #  Copyright 2023 Amazon.com, Inc. or its affiliates.
-
+import os
 from dataclasses import dataclass
 
 
@@ -9,7 +9,12 @@ class TestConfig:
 
     test_bucket = "test-bucket"
     test_object_key = "test-sample.nitf"
-    test_file_path = "./test/data/test-sample.nitf"
+    test_data_directory = "./test/data"
+    test_file_path = os.path.join(test_data_directory, "test-sample.nitf")
+    test_metadata_path = os.path.join(test_data_directory, "test-sample.nitf.metadata")
+    test_stats_path = os.path.join(test_data_directory, "test-sample.nitf.stats")
+    test_bounds_path = os.path.join(test_data_directory, "test-sample.nitf.bounds")
+    test_info_path = os.path.join(test_data_directory, "test-sample.nitf.geojson")
     test_viewpoint_name = "test-name"
 
     test_viewpoint_table_name = "TSJobTable"
