@@ -39,7 +39,7 @@ def get_metadata_viewpoint_unhappy(self, viewpoint_id: str) -> bool:
 
         response_data = json.loads(response.data)
 
-        assert response.status == 400
+        assert response.status == 404
         assert (
             "Cannot view ViewpointApiNames.METADATA for this image since this has already been deleted."
             in response_data["detail"]

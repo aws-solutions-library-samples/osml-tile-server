@@ -49,7 +49,7 @@ def update_viewpoint_unhappy(self, viewpoint_id: str, test_body_data: Dict[str, 
 
         response_data = json.loads(response.data)
 
-        assert response.status == 400
+        assert response.status == 404
         assert (
             "Cannot view ViewpointApiNames.UPDATE for this image since this has already been deleted."
             in response_data["detail"]

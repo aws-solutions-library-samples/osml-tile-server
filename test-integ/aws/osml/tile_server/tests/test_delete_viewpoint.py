@@ -37,7 +37,7 @@ def delete_viewpoint_unhappy(self, viewpoint_id: str) -> bool:
         response = self.http.request("DELETE", f"{self.url}/{viewpoint_id}")
 
         response_data = json.loads(response.data)
-        assert response.status == 400
+        assert response.status == 404
         assert (
             "Cannot view ViewpointApiNames.UPDATE for this image since this has already been deleted"
             in response_data["detail"]
