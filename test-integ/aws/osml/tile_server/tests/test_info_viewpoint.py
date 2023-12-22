@@ -13,8 +13,6 @@ def get_info_viewpoint(self, viewpoint_id: str) -> bool:
     try:
         response = self.http.request("GET", f"{self.url}/{viewpoint_id}/info")
 
-        response_data = json.loads(response.data)
-
         assert response.status == 200
         return True
     except Exception as err:

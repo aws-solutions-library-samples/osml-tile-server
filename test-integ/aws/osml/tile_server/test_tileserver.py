@@ -30,7 +30,7 @@ class TestTileServer:
     def __init__(self, elb_endpoint) -> None:
         self.logger = logging.getLogger()
         self.logger.setLevel(logging.INFO)
-        
+
         self.elb_endpoint = elb_endpoint
         self.url = self.elb_endpoint + "/latest/viewpoints"
 
@@ -209,7 +209,7 @@ def test_tileserver(event: Dict[Any, Any], context: Any):
     :return: A dictionary containing the response status code and body.
     """
     elb_endpoint = fetch_elb_endpoint(event, context)
-    
+
     if elb_endpoint:
         ts = TestTileServer(elb_endpoint)
         return ts.start_integration_test("small")

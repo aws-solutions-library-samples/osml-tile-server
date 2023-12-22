@@ -19,7 +19,7 @@ def describe_viewpoint(self, viewpoint_id: str) -> bool:
         assert response_data["viewpoint_id"] == viewpoint_id
         assert response_data["viewpoint_status"] != "DELETED"
 
-        with open(f"integ/data/{self.image_type}/test_{self.image_type}_viewpoint.json", "r") as output_json:
+        with open(f"aws/osml/tile_server/data/{self.image_type}/test_{self.image_type}_viewpoint.json", "r") as output_json:
             expected_json_result = json.loads(output_json.read())
 
             expected_json_result["viewpoint_id"] = response_data["viewpoint_id"]

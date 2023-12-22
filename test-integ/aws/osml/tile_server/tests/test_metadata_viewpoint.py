@@ -17,7 +17,7 @@ def get_metadata_viewpoint(self, viewpoint_id: str) -> bool:
 
         assert response.status == 200
 
-        with open(f"integ/data/{self.image_type}/test_{self.image_type}_metadata.json", "r") as output_json:
+        with open(f"aws/osml/tile_server/data/{self.image_type}/test_{self.image_type}_metadata.json", "r") as output_json:
             expected_json_result = json.loads(output_json.read())
             assert response_data == expected_json_result
         return True
