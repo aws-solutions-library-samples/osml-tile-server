@@ -1,5 +1,6 @@
 import json
-import traceback 
+import traceback
+
 
 def get_info_viewpoint(self, viewpoint_id: str) -> bool:
     """
@@ -11,9 +12,9 @@ def get_info_viewpoint(self, viewpoint_id: str) -> bool:
     """
     try:
         response = self.http.request("GET", f"{self.url}/{viewpoint_id}/info")
-        
+
         response_data = json.loads(response.data)
-        
+
         assert response.status == 200
         return True
     except Exception as err:
@@ -31,13 +32,15 @@ def get_info_viewpoint_unhappy(self, viewpoint_id: str) -> bool:
     """
     try:
         response = self.http.request("GET", f"{self.url}/{viewpoint_id}/info")
-        
+
         response_data = json.loads(response.data)
-        
+
         assert response.status == 400
-        assert "Cannot view ViewpointApiNames.INFO for this image since this has already been deleted." in response_data["detail"]
+        assert (
+            "Cannot view ViewpointApiNames.INFO for this image since this has already been deleted."
+            in response_data["detail"]
+        )
         return True
     except Exception as err:
         self.logger.error(traceback.print_exception(err))
         return False
-

@@ -1,5 +1,5 @@
 import json
-import traceback 
+import traceback
 
 
 def get_metadata_viewpoint(self, viewpoint_id: str) -> bool:
@@ -12,11 +12,11 @@ def get_metadata_viewpoint(self, viewpoint_id: str) -> bool:
     """
     try:
         response = self.http.request("GET", f"{self.url}/{viewpoint_id}/metadata")
-        
+
         response_data = json.loads(response.data)
-        
+
         assert response.status == 200
-        
+
         with open(f"integ/data/{self.image_type}/test_{self.image_type}_metadata.json", "r") as output_json:
             expected_json_result = json.loads(output_json.read())
             assert response_data == expected_json_result
@@ -36,13 +36,15 @@ def get_metadata_viewpoint_unhappy(self, viewpoint_id: str) -> bool:
     """
     try:
         response = self.http.request("GET", f"{self.url}/{viewpoint_id}/metadata")
-        
+
         response_data = json.loads(response.data)
-        
+
         assert response.status == 400
-        assert "Cannot view ViewpointApiNames.METADATA for this image since this has already been deleted." in response_data["detail"]
+        assert (
+            "Cannot view ViewpointApiNames.METADATA for this image since this has already been deleted."
+            in response_data["detail"]
+        )
         return True
     except Exception as err:
         self.logger.error(traceback.print_exception(err))
         return False
-

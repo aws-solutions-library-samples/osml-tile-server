@@ -7,6 +7,7 @@ from typing import Dict, Tuple
 import boto3
 from boto3.resources.base import ServiceResource
 
+
 def fetch_elb_endpoint() -> str:
     """
     Fetch an active endpoint for Tile Server
@@ -19,17 +20,13 @@ def fetch_elb_endpoint() -> str:
     # Get VPC of this Lambda Function
     # lambda_client = boto3.client('lambda')
     # lambda_response = lambda_client.get_function_configuration(
-    #     FunctionName="TSInteg" 
+    #     FunctionName="TSInteg"
     # )
 
     # vpcId = lambda_response["VpcConfig"]
 
     # # Get Security Subnet of this Lambda Function
 
-    # # 
+    # #
 
     # elbv2 = boto3.client("elbv2")
-
-
-
-

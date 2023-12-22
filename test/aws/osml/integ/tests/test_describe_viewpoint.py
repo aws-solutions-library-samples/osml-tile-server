@@ -1,5 +1,5 @@
 import json
-import traceback 
+import traceback
 
 
 def describe_viewpoint(self, viewpoint_id: str) -> bool:
@@ -12,20 +12,20 @@ def describe_viewpoint(self, viewpoint_id: str) -> bool:
     """
     try:
         response = self.http.request("GET", f"{self.url}/{viewpoint_id}")
-        
+
         response_data = json.loads(response.data)
-        
+
         assert response.status == 200
         assert response_data["viewpoint_id"] == viewpoint_id
         assert response_data["viewpoint_status"] != "DELETED"
-        
+
         with open(f"integ/data/{self.image_type}/test_{self.image_type}_viewpoint.json", "r") as output_json:
             expected_json_result = json.loads(output_json.read())
-            
+
             expected_json_result["viewpoint_id"] = response_data["viewpoint_id"]
             expected_json_result["bucket_name"] = response_data["bucket_name"]
             expected_json_result["viewpoint_status"] = response_data["viewpoint_status"]
-            
+
             assert response_data == expected_json_result
         return True
     except Exception as err:
@@ -43,9 +43,9 @@ def describe_viewpoint_unhappy(self, viewpoint_id: str) -> bool:
     """
     try:
         response = self.http.request("GET", f"{self.url}/{viewpoint_id}")
-        
+
         response_data = json.loads(response.data)
-        
+
         assert response.status == 500
         assert "Invalid Key, it does not exist in ViewpointStatusTable" in response_data["detail"]
         return True

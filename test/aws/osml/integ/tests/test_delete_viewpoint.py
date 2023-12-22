@@ -1,5 +1,5 @@
 import json
-import traceback 
+import traceback
 
 
 def delete_viewpoint(self, viewpoint_id: str) -> bool:
@@ -12,9 +12,9 @@ def delete_viewpoint(self, viewpoint_id: str) -> bool:
     """
     try:
         response = self.http.request("DELETE", f"{self.url}/{viewpoint_id}")
-        
+
         response_data = json.loads(response.data)
-        
+
         assert response.status == 200
         assert response_data["viewpoint_status"] == "DELETED"
         assert response_data["local_object_path"] == None
@@ -23,6 +23,7 @@ def delete_viewpoint(self, viewpoint_id: str) -> bool:
     except Exception as err:
         self.logger.error(traceback.print_exception(err))
         return False
+
 
 def delete_viewpoint_unhappy(self, viewpoint_id: str) -> bool:
     """
@@ -34,11 +35,14 @@ def delete_viewpoint_unhappy(self, viewpoint_id: str) -> bool:
     """
     try:
         response = self.http.request("DELETE", f"{self.url}/{viewpoint_id}")
-        
+
         response_data = json.loads(response.data)
         assert response.status == 400
-        assert "Cannot view ViewpointApiNames.UPDATE for this image since this has already been deleted" in response_data["detail"]
-        
+        assert (
+            "Cannot view ViewpointApiNames.UPDATE for this image since this has already been deleted"
+            in response_data["detail"]
+        )
+
         return True
     except Exception as err:
         self.logger.error(traceback.print_exception(err))

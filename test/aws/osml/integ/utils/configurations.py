@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from typing import Dict, Any
+from typing import Any, Dict
+
 
 @dataclass
 class TestConfig:
@@ -13,9 +14,9 @@ class TestConfig:
 
 class TestData:
     from .configurations import TestConfig
-    
+
     TEST_INVALID_VIEWPOINT_ID: str = "invalid-viewpoint-id"
-    
+
     TEST_BODY_SMALL: Dict[str, Any] = {
         "bucket_name": TestConfig.test_bucket,
         "object_key": TestConfig.test_object_key,
@@ -23,7 +24,7 @@ class TestData:
         "tile_size": 512,
         "range_adjustment": "NONE",
     }
-    
+
     INVALID_TEST_BODY: Dict[str, Any] = {
         "bucket_name": None,
         "object_key": TestConfig.test_object_key,
@@ -31,14 +32,14 @@ class TestData:
         "tile_size": 512,
         "range_adjustment": "NONE",
     }
-    
+
     VALID_UPDATE_TEST_BODY: Dict[str, Any] = {
         "viewpoint_id": "",
         "viewpoint_name": "New-Viewpoint-Name",
         "tile_size": 512,
         "range_adjustment": "NONE",
     }
-    
+
     INVALID_UPDATE_TEST_BODY: Dict[str, Any] = {
         "tile_size": 512,
         "range_adjustment": "NONE",

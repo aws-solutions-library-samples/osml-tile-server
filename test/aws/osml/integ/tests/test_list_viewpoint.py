@@ -1,5 +1,6 @@
 import json
-import traceback 
+import traceback
+
 
 def list_viewpoint(self) -> bool:
     """
@@ -8,10 +9,10 @@ def list_viewpoint(self) -> bool:
     return bool: Test succeeded or failed
     """
     try:
-        response = self.http.request('GET', self.elb_endpoint + "/latest/viewpoints/")
-        
-        response_data = json.loads(response.data) 
-        
+        response = self.http.request("GET", self.elb_endpoint + "/latest/viewpoints/")
+
+        response_data = json.loads(response.data)
+
         assert response.status == 200
         assert len(response_data["items"]) > 0
         return True
