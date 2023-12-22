@@ -4,22 +4,30 @@ import threading
 import time
 import traceback
 from datetime import datetime, timedelta
+from math import degrees
 from pathlib import Path
 
+import geojson
 from boto3.resources.base import ServiceResource
 from botocore.exceptions import ClientError
 from osgeo import gdal, gdalconst
 
 from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustmentType
+from aws.osml.photogrammetry import ImageCoordinate
 from aws.osml.tile_server.app_config import ServerConfig
-from aws.osml.tile_server.utils import get_standard_overviews, get_tile_factory_pool
+from aws.osml.tile_server.utils import TileFactoryPool, get_standard_overviews, get_tile_factory_pool
 
+from .common import (
+    AUXXML_FILE_EXTENSION,
+    BOUNDS_FILE_EXTENSION,
+    INFO_FILE_EXTENSION,
+    METADATA_FILE_EXTENSION,
+    OVERVIEW_FILE_EXTENSION,
+    STATISTICS_FILE_EXTENSION,
+)
 from .database import DecimalEncoder, ViewpointStatusTable
 from .models import ViewpointModel, ViewpointStatus
 from .queue import ViewpointRequestQueue
-
-OVERVIEW_FILE_EXTENSION = ".ovr"
-AUXXML_FILE_EXTENSION = ".aux.xml"
 
 
 class ViewpointWorker(threading.Thread):
@@ -90,6 +98,9 @@ class ViewpointWorker(threading.Thread):
 
                     if viewpoint_item.viewpoint_status != ViewpointStatus.FAILED:
                         self.create_tile_pyramid(viewpoint_item)
+
+                    if viewpoint_item.viewpoint_status != ViewpointStatus.FAILED:
+                        self.extract_metadata(viewpoint_item)
 
                     # Update ddb table to reflect status change
                     if viewpoint_item.viewpoint_status == ViewpointStatus.FAILED:
@@ -198,20 +209,7 @@ class ViewpointWorker(threading.Thread):
         :return: None
         """
         try:
-            tile_format = GDALImageFormats.PNG
-            compression = GDALCompressionOptions.NONE
-
-            output_type = None
-            if viewpoint_item.range_adjustment is not RangeAdjustmentType.NONE:
-                output_type = gdalconst.GDT_Byte
-
-            tile_factory_pool = get_tile_factory_pool(
-                tile_format,
-                compression,
-                viewpoint_item.local_object_path,
-                output_type,
-                viewpoint_item.range_adjustment,
-            )
+            tile_factory_pool = self.get_default_tile_factory_pool_for_viewpoint(viewpoint_item)
 
             aux_file_path = Path(viewpoint_item.local_object_path + AUXXML_FILE_EXTENSION)
             overview_file_path = Path(viewpoint_item.local_object_path + OVERVIEW_FILE_EXTENSION)
@@ -272,3 +270,83 @@ class ViewpointWorker(threading.Thread):
             self.logger.error(error_message)
             viewpoint_item.viewpoint_status = ViewpointStatus.FAILED
             viewpoint_item.error_message = error_message
+
+    def extract_metadata(self, viewpoint_item: ViewpointModel) -> None:
+        """
+        Extracts the metadata from an image and creates various JSON files for the metadata, bounds, info, etc. so
+        that they can be easily returned by the web API without need to reparse the information from the image itself.
+        This reduces the pressure on the tile factory resource pool making those resources more available for
+        operations that need to return pixels.
+
+        :param: the description of the viewpoint item
+        """
+
+        try:
+            tile_factory_pool = self.get_default_tile_factory_pool_for_viewpoint(viewpoint_item)
+            with tile_factory_pool.checkout_in_context() as tile_factory:
+                # Metadata
+                metadata = tile_factory.raster_dataset.GetMetadata()
+                with open(viewpoint_item.local_object_path + METADATA_FILE_EXTENSION, "w") as md_file:
+                    md_file.write(json.dumps({"metadata": metadata}))
+
+                # Bounds
+                width = tile_factory.raster_dataset.RasterXSize
+                height = tile_factory.raster_dataset.RasterYSize
+                image_coordinates = [0, 0, width, height]
+                with open(viewpoint_item.local_object_path + BOUNDS_FILE_EXTENSION, "w") as bounds_file:
+                    bounds_file.write(json.dumps({"bounds": image_coordinates}))
+
+                # Info
+                coordinates = []
+                for corner in [(0, 0), (0, height), (width, height), (width, 0)]:
+                    world_coordinate = tile_factory.sensor_model.image_to_world(ImageCoordinate(corner))
+                    coordinates.append((degrees(world_coordinate.longitude), degrees(world_coordinate.latitude)))
+                coordinates.append(coordinates[0])
+
+                feature = geojson.Feature(
+                    id=viewpoint_item.viewpoint_name, geometry=geojson.geometry.Polygon([coordinates]), properties={}
+                )
+                feature_collection = geojson.FeatureCollection(features=[feature])
+                with open(viewpoint_item.local_object_path + INFO_FILE_EXTENSION, "w") as info_file:
+                    info_file.write(geojson.dumps(feature_collection))
+
+                # Statistics
+                gdal_options = gdal.InfoOptions(format="json", showMetadata=False)
+                gdal_info = gdal.Info(viewpoint_item.local_object_path, options=gdal_options)
+                with open(viewpoint_item.local_object_path + STATISTICS_FILE_EXTENSION, "w") as stats_file:
+                    stats_file.write(json.dumps({"image_statistics": gdal_info}))
+
+        except Exception as err:
+            error_message = f"Unable to extract metadata for viewpoint_id: {viewpoint_item.viewpoint_id}! Error={err}"
+            self.logger.error(error_message)
+            viewpoint_item.viewpoint_status = ViewpointStatus.FAILED
+            viewpoint_item.error_message = error_message
+
+            start_time = time.perf_counter()
+            end_time = time.perf_counter()
+            self.logger.info(
+                f"METRIC: TileFactory Create Time: {end_time - start_time}" f" for {viewpoint_item.local_object_path}"
+            )
+
+    @staticmethod
+    def get_default_tile_factory_pool_for_viewpoint(viewpoint_item) -> TileFactoryPool:
+        """
+        Helper method that creates a default tile factory pool for the image. This resource pool will not necessarily
+        be sufficient to build all tiles, but it is sufficient to build previews and handle metadata.
+
+        :param viewpoint_item: the description of the viewpoint item
+        :return: a default tile factory pool
+        """
+        tile_format = GDALImageFormats.PNG
+        compression = GDALCompressionOptions.NONE
+        output_type = None
+        if viewpoint_item.range_adjustment is not RangeAdjustmentType.NONE:
+            output_type = gdalconst.GDT_Byte
+        tile_factory_pool = get_tile_factory_pool(
+            tile_format,
+            compression,
+            viewpoint_item.local_object_path,
+            output_type,
+            viewpoint_item.range_adjustment,
+        )
+        return tile_factory_pool
