@@ -17,8 +17,8 @@ def delete_viewpoint(self, viewpoint_id: str) -> bool:
 
         assert response.status == 200
         assert response_data["viewpoint_status"] == "DELETED"
-        assert response_data["local_object_path"] == None
-        assert response_data["expire_time"] != None
+        assert response_data["local_object_path"] is None
+        assert response_data["expire_time"] is not None
         return True
     except Exception as err:
         self.logger.error(traceback.print_exception(err))
