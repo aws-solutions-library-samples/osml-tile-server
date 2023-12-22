@@ -6,8 +6,7 @@ The OversightML Tile Server is a lightweight, cloud-based tile server which allo
 * [Getting Started](#getting-started)
   * [Package Layout](#package-layout)
   * [Prerequisites](prerequisites)
-  * [Running Tile Server](#running-tile-server)
-  * [Development Environment](#development-environment)
+  * [Running Tile Server Locally](#running-tile-server-locally)
 * [Support & Feedback](#support--feedback)
 * [Security](#security)
 * [License](#license)
@@ -18,8 +17,13 @@ The OversightML Tile Server is a lightweight, cloud-based tile server which allo
 
 * **/src**: This is the Python implementation of this application.
 * **/test**: Unit tests have been implemented using [pytest](https://docs.pytest.org).
-* **/scripts**: Utility scripts that are not part of the main application frequently used in development / testing.
-* **/docs**: Contains Sphinx Doc configuration which is used to generate documentation for this package
+* **/doc**: Contains Sphinx Doc configuration which is used to generate documentation for this package
+* **/load-test**: Contains sample [Locust](https://locust.io) configuration files which is used to run load test against the Tile Server
+
+### Documentation
+
+* **APIs**: You can find API documentation for the OSML Tile Server hosted on our [GitHub project page](https://aws-solutions-library-samples.github.io/osml-tile-server/). Keep in mind that the `Try it out` button functionality does not work in Github project page.
+  * Alternatively, if you are working from the source code running docker build, you can find the latest API documentation by booting up the Tile Server by visiting http://0.0.0.0:8080/latest/docs or http://0.0.0.0:8080/latest/redoc. With this approach, you can use `Try it out` functionality.
 
 ### Prerequisites
 
