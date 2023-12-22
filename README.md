@@ -22,7 +22,8 @@ The OversightML Tile Server is a lightweight, cloud-based tile server which allo
 
 ### Documentation
 
-* **APIs**: You can find API documentation by booting up the Tile Server locally by visiting http://0.0.0.0:8080/latest/docs or http://0.0.0.0:8080/latest/redoc for a nice UI API documentation
+* **APIs**: You can find API documentation for the OSML Tile Server hosted on our [GitHub project page](https://aws-solutions-library-samples.github.io/osml-tile-server/). Keep in mind that the `Try it out` button functionality does not work in Github project page.
+  * Alternatively, if you are working from the source code running docker build, you can find the latest API documentation by booting up the Tile Server by visiting http://0.0.0.0:8080/latest/docs or http://0.0.0.0:8080/latest/redoc. With this approach, you can use `Try it out` functionality.
 
 ### Prerequisites
 
