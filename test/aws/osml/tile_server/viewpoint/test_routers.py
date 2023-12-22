@@ -4,7 +4,6 @@ import json
 import os
 import shutil
 import unittest
-from glob import glob
 from unittest.mock import patch
 
 import boto3
@@ -148,9 +147,9 @@ class TestRoutersE2E(unittest.TestCase):
         self.table = None
         self.sqs = None
         self.queue = None
-        tmp_test_files = glob(os.path.join("test_tmp", "viewpoints", "*"))
-        for tmp_test_file in tmp_test_files:
-            os.remove(tmp_test_file)
+        tmp_viewpoints_path = os.path.join("test_tmp", "viewpoints")
+        if os.path.isdir(tmp_viewpoints_path):
+            shutil.rmtree(tmp_viewpoints_path)
 
     def mock_set_ready(self, viewpoint_id):
         return self.table.update_item(
@@ -177,18 +176,26 @@ class TestRoutersE2E(unittest.TestCase):
         )
 
     def mock_download(self, viewpoint_id):
-        local_dir = os.path.join("test_tmp", "viewpoints")
-        local_path = os.path.join(local_dir, viewpoint_id)
+        local_dir = os.path.join("test_tmp", "viewpoints", viewpoint_id)
+        local_path = os.path.join(local_dir, TestConfig.test_object_key)
         if not os.path.exists(local_dir):
             os.makedirs(local_dir)
         shutil.copy(TestConfig.test_file_path, local_path)
         self.mock_set_local_path(viewpoint_id, local_path)
+
+    def mock_extract_metadata(self, viewpoint_id):
+        local_dir = os.path.join("test_tmp", "viewpoints", viewpoint_id)
+        shutil.copy(TestConfig.test_metadata_path, local_dir)
+        shutil.copy(TestConfig.test_stats_path, local_dir)
+        shutil.copy(TestConfig.test_info_path, local_dir)
+        shutil.copy(TestConfig.test_bounds_path, local_dir)
 
     def mock_create_viewpoint(self) -> str:
         viewpoint_data_res = self.client.post("/latest/viewpoints/", data=json.dumps(TEST_BODY))
         viewpoint_data = viewpoint_data_res.json()
         self.mock_set_ready(viewpoint_data["viewpoint_id"])
         self.mock_download(viewpoint_data["viewpoint_id"])
+        self.mock_extract_metadata(viewpoint_data["viewpoint_id"])
         return viewpoint_data["viewpoint_id"]
 
     def test_e2e_list_viewpoints_valid(self):
@@ -264,7 +271,7 @@ class TestRoutersE2E(unittest.TestCase):
 
         assert response.status_code == 200
 
-        with open("test/data/viewpoint_metadata_sample.json", "r") as output_json:
+        with open(TestConfig.test_metadata_path, "r") as output_json:
             expected_json_result = json.loads(output_json.read())
             assert response.json() == expected_json_result
 
@@ -279,14 +286,18 @@ class TestRoutersE2E(unittest.TestCase):
         response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/bounds")
 
         assert response.status_code == 200
-        assert response.json()["bounds"] == ["325860N0846000E", "325859N0846000E", "325859N0850001E", "325859N0850000E"]
+        assert response.json()["bounds"] == [0, 0, 1024, 1024]
 
     def test_e2e_get_info_valid(self):
         viewpoint_id = self.mock_create_viewpoint()
         response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/info")
 
         assert response.status_code == 200
-        assert response.json() is not None
+        response_data = response.json()
+
+        with open(TestConfig.test_info_path, "r") as output_json:
+            expected_json_result = json.loads(output_json.read())
+            assert response_data == expected_json_result
 
     def test_e2e_get_statistics_valid(self):
         viewpoint_id = self.mock_create_viewpoint()
@@ -295,12 +306,8 @@ class TestRoutersE2E(unittest.TestCase):
         assert response.status_code == 200
         response_data = response.json()
 
-        with open("test/data/viewpoint_statistics_sample.json", "r") as output_json:
+        with open(TestConfig.test_stats_path, "r") as output_json:
             expected_json_result = json.loads(output_json.read())
-
-            # update unique viewpoint_id
-            expected_json_result["image_statistics"]["description"] = response_data["image_statistics"]["description"]
-            expected_json_result["image_statistics"]["files"] = response_data["image_statistics"]["files"]
             assert response_data == expected_json_result
 
     def test_e2e_get_preview(self):

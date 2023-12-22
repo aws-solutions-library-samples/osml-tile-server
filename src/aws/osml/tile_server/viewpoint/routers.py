@@ -14,13 +14,13 @@ from boto3.resources.base import ServiceResource
 from cryptography.fernet import Fernet
 from fastapi import APIRouter, HTTPException, Query, Response
 from fastapi_versioning import version
-from osgeo import gdal, gdalconst
-from starlette.responses import StreamingResponse
+from osgeo import gdalconst
+from starlette.responses import FileResponse, StreamingResponse
 
-from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustmentType, load_gdal_dataset
-from aws.osml.photogrammetry.coordinates import ImageCoordinate
+from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustmentType
 from aws.osml.tile_server.utils import get_media_type, get_tile_factory_pool, perform_gdal_translation
 
+from .common import BOUNDS_FILE_EXTENSION, INFO_FILE_EXTENSION, METADATA_FILE_EXTENSION, STATISTICS_FILE_EXTENSION
 from .database import ViewpointStatusTable
 from .models import (
     ViewpointApiNames,
@@ -208,7 +208,7 @@ class ViewpointRouter:
             return viewpoint_item
 
         @api_router.get("/{viewpoint_id}/metadata")
-        def get_metadata(viewpoint_id: str) -> Dict[str, Any]:
+        def get_metadata(viewpoint_id: str) -> FileResponse:
             """
             Get viewpoint metadata based on provided viewpoint id.
 
@@ -220,18 +220,10 @@ class ViewpointRouter:
 
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.METADATA)
 
-            viewpoint_path = viewpoint_item.local_object_path
-
-            ds, sm = load_gdal_dataset(viewpoint_path)
-            metadata = ds.GetMetadata()
-
-            if not metadata:
-                raise HTTPException(status_code=200, detail="The metadata is empty!")
-
-            return {"metadata": metadata}
+            return FileResponse(viewpoint_item.local_object_path + METADATA_FILE_EXTENSION, media_type="application/json")
 
         @api_router.get("/{viewpoint_id}/bounds")
-        def get_bounds(viewpoint_id: str) -> Dict[str, Any]:
+        def get_bounds(viewpoint_id: str) -> FileResponse:
             """
             Get viewpoint bounds based on provided viewpoint id.
 
@@ -243,20 +235,10 @@ class ViewpointRouter:
 
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.BOUNDS)
 
-            viewpoint_path = viewpoint_item.local_object_path
-
-            ds, sm = load_gdal_dataset(viewpoint_path)
-            width = ds.RasterXSize
-            height = ds.RasterYSize
-
-            world_coordinates = []
-            for coordinates in [[0, 0], [0, height], [width, height], [width / 2, height / 2]]:
-                world_coordinates.append(sm.image_to_world(ImageCoordinate(coordinates)).to_dms_string())
-
-            return {"bounds": world_coordinates}
+            return FileResponse(viewpoint_item.local_object_path + BOUNDS_FILE_EXTENSION, media_type="application/json")
 
         @api_router.get("/{viewpoint_id}/info")
-        def get_info(viewpoint_id: str) -> Dict[str, Any]:
+        def get_info(viewpoint_id: str) -> FileResponse:
             """
             Get viewpoint info based on provided viewpoint id.
 
@@ -268,22 +250,10 @@ class ViewpointRouter:
 
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.INFO)
 
-            viewpoint_path = viewpoint_item.local_object_path
-
-            ds, sm = load_gdal_dataset(viewpoint_path)
-            width = ds.RasterXSize
-            height = ds.RasterYSize
-
-            world_coordinates = []
-            for coordinates in [[0, 0], [0, height], [width, height], [width / 2, height / 2]]:
-                world_coordinates.append(sm.image_to_world(ImageCoordinate(coordinates)).to_dms_string())
-
-            # TODO get geoJson feature that has a polygon geometry using the world coordinates above
-
-            return {"features": None}
+            return FileResponse(viewpoint_item.local_object_path + INFO_FILE_EXTENSION, media_type="application/json")
 
         @api_router.get("/{viewpoint_id}/statistics")
-        def get_statistics(viewpoint_id: str) -> Dict[str, Any]:
+        def get_statistics(viewpoint_id: str) -> FileResponse:
             """
             Get viewpoint statistics based on provided viewpoint id.
 
@@ -295,15 +265,7 @@ class ViewpointRouter:
 
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.STATISTICS)
 
-            viewpoint_path = viewpoint_item.local_object_path
-
-            try:
-                gdal_options = gdal.InfoOptions(format="json", showMetadata=False)
-                gdal_info = gdal.Info(viewpoint_path, options=gdal_options)
-            except Exception as err:
-                raise HTTPException(status_code=400, detail=f"Failed to fetch statistics of an image. {err}")
-
-            return {"image_statistics": gdal_info}
+            return FileResponse(viewpoint_item.local_object_path + STATISTICS_FILE_EXTENSION, media_type="application/json")
 
         @api_router.get("/{viewpoint_id}/preview.{img_format}")
         def get_preview(
@@ -499,7 +461,7 @@ class ViewpointRouter:
         """
         if current_status == ViewpointStatus.DELETED:
             raise HTTPException(
-                status_code=400,
+                status_code=404,
                 detail=f"Cannot view {api_operation} for this image since this has already been " f"deleted.",
             )
         elif current_status == ViewpointStatus.REQUESTED:

@@ -85,6 +85,7 @@ class TileServerUser(FastHttpUser):
 
     # Establishes a 1-2 second wait between tasks
     wait_time = between(1, 2)
+    max_retries = 3
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -130,7 +131,7 @@ class TileServerUser(FastHttpUser):
             if final_status == "READY":
                 self.request_tiles(viewpoint_id)
 
-            if final_status not in ["DELETED", "NOT_FOUND"]:
+            if final_status in ["READY", "FAILED"]:
                 self.cleanup_viewpoint(viewpoint_id)
 
     @task(1)
@@ -200,7 +201,7 @@ class TileServerUser(FastHttpUser):
                     if response.js[VIEWPOINT_STATUS] in ["READY", "FAILED", "DELETED"]:
                         done = True
                     else:
-                        time.sleep(5)
+                        time.sleep(15)
                         num_retries -= 1
         if not done:
             response.failure(f"Gave up waiting for {viewpoint_id} to become ready. Final Status was {final_status}")
@@ -276,7 +277,11 @@ class TileServerUser(FastHttpUser):
         :param viewpoint_id: ID of the viewpoint to fetch metadata for
         """
         with self.rest("GET", f"/viewpoints/{viewpoint_id}/metadata", name="GetMetadata") as response:
-            if response.js is not None and "metadata" not in response.js:
+            if response.status_code == 404 and "already been deleted" in response.js["detail"]:
+                # It is possible the viewpoint was deleted between the call to list and this call. A 404 response may
+                # be valid.
+                response.success()
+            elif response.js is not None and "metadata" not in response.js:
                 response.failure(f"'metadata' missing from response {response.text}")
 
     def get_viewpoint_bounds(self, viewpoint_id: str):
@@ -286,7 +291,11 @@ class TileServerUser(FastHttpUser):
         :param viewpoint_id: ID of the viewpoint to fetch bounds for
         """
         with self.rest("GET", f"/viewpoints/{viewpoint_id}/bounds", name="GetBounds") as response:
-            if response.js is not None and "bounds" not in response.js:
+            if response.status_code == 404 and "already been deleted" in response.js["detail"]:
+                # It is possible the viewpoint was deleted between the call to list and this call. A 404 response may
+                # be valid.
+                response.success()
+            elif response.js is not None and "bounds" not in response.js:
                 response.failure(f"'bounds' missing from response {response.text}")
 
     def get_viewpoint_info(self, viewpoint_id: str):
@@ -296,7 +305,11 @@ class TileServerUser(FastHttpUser):
         :param viewpoint_id: ID of the viewpoint to fetch info for
         """
         with self.rest("GET", f"/viewpoints/{viewpoint_id}/info", name="GetInfo") as response:
-            if response.js is not None and "features" not in response.js:
+            if response.status_code == 404 and "already been deleted" in response.js["detail"]:
+                # It is possible the viewpoint was deleted between the call to list and this call. A 404 response may
+                # be valid.
+                response.success()
+            elif response.js is not None and "features" not in response.js:
                 response.failure(f"'features' missing from response {response.text}")
 
     def get_viewpoint_statistics(self, viewpoint_id: str):
@@ -306,7 +319,11 @@ class TileServerUser(FastHttpUser):
         :param viewpoint_id: ID of the viewpoint to fetch statistics for
         """
         with self.rest("GET", f"/viewpoints/{viewpoint_id}/statistics", name="GetStatistics") as response:
-            if response.js is not None and "image_statistics" not in response.js:
+            if response.status_code == 404 and "already been deleted" in response.js["detail"]:
+                # It is possible the viewpoint was deleted between the call to list and this call. A 404 response may
+                # be valid.
+                response.success()
+            elif response.js is not None and "image_statistics" not in response.js:
                 response.failure(f"'image_statistics' missing from response {response.text}")
 
     def get_viewpoint_preview(self, viewpoint_id: str):
@@ -317,5 +334,9 @@ class TileServerUser(FastHttpUser):
         """
         tile_format = "PNG"
         with self.client.get(f"/viewpoints/{viewpoint_id}/preview.{tile_format}", name="GetPreview") as response:
-            if not response.content:
+            if response.status_code == 404 and "already been deleted" in response.js["detail"]:
+                # It is possible the viewpoint was deleted between the call to list and this call. A 404 response may
+                # be valid.
+                response.success()
+            elif not response.content:
                 response.failure("GetPreview response contained no content")
