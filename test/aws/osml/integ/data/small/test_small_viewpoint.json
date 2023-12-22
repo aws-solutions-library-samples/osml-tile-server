@@ -1,0 +1,12 @@
+{
+  "viewpoint_id": "67afab90c0f78fe805b8bde2988754bc",
+  "viewpoint_name": "test-name",
+  "viewpoint_status": "READY",
+  "bucket_name": "test-images-1234567890",
+  "object_key": "small.tif",
+  "tile_size": 512,
+  "range_adjustment": "NONE",
+  "local_object_path": null,
+  "error_message": null,
+  "expire_time": null
+}
