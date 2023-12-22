@@ -1,11 +1,13 @@
 import json
 import logging
-import threading
 import time
 import traceback
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
+from enum import auto
 from math import degrees
 from pathlib import Path
+from threading import Event, Thread
+from typing import Tuple
 
 import geojson
 from boto3.resources.base import ServiceResource
@@ -15,7 +17,7 @@ from osgeo import gdal, gdalconst
 from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustmentType
 from aws.osml.photogrammetry import ImageCoordinate
 from aws.osml.tile_server.app_config import ServerConfig
-from aws.osml.tile_server.utils import TileFactoryPool, get_standard_overviews, get_tile_factory_pool
+from aws.osml.tile_server.utils import AutoLowerStringEnum, TileFactoryPool, get_standard_overviews, get_tile_factory_pool
 
 from .common import (
     AUXXML_FILE_EXTENSION,
@@ -30,7 +32,19 @@ from .models import ViewpointModel, ViewpointStatus
 from .queue import ViewpointRequestQueue
 
 
-class ViewpointWorker(threading.Thread):
+class SupplementaryFileType(str, AutoLowerStringEnum):
+    """
+    Provides supplementary file types to download from S3.
+
+    :cvar AUX: Aux file.
+    :cvar OVERVIEW: Overview file.
+    """
+
+    AUX = auto()
+    OVERVIEW = auto()
+
+
+class ViewpointWorker(Thread):
     def __init__(
         self,
         viewpoint_request_queue: ViewpointRequestQueue,
@@ -52,7 +66,7 @@ class ViewpointWorker(threading.Thread):
         self.s3 = aws_s3
         self.viewpoint_database = viewpoint_database
         self.logger = logging.getLogger("uvicorn")
-        self.stop_event = threading.Event()
+        self.stop_event = Event()
 
     def join(self, timeout: float | None = ...) -> None:
         """
@@ -64,7 +78,7 @@ class ViewpointWorker(threading.Thread):
         """
         self.logger.info("ViewpointWorker Background Thread Stopping.")
         self.stop_event.set()
-        threading.Thread.join(self, timeout)
+        Thread.join(self, timeout)
 
     def run(self) -> None:
         """
@@ -95,22 +109,10 @@ class ViewpointWorker(threading.Thread):
 
                     if viewpoint_item.viewpoint_status != ViewpointStatus.FAILED:
                         self.download_image(viewpoint_item)
-
-                    if viewpoint_item.viewpoint_status != ViewpointStatus.FAILED:
                         self.create_tile_pyramid(viewpoint_item)
-
-                    if viewpoint_item.viewpoint_status != ViewpointStatus.FAILED:
                         self.extract_metadata(viewpoint_item)
 
-                    # Update ddb table to reflect status change
-                    if viewpoint_item.viewpoint_status == ViewpointStatus.FAILED:
-                        time_now = datetime.utcnow()
-                        expire_time = time_now + timedelta(1)
-                        viewpoint_item.expire_time = int(expire_time.timestamp())
-                    else:
-                        viewpoint_item.viewpoint_status = ViewpointStatus.READY
-
-                    self.viewpoint_database.update_viewpoint(viewpoint_item)
+                    self._update_status(viewpoint_item)
 
                     # Remove message from the queue since it has been processed
                     message.delete()
@@ -122,7 +124,7 @@ class ViewpointWorker(threading.Thread):
             except Exception as err:
                 self.logger.error(f"[Worker Background Thread] {err} / {traceback.format_exc()}")
 
-    def download_image(self, viewpoint_item: ViewpointModel):
+    def download_image(self, viewpoint_item: ViewpointModel) -> None:
         """
         This method downloads an image file from an S3 bucket using the bucket_name and object_key attributes of a
         ViewpointModel instance. The downloaded image is saved under specific server configuration, and its path is
@@ -134,71 +136,15 @@ class ViewpointWorker(threading.Thread):
         :return: None
 
         """
-        message_viewpoint_id = viewpoint_item.viewpoint_id
-        message_object_key = viewpoint_item.object_key
-        message_bucket_name = viewpoint_item.bucket_name
+        viewpoint_item.local_object_path = self._create_local_tmp_directory(viewpoint_item)
 
-        # Create a temp file
-        self.logger.info(f"Creating local directory for {message_viewpoint_id} in /{ServerConfig.efs_mount_name}")
-        local_viewpoint_folder = Path("/" + ServerConfig.efs_mount_name, message_viewpoint_id)
-        local_viewpoint_folder.mkdir(parents=True, exist_ok=True)
-        local_object_path = Path(local_viewpoint_folder, Path(message_object_key).name)
-        local_object_path_str = str(local_object_path.absolute())
-        viewpoint_item.local_object_path = local_object_path_str
-
-        # Download file to temp local (TODO update when efs is implemented)
-        retry_count = 0
-        while retry_count < 3:
-            try:
-                self.logger.info(f"Beginning download of {message_viewpoint_id}")
-                self.s3.meta.client.download_file(message_bucket_name, message_object_key, local_object_path_str)
-                self.logger.info(f"Successfully download to {local_object_path_str}.")
-                break
-
-            except ClientError as err:
-                if err.response["Error"]["Code"] == "404":
-                    error_message = f"The {message_bucket_name} bucket does not exist! Error={err}"
-                    self.logger.error(error_message)
-
-                elif err.response["Error"]["Code"] == "403":
-                    error_message = f"You do not have permission to access {message_bucket_name} bucket! Error={err}"
-                    self.logger.error(error_message)
-
-                error_message = f"Image Tile Server cannot process your S3 request! Error={err}"
-                self.logger.error(error_message)
-                viewpoint_item.viewpoint_status = ViewpointStatus.FAILED
-                viewpoint_item.error_message = error_message
-                break
-            except Exception as err:
-                error_message = f"Something went wrong! Viewpoint_id: {message_viewpoint_id}! Error={err}"
-                self.logger.error(error_message)
-                viewpoint_item.viewpoint_status = ViewpointStatus.FAILED
-                viewpoint_item.error_message = error_message
-
-            retry_count += 1
-
-        if viewpoint_item.viewpoint_status != ViewpointStatus.FAILED:
-            try:
-                self.logger.info(f"Attempting to download optional overviews for {message_viewpoint_id}")
-                self.s3.meta.client.download_file(
-                    message_bucket_name,
-                    message_object_key + OVERVIEW_FILE_EXTENSION,
-                    local_object_path_str + OVERVIEW_FILE_EXTENSION,
-                )
-                self.logger.info(f"Successfully downloaded overviews to {local_object_path_str + OVERVIEW_FILE_EXTENSION}.")
-            except ClientError:
-                self.logger.info(f"No overviews available for {message_viewpoint_id}")
-
-            try:
-                self.logger.info(f"Attempting to download optional aux file for {message_viewpoint_id}")
-                self.s3.meta.client.download_file(
-                    message_bucket_name,
-                    message_object_key + AUXXML_FILE_EXTENSION,
-                    local_object_path_str + AUXXML_FILE_EXTENSION,
-                )
-                self.logger.info(f"Successfully download aux file to {local_object_path_str + AUXXML_FILE_EXTENSION}.")
-            except ClientError:
-                self.logger.info(f"No aux file available for {message_viewpoint_id}")
+        failed, error_message = self._download_s3_file_to_local_tmp(viewpoint_item)
+        if isinstance(failed, ViewpointStatus):
+            viewpoint_item.viewpoint_status = failed
+            viewpoint_item.error_message = error_message
+        else:
+            self._download_supplementary_file(viewpoint_item, SupplementaryFileType.OVERVIEW)
+            self._download_supplementary_file(viewpoint_item, SupplementaryFileType.AUX)
 
     def create_tile_pyramid(self, viewpoint_item: ViewpointModel):
         """
@@ -327,6 +273,127 @@ class ViewpointWorker(threading.Thread):
             self.logger.info(
                 f"METRIC: TileFactory Create Time: {end_time - start_time}" f" for {viewpoint_item.local_object_path}"
             )
+
+    def _update_status(self, viewpoint_item: ViewpointModel) -> None:
+        """
+        Update ddb table to reflect status change after processed by the worker.
+
+        :param viewpoint_item: Item being processed by the worker.
+
+        :return: None.
+        """
+        if viewpoint_item.viewpoint_status == ViewpointStatus.FAILED:
+            time_now = datetime.now(UTC)
+            expire_time = time_now + timedelta(days=1)
+            viewpoint_item.expire_time = int(expire_time.timestamp())
+        else:
+            viewpoint_item.viewpoint_status = ViewpointStatus.READY
+
+        self.viewpoint_database.update_viewpoint(viewpoint_item)
+
+    def _create_local_tmp_directory(self, viewpoint_item: ViewpointModel) -> str:
+        """
+        Create a tmp directory locally to store the downloaded files
+
+        :param viewpoint_item: Item being processed by the worker.
+
+        :return: The path to the temp directory.
+        """
+        message_viewpoint_id = viewpoint_item.viewpoint_id
+        message_object_key = viewpoint_item.object_key
+
+        self.logger.info(f"Creating local directory for {message_viewpoint_id} in /{ServerConfig.efs_mount_name}")
+        local_viewpoint_folder = Path("/" + ServerConfig.efs_mount_name, message_viewpoint_id)
+        local_viewpoint_folder.mkdir(parents=True, exist_ok=True)
+        local_object_path = Path(local_viewpoint_folder, Path(message_object_key).name)
+        return str(local_object_path.absolute())
+
+    def _download_s3_file_to_local_tmp(
+        self, viewpoint_item: ViewpointModel, max_retries: int = 3
+    ) -> Tuple[ViewpointStatus | None, str | None]:
+        """
+        Download the object from S3 to the local tmp dorectory.
+
+        :param viewpoint_item: Item being processed by the worker.
+
+        :param max_retries: The number of times to retry the download if a non-fatal error is encountered.
+
+        :return: The viewpoint status and error message as a tuple. Returns None, None if the operation was successful.
+        """
+        message_viewpoint_id = viewpoint_item.viewpoint_id
+        message_object_key = viewpoint_item.object_key
+        message_bucket_name = viewpoint_item.bucket_name
+        local_object_path_str = viewpoint_item.local_object_path
+
+        viewpoint_status = None
+        error_message = None
+
+        retry_count = 0
+        while retry_count < max_retries:
+            try:
+                self.logger.info(f"Beginning download of {message_viewpoint_id}")
+                self.s3.meta.client.download_file(message_bucket_name, message_object_key, local_object_path_str)
+                self.logger.info(f"Successfully download to {local_object_path_str}.")
+                viewpoint_status = None
+                error_message = None
+                break
+
+            except ClientError as err:
+                detailed_error = ""
+                if err.response["Error"]["Code"] == "404":
+                    detailed_error = f"The {message_bucket_name} bucket does not exist!"
+                    self.logger.error(detailed_error)
+
+                elif err.response["Error"]["Code"] == "403":
+                    detailed_error = f"You do not have permission to access {message_bucket_name} bucket!"
+                    self.logger.error(detailed_error)
+
+                error_message = f"Image Tile Server cannot process your S3 request! Error={err} {detailed_error}".strip()
+                self.logger.error(error_message)
+                viewpoint_status = ViewpointStatus.FAILED
+                break
+
+            except Exception as err:
+                error_message = (
+                    f"Attempt {retry_count + 1}/{max_retries}: Something went wrong!"
+                    f" Viewpoint_id: {message_viewpoint_id} | Error={err}"
+                )
+                self.logger.error(error_message)
+                viewpoint_status = ViewpointStatus.FAILED
+
+            retry_count += 1
+        return viewpoint_status, error_message
+
+    def _download_supplementary_file(self, viewpoint_item: ViewpointModel, file_type: SupplementaryFileType) -> None:
+        """
+        Attempts to download associated supplementary file from S3, if present
+
+        :param viewpoint_item: Item being processed by the worker.
+
+        :param file_type: The type of supplementary file to download from S3.
+
+        :return: None.
+        """
+        message_viewpoint_id = viewpoint_item.viewpoint_id
+        message_object_key = viewpoint_item.object_key
+        message_bucket_name = viewpoint_item.bucket_name
+        local_object_path = viewpoint_item.local_object_path
+        extension_lookup = {
+            SupplementaryFileType.AUX: AUXXML_FILE_EXTENSION,
+            SupplementaryFileType.OVERVIEW: OVERVIEW_FILE_EXTENSION,
+        }
+        try:
+            self.logger.info(f"Attempting to download optional {file_type.value} file for {message_viewpoint_id}")
+            self.s3.meta.client.download_file(
+                message_bucket_name,
+                message_object_key + extension_lookup[file_type],
+                local_object_path + extension_lookup[file_type],
+            )
+            self.logger.info(
+                f"Successfully downloaded {file_type.value} file to {local_object_path + extension_lookup[file_type]}."
+            )
+        except ClientError:
+            self.logger.info(f"No {file_type.value} file available for {message_viewpoint_id}")
 
     @staticmethod
     def get_default_tile_factory_pool_for_viewpoint(viewpoint_item) -> TileFactoryPool:
