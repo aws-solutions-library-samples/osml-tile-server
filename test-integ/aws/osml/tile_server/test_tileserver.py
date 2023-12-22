@@ -27,16 +27,12 @@ from .utils.configurations import TestData
 
 
 class TestTileServer:
-    def __init__(self) -> None:
+    def __init__(self, elb_endpoint) -> None:
         self.logger = logging.getLogger()
         self.logger.setLevel(logging.INFO)
-
-        try:
-            self.elb_endpoint = fetch_elb_endpoint()
-            self.url = self.elb_endpoint + "/latest/viewpoints"
-        except ClientError as err:
-            self.logger.error(f"Fatal error occurred while fetching elb endpoint. Exception: {err}")
-            sys.exit("Fatal error occurred while fetching elb endpoint. Exiting.")
+        
+        self.elb_endpoint = elb_endpoint
+        self.url = self.elb_endpoint + "/latest/viewpoints"
 
         try:
             self.http = urllib3.PoolManager()
@@ -212,5 +208,10 @@ def test_tileserver(event: Dict[Any, Any], context: Any):
 
     :return: A dictionary containing the response status code and body.
     """
-    ts = TestTileServer()
-    return ts.start_integration_test("small")
+    elb_endpoint = fetch_elb_endpoint(event, context)
+    
+    if elb_endpoint:
+        ts = TestTileServer(elb_endpoint)
+        return ts.start_integration_test("small")
+    else:
+        sys.exit("Fatal error occurred. There's no ELB Endpoint! Exiting.")
