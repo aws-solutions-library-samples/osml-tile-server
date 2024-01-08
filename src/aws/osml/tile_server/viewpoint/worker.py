@@ -4,6 +4,7 @@ import time
 import traceback
 from datetime import UTC, datetime, timedelta
 from enum import auto
+from logging import Logger
 from math import degrees
 from pathlib import Path
 from threading import Event, Thread
@@ -50,6 +51,7 @@ class ViewpointWorker(Thread):
         viewpoint_request_queue: ViewpointRequestQueue,
         aws_s3: ServiceResource,
         viewpoint_database: ViewpointStatusTable,
+        logger: Logger = logging.getLogger(__name__),
     ):
         """
         The `__init__` method of the `ViewpointWorker` class initializes a new instance of the `ViewpointWorker`.
@@ -57,6 +59,7 @@ class ViewpointWorker(Thread):
         :param viewpoint_request_queue: `ViewpointRequestQueue` class representing the queue for viewpoint requests.
         :param aws_s3: An instance of the `ServiceResource` class representing the AWS S3 service.
         :param viewpoint_database: `ViewpointStatusTable` class representing the database for viewpoint status.
+        :param logger: 'Logger' class representing the logger.  Defaults to the default python logger.
 
         :return: None
         """
@@ -65,7 +68,7 @@ class ViewpointWorker(Thread):
         self.viewpoint_request_queue = viewpoint_request_queue
         self.s3 = aws_s3
         self.viewpoint_database = viewpoint_database
-        self.logger = logging.getLogger("uvicorn")
+        self.logger = logger
         self.stop_event = Event()
 
     def join(self, timeout: float | None = ...) -> None:
@@ -94,28 +97,8 @@ class ViewpointWorker(Thread):
             self.logger.debug("Scanning for SQS messages")
             try:
                 messages = self.viewpoint_request_queue.queue.receive_messages(WaitTimeSeconds=5)
-
                 for message in messages:
-                    self.logger.info(f"MESSAGE: {message.body}")
-                    message_attributes = json.loads(message.body)
-                    viewpoint_item = ViewpointModel.model_validate_json(json.dumps(message_attributes, cls=DecimalEncoder))
-
-                    if viewpoint_item.viewpoint_status != ViewpointStatus.REQUESTED:
-                        self.logger.error(
-                            f"Cannot process {viewpoint_item.viewpoint_id} due to the incorrect "
-                            f"Viewpoint Status {viewpoint_item.viewpoint_status}!"
-                        )
-                        continue
-
-                    if viewpoint_item.viewpoint_status != ViewpointStatus.FAILED:
-                        self.download_image(viewpoint_item)
-                        self.create_tile_pyramid(viewpoint_item)
-                        self.extract_metadata(viewpoint_item)
-
-                    self._update_status(viewpoint_item)
-
-                    # Remove message from the queue since it has been processed
-                    message.delete()
+                    self._process_message(message)
 
             except ClientError as err:
                 self.logger.error(f"[Worker Background Thread] {err} / {traceback.format_exc()}")
@@ -160,59 +143,26 @@ class ViewpointWorker(Thread):
             aux_file_path = Path(viewpoint_item.local_object_path + AUXXML_FILE_EXTENSION)
             overview_file_path = Path(viewpoint_item.local_object_path + OVERVIEW_FILE_EXTENSION)
 
-            """NOTE: This code forces GDAL to and compute the statistics / histograms for each band. This can be a
-            time-consuming operation, so we want to only do this once. GDAL will write those statistics into a
-            .aux.xml file associated with the dataset, but it only appears to do so when the dataset object is
-            cleaned up. So this code creates a temporary dataset, forces it to generate the statistics using the
-            gdal.Info() command and then closes the dataset to ensure that the auxiliary file is created. This is
-            somewhat of a hack but all future calls to gdal.Open (i.e. in the tile factory pool) should be able to
-            read the .aux.xml file and skip the expensive work of generating the statistics."""
             if not self.stop_event.is_set() and not aux_file_path.is_file():
-                self.logger.info(f"Calculating Image Statistics for {viewpoint_item.local_object_path}")
-                start_time = time.perf_counter()
-                temp_ds = gdal.Open(viewpoint_item.local_object_path)
-                gdal.Info(temp_ds, stats=True, approxStats=True, computeMinMax=True, reportHistograms=True)
-                del temp_ds
-                end_time = time.perf_counter()
-                self.logger.info(
-                    f"METRIC: GDAL Info Time: {end_time - start_time}" f" for {viewpoint_item.local_object_path}"
-                )
+                self._calculate_image_statistics(viewpoint_item)
 
             start_time = time.perf_counter()
             with tile_factory_pool.checkout_in_context() as tile_factory:
                 end_time = time.perf_counter()
                 self.logger.info(
-                    f"METRIC: TileFactory Create Time: {end_time - start_time}" f" for {viewpoint_item.local_object_path}"
+                    f"METRIC: TileFactory Create Time: {end_time - start_time} for {viewpoint_item.local_object_path}"
                 )
 
+                image_bytes = None
                 if not self.stop_event.is_set() and not overview_file_path.is_file():
-                    self.logger.info(f"Creating Image Pyramid for {viewpoint_item.local_object_path}")
-                    start_time = time.perf_counter()
-                    ds = tile_factory.raster_dataset
-                    overviews = get_standard_overviews(ds.RasterXSize, ds.RasterYSize, 1024)
-                    ds.BuildOverviews("CUBIC", overviews)
-                    end_time = time.perf_counter()
-                    self.logger.info(
-                        f"METRIC: BuildOverviews Time: {end_time - start_time}" f" for {viewpoint_item.local_object_path}"
-                    )
-
-                self.logger.info(f"Verifying tile creation for {viewpoint_item.local_object_path}.")
-                start_time = time.perf_counter()
-                tile_size = viewpoint_item.tile_size
-                image_bytes = tile_factory.create_encoded_tile([0, 0, tile_size, tile_size])
-                end_time = time.perf_counter()
-                self.logger.info(
-                    f"METRIC: Sample TileCreate Time: {end_time - start_time}" f" for {viewpoint_item.local_object_path}"
-                )
+                    self._create_image_pyramid(tile_factory, viewpoint_item)
+                    image_bytes = self._verify_tile_creation(tile_factory, viewpoint_item)
 
                 if not image_bytes:
-                    error_message = f"Unable to create valid tile for viewpoint: {viewpoint_item.viewpoint_id}"
-                    self.logger.error(error_message)
-                    viewpoint_item.viewpoint_status = ViewpointStatus.FAILED
-                    viewpoint_item.error_message = error_message
+                    raise ValueError("Image is empty.")
 
         except Exception as err:
-            error_message = f"Unable to create sample tile for! Viewpoint_id: {viewpoint_item.viewpoint_id}! Error={err}"
+            error_message = f"Unable to create sample tile for viewpoint: {viewpoint_item.viewpoint_id}! Error={err}"
             self.logger.error(error_message)
             viewpoint_item.viewpoint_status = ViewpointStatus.FAILED
             viewpoint_item.error_message = error_message
@@ -230,40 +180,13 @@ class ViewpointWorker(Thread):
         try:
             tile_factory_pool = self.get_default_tile_factory_pool_for_viewpoint(viewpoint_item)
             with tile_factory_pool.checkout_in_context() as tile_factory:
-                # Metadata
-                metadata = tile_factory.raster_dataset.GetMetadata()
-                with open(viewpoint_item.local_object_path + METADATA_FILE_EXTENSION, "w") as md_file:
-                    md_file.write(json.dumps({"metadata": metadata}))
-
-                # Bounds
-                width = tile_factory.raster_dataset.RasterXSize
-                height = tile_factory.raster_dataset.RasterYSize
-                image_coordinates = [0, 0, width, height]
-                with open(viewpoint_item.local_object_path + BOUNDS_FILE_EXTENSION, "w") as bounds_file:
-                    bounds_file.write(json.dumps({"bounds": image_coordinates}))
-
-                # Info
-                coordinates = []
-                for corner in [(0, 0), (0, height), (width, height), (width, 0)]:
-                    world_coordinate = tile_factory.sensor_model.image_to_world(ImageCoordinate(corner))
-                    coordinates.append((degrees(world_coordinate.longitude), degrees(world_coordinate.latitude)))
-                coordinates.append(coordinates[0])
-
-                feature = geojson.Feature(
-                    id=viewpoint_item.viewpoint_name, geometry=geojson.geometry.Polygon([coordinates]), properties={}
-                )
-                feature_collection = geojson.FeatureCollection(features=[feature])
-                with open(viewpoint_item.local_object_path + INFO_FILE_EXTENSION, "w") as info_file:
-                    info_file.write(geojson.dumps(feature_collection))
-
-                # Statistics
-                gdal_options = gdal.InfoOptions(format="json", showMetadata=False)
-                gdal_info = gdal.Info(viewpoint_item.local_object_path, options=gdal_options)
-                with open(viewpoint_item.local_object_path + STATISTICS_FILE_EXTENSION, "w") as stats_file:
-                    stats_file.write(json.dumps({"image_statistics": gdal_info}))
+                self._write_metadata(tile_factory, viewpoint_item)
+                self._write_bounds(tile_factory, viewpoint_item)
+                self._write_info(tile_factory, viewpoint_item)
+                self._write_statistics(viewpoint_item)
 
         except Exception as err:
-            error_message = f"Unable to extract metadata for viewpoint_id: {viewpoint_item.viewpoint_id}! Error={err}"
+            error_message = f"Unable to extract metadata for viewpoint: {viewpoint_item.viewpoint_id}! Error={err}"
             self.logger.error(error_message)
             viewpoint_item.viewpoint_status = ViewpointStatus.FAILED
             viewpoint_item.error_message = error_message
@@ -271,8 +194,29 @@ class ViewpointWorker(Thread):
             start_time = time.perf_counter()
             end_time = time.perf_counter()
             self.logger.info(
-                f"METRIC: TileFactory Create Time: {end_time - start_time}" f" for {viewpoint_item.local_object_path}"
+                f"METRIC: TileFactory Create Time: {end_time - start_time} for {viewpoint_item.local_object_path}"
             )
+
+    def _process_message(self, message) -> None:
+        self.logger.info(f"MESSAGE: {message.body}")
+        message_attributes = json.loads(message.body)
+        viewpoint_item = ViewpointModel.model_validate_json(json.dumps(message_attributes, cls=DecimalEncoder))
+
+        if viewpoint_item.viewpoint_status != ViewpointStatus.REQUESTED:
+            self.logger.error(
+                f"Cannot process {viewpoint_item.viewpoint_id} due to the incorrect "
+                f"Viewpoint Status {viewpoint_item.viewpoint_status}!"
+            )
+            return
+
+        self.download_image(viewpoint_item)
+        self.create_tile_pyramid(viewpoint_item)
+        self.extract_metadata(viewpoint_item)
+
+        self._update_status(viewpoint_item)
+
+        # Remove message from the queue since it has been processed
+        message.delete()
 
     def _update_status(self, viewpoint_item: ViewpointModel) -> None:
         """
@@ -396,7 +340,7 @@ class ViewpointWorker(Thread):
             self.logger.info(f"No {file_type.value} file available for {message_viewpoint_id}")
 
     @staticmethod
-    def get_default_tile_factory_pool_for_viewpoint(viewpoint_item) -> TileFactoryPool:
+    def get_default_tile_factory_pool_for_viewpoint(viewpoint_item: ViewpointModel) -> TileFactoryPool:
         """
         Helper method that creates a default tile factory pool for the image. This resource pool will not necessarily
         be sufficient to build all tiles, but it is sufficient to build previews and handle metadata.
@@ -417,3 +361,75 @@ class ViewpointWorker(Thread):
             viewpoint_item.range_adjustment,
         )
         return tile_factory_pool
+
+    def _calculate_image_statistics(self, viewpoint_item: ViewpointModel):
+        """NOTE: This code forces GDAL to and compute the statistics / histograms for each band. This can be a
+        time-consuming operation, so we want to only do this once. GDAL will write those statistics into a
+        .aux.xml file associated with the dataset, but it only appears to do so when the dataset object is
+        cleaned up. So this code creates a temporary dataset, forces it to generate the statistics using the
+        gdal.Info() command and then closes the dataset to ensure that the auxiliary file is created. This is
+        somewhat of a hack but all future calls to gdal.Open (i.e. in the tile factory pool) should be able to
+        read the .aux.xml file and skip the expensive work of generating the statistics."""
+        self.logger.info(f"Calculating Image Statistics for {viewpoint_item.local_object_path}")
+        start_time = time.perf_counter()
+        temp_ds = gdal.Open(viewpoint_item.local_object_path)
+        gdal.Info(temp_ds, stats=True, approxStats=True, computeMinMax=True, reportHistograms=True)
+        del temp_ds
+        end_time = time.perf_counter()
+        self.logger.info(f"METRIC: GDAL Info Time: {end_time - start_time} for {viewpoint_item.local_object_path}")
+
+    def _create_image_pyramid(self, tile_factory: TileFactoryPool, viewpoint_item: ViewpointModel) -> None:
+        self.logger.info(f"Creating Image Pyramid for {viewpoint_item.local_object_path}")
+        start_time = time.perf_counter()
+        ds = tile_factory.raster_dataset
+        overviews = get_standard_overviews(ds.RasterXSize, ds.RasterYSize, 1024)
+        ds.BuildOverviews("CUBIC", overviews)
+        end_time = time.perf_counter()
+        self.logger.info(f"METRIC: BuildOverviews Time: {end_time - start_time}" f" for {viewpoint_item.local_object_path}")
+
+    def _verify_tile_creation(self, tile_factory: TileFactoryPool, viewpoint_item: ViewpointModel) -> bytes:
+        self.logger.info(f"Verifying tile creation for {viewpoint_item.local_object_path}.")
+        start_time = time.perf_counter()
+        tile_size = viewpoint_item.tile_size
+        image_bytes = tile_factory.create_encoded_tile([0, 0, tile_size, tile_size])
+        end_time = time.perf_counter()
+        self.logger.info(f"METRIC: Sample TileCreate Time: {end_time - start_time} for {viewpoint_item.local_object_path}")
+        return image_bytes
+
+    @staticmethod
+    def _write_metadata(tile_factory: TileFactoryPool, viewpoint_item: ViewpointModel) -> None:
+        metadata = tile_factory.raster_dataset.GetMetadata()
+        with open(viewpoint_item.local_object_path + METADATA_FILE_EXTENSION, "w") as md_file:
+            md_file.write(json.dumps({"metadata": metadata}))
+
+    @staticmethod
+    def _write_bounds(tile_factory: TileFactoryPool, viewpoint_item: ViewpointModel) -> None:
+        width = tile_factory.raster_dataset.RasterXSize
+        height = tile_factory.raster_dataset.RasterYSize
+        image_coordinates = [0, 0, width, height]
+        with open(viewpoint_item.local_object_path + BOUNDS_FILE_EXTENSION, "w") as bounds_file:
+            bounds_file.write(json.dumps({"bounds": image_coordinates}))
+
+    @staticmethod
+    def _write_info(tile_factory: TileFactoryPool, viewpoint_item: ViewpointModel) -> None:
+        width = tile_factory.raster_dataset.RasterXSize
+        height = tile_factory.raster_dataset.RasterYSize
+        coordinates = []
+        for corner in [(0, 0), (0, height), (width, height), (width, 0)]:
+            world_coordinate = tile_factory.sensor_model.image_to_world(ImageCoordinate(corner))
+            coordinates.append((degrees(world_coordinate.longitude), degrees(world_coordinate.latitude)))
+        coordinates.append(coordinates[0])
+
+        feature = geojson.Feature(
+            id=viewpoint_item.viewpoint_name, geometry=geojson.geometry.Polygon([coordinates]), properties={}
+        )
+        feature_collection = geojson.FeatureCollection(features=[feature])
+        with open(viewpoint_item.local_object_path + INFO_FILE_EXTENSION, "w") as info_file:
+            info_file.write(geojson.dumps(feature_collection))
+
+    @staticmethod
+    def _write_statistics(viewpoint_item: ViewpointModel) -> None:
+        gdal_options = gdal.InfoOptions(format="json", showMetadata=False)
+        gdal_info = gdal.Info(viewpoint_item.local_object_path, options=gdal_options)
+        with open(viewpoint_item.local_object_path + STATISTICS_FILE_EXTENSION, "w") as stats_file:
+            stats_file.write(json.dumps({"image_statistics": gdal_info}))
