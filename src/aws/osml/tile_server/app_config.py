@@ -1,3 +1,4 @@
+import logging
 import os
 from dataclasses import dataclass
 
@@ -26,6 +27,7 @@ class ServerConfig:
     viewpoint_request_queue: str = os.getenv("JOB_QUEUE", "TSJobQueue")
     efs_mount_name: str = os.getenv("EFS_MOUNT_NAME", "ts-efs-volume")
     sts_arn: str = os.getenv("STS_ARN", None)
+    tile_server_log_level = logging.INFO
 
 
 @dataclass

@@ -24,8 +24,17 @@ from .viewpoint.worker import ViewpointWorker
 # Configure GDAL to throw Python exceptions on errors
 gdal.UseExceptions()
 
+uvicorn_log_level_lookup = {
+    logging.CRITICAL: "critical",
+    logging.ERROR: "error",
+    logging.WARNING: "warning",
+    logging.INFO: "info",
+    logging.DEBUG: "debug",
+}
+
 # Configure logger
 logger = logging.getLogger("uvicorn")
+logger.setLevel(ServerConfig.tile_server_log_level)
 
 try:
     aws_ddb, aws_s3, aws_sqs = initialize_aws_services()
@@ -78,7 +87,7 @@ async def lifespan(app: FastAPI) -> AbstractAsyncContextManager[None] | FastAPI:
         They represent your AWS S3 bucket instance,
         your database instance and a queue of requests respectively.
     """
-    viewpoint_worker = ViewpointWorker(viewpoint_request_queue, aws_s3, viewpoint_database)
+    viewpoint_worker = ViewpointWorker(viewpoint_request_queue, aws_s3, viewpoint_database, logger)
     viewpoint_worker.start()
     yield
     viewpoint_worker.join(timeout=20)
@@ -164,4 +173,6 @@ async def healthcheck() -> HealthCheck:
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=4557, reload=True)
+    uvicorn.run(
+        app, host="0.0.0.0", port=4557, reload=True, log_level=uvicorn_log_level_lookup[ServerConfig.tile_server_log_level]
+    )
