@@ -5,11 +5,11 @@ from unittest.mock import MagicMock
 
 import boto3
 from botocore.exceptions import ClientError
-from moto import mock_sqs
+from moto import mock_aws
 from test_config import TestConfig
 
 
-@mock_sqs
+@mock_aws
 class TestViewpointRequestQueue(TestCase):
     def setUp(self):
         from aws.osml.tile_server.app_config import BotoConfig
