@@ -3,7 +3,7 @@
 from unittest import TestCase
 
 import pytest
-from moto import mock_dynamodb, mock_s3, mock_sqs
+from moto import mock_aws
 
 
 class TestRefreshableBotoSession(TestCase):
@@ -16,9 +16,7 @@ class TestRefreshableBotoSession(TestCase):
         pass
 
 
-@mock_s3
-@mock_dynamodb
-@mock_sqs
+@mock_aws
 class TestAwsServices(TestCase):
     @pytest.mark.skip(reason="Test not implemented")
     def test_initialize_ddb(self):

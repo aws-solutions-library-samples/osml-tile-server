@@ -2,9 +2,6 @@ name: osml_tile_server
 channels:
   - conda-forge
 dependencies:
-  - cryptography
-  - conda-forge::gdal=3.7.0
-  - conda-forge::proj=9.2.1
-  - pip
-  - pip:
-      - fastapi-versioning
+  - conda-forge::cryptography=42.0.2
+  - conda-forge::gdal=3.8.3
+  - conda-forge::proj=9.3.1

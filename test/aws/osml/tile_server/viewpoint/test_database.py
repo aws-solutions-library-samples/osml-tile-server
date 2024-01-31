@@ -7,7 +7,7 @@ import boto3
 import pytest
 from botocore.exceptions import ClientError
 from fastapi import HTTPException
-from moto import mock_dynamodb
+from moto import mock_aws
 from test_config import TestConfig
 
 from aws.osml.gdal import RangeAdjustmentType
@@ -63,7 +63,7 @@ MOCK_VIEWPOINT_4 = ViewpointModel(
 )
 
 
-@mock_dynamodb
+@mock_aws
 class TestViewpointStatusTable(TestCase):
     def setUp(self):
         from aws.osml.tile_server.app_config import BotoConfig
