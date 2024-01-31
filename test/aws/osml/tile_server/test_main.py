@@ -7,13 +7,11 @@ from unittest.mock import patch
 import boto3
 from cryptography.fernet import Fernet
 from fastapi.testclient import TestClient
-from moto import mock_dynamodb, mock_s3, mock_sqs
+from moto import mock_aws
 from test_config import TestConfig
 
 
-@mock_s3
-@mock_dynamodb
-@mock_sqs
+@mock_aws
 class TestTileServer(unittest.TestCase):
     @patch("aws.osml.tile_server.utils.initialize_token_key")
     @patch("aws.osml.tile_server.utils.read_token_key", return_value=Fernet.generate_key())
