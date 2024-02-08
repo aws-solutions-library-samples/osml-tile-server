@@ -33,9 +33,35 @@ First, ensure you have installed the following tools locally
 - [docker compose](https://docs.docker.com/compose/)
 - [tox](https://tox.wiki/en/latest/installation.html)
 
+### Cloning the repository
+Clone the repository to your local computer using
+
+```git clone https://github.com/aws-solutions-library-samples/osml-tile-server.git```
+
+Navigate to the cloned directory using ```cd``` or ```dir```, depending on your operating system.
+
+More information about cloning and managing repositories can be found in the [GitHub Docs](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).
+
+### Building the Infrastructure
+Tile Server infrastructure is contained in the [associated CDK repository](https://github.com/aws-solutions-library-samples/osml-cdk-constructs),
+and a sample can be deployed by following the instructions in the [Guidance for Overhead Imagery Inference on AWS repository](https://github.com/aws-solutions-library-samples/guidance-for-overhead-imagery-inference-on-aws).
+
 ### Running Tile Server Locally
 
-The Tile Server is designed to be able to be run locally using docker compose for development and testing purposes. Start the Tile Server using
+The Tile Server is designed to be able to be run locally using docker compose for development and testing purposes
+using docker compose.
+
+*Note*: Some operating systems may use ```docker-compose``` instead of ```docker compose ```.
+
+Configure your [AWS credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html)
+for the account in which the Tile Server infrastructure was deployed by setting your environment variables.
+```
+export AWS_ACCESS_KEY_ID=<AKIAIOSFODNN7EXAMPLE>
+export AWS_SECRET_ACCESS_KEY=<wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY>
+```
+
+
+Start the Tile Server using
 ```shell
 docker compose up -d
 ```
