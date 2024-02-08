@@ -33,9 +33,23 @@ First, ensure you have installed the following tools locally
 - [docker compose](https://docs.docker.com/compose/)
 - [tox](https://tox.wiki/en/latest/installation.html)
 
+### Cloning the repository
+Clone the repository to your local computer using
+
+```git clone https://github.com/aws-solutions-library-samples/osml-tile-server.git```
+
+Navigate to the cloned directory using ```cd``` or ```dir```, depending on your operating system.
+
+More information about cloning and managing repositories can be found in the [GitHub Docs](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).
+
+
 ### Running Tile Server Locally
 
-The Tile Server is designed to be able to be run locally using docker compose for development and testing purposes. Start the Tile Server using
+The Tile Server is designed to be able to be run locally using docker compose for development and testing purposes using docker compose.
+
+*Note*: Some operating systems may use ```docker-compose``` instead of ```docker compose ```.
+
+Start the Tile Server using
 ```shell
 docker compose up -d
 ```
