@@ -45,9 +45,18 @@ More information about cloning and managing repositories can be found in the [Gi
 
 ### Running Tile Server Locally
 
-The Tile Server is designed to be able to be run locally using docker compose for development and testing purposes using docker compose.
+The Tile Server is designed to be able to be run locally using docker compose for development and testing purposes
+using docker compose.
 
 *Note*: Some operating systems may use ```docker-compose``` instead of ```docker compose ```.
+
+Configure your [AWS credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html) 
+for the account in which the Tile Server infrastructure was deployed by setting your environment variables.
+```
+export AWS_ACCESS_KEY_ID=<AKIAIOSFODNN7EXAMPLE>
+export AWS_SECRET_ACCESS_KEY=<wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY>
+```
+
 
 Start the Tile Server using
 ```shell
