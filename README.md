@@ -42,6 +42,9 @@ Navigate to the cloned directory using ```cd``` or ```dir```, depending on your 
 
 More information about cloning and managing repositories can be found in the [GitHub Docs](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).
 
+### Building the Infrastructure
+Tile Server infrastructure is contained in the [associated CDK repository](https://github.com/aws-solutions-library-samples/osml-cdk-constructs),
+and a sample can be deployed by following the instructions in the [Guidance for Overhead Imagery Inference on AWS repository](https://github.com/aws-solutions-library-samples/guidance-for-overhead-imagery-inference-on-aws).
 
 ### Running Tile Server Locally
 
@@ -50,7 +53,7 @@ using docker compose.
 
 *Note*: Some operating systems may use ```docker-compose``` instead of ```docker compose ```.
 
-Configure your [AWS credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html) 
+Configure your [AWS credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html)
 for the account in which the Tile Server infrastructure was deployed by setting your environment variables.
 ```
 export AWS_ACCESS_KEY_ID=<AKIAIOSFODNN7EXAMPLE>
