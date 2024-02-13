@@ -1,4 +1,6 @@
 #  Copyright 2023-2024 Amazon.com, Inc or its affiliates.
+
+import base64
 import unittest
 from unittest.mock import mock_open, patch
 
@@ -27,10 +29,10 @@ class TestToken(unittest.TestCase):
 
         mock_open.assert_not_called()
 
-    @patch("builtins.open", new_callable=mock_open, read_data='{"token": "good_key"}')
+    @patch("builtins.open", new_callable=mock_open, read_data='{"token": "dVVCdC1TSjZKMHJfWFVRY0FMLXRDaz0="}')
     def test_read_token_key_valid(self, mocked_open):
         actual_token = read_token_key()
-        expected_token = "good_key".encode()
+        expected_token = base64.b64decode("dVVCdC1TSjZKMHJfWFVRY0FMLXRDaz0=")
         self.assertEqual(actual_token, expected_token)
 
         mocked_open.assert_called_once()

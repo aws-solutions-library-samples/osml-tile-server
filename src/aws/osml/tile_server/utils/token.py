@@ -1,8 +1,8 @@
 #  Copyright 2024 Amazon.com, Inc. or its affiliates.
 
-from base64 import b64encode, b64decode
 import json
 import logging
+from base64 import b64decode, b64encode
 from os import path
 from typing import Optional
 
