@@ -1,5 +1,6 @@
-#  Copyright 2023 Amazon.com, Inc. or its affiliates.
+#  Copyright 2024 Amazon.com, Inc. or its affiliates.
 
+from base64 import b64encode, b64decode
 import json
 import logging
 from os import path
@@ -23,8 +24,8 @@ def initialize_token_key() -> None:
     file_path = path.join(f"/{ServerConfig.efs_mount_name}", TS_TOKEN_FILE_NAME)
     if not path.isfile(file_path):
         key = Fernet.generate_key()
-        with open(file_path, "w") as token_file:  # Change to "w" for writing text.
-            json.dump({"token": key.decode()}, token_file)  # Store as JSON.
+        with open(file_path, "w") as token_file:
+            json.dump({"token": b64encode(key).decode("ascii")}, token_file)
 
 
 def read_token_key() -> Optional[bytes]:
@@ -37,7 +38,7 @@ def read_token_key() -> Optional[bytes]:
     try:
         with open(file_path, "r") as token_file:
             token: str = json.load(token_file).get("token")
-            return token.encode()
+            return b64decode(token)
     except Exception as err:
         # Handle the case where the file is empty or not valid JSON
         logger.error(f"Not able to token key from json file {file_path} wth error: {err}")
