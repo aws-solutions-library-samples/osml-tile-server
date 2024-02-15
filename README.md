@@ -1,6 +1,6 @@
 # OversightML Tile Server
 
-The OversightML Tile Server is a lightweight, cloud-based tile server which allows you to quickly pass an image from S3 bucket to get metadata, image statistics, and set of tiles in real-time.
+The OversightML Tile Server (TS) is a lightweight, cloud-based tile server which allows you to quickly pass an image from S3 bucket to get metadata, image statistics, and set of tiles in real-time.
 
 ### Table of Contents
 * [Getting Started](#getting-started)
@@ -56,6 +56,7 @@ using docker compose.
 Configure your [AWS credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html)
 for the account in which the Tile Server infrastructure was deployed by setting your environment variables.
 ```
+export AWS_DEFAULT_REGION=<region where TS infrastructure deployed in>
 export AWS_ACCESS_KEY_ID=<AKIAIOSFODNN7EXAMPLE>
 export AWS_SECRET_ACCESS_KEY=<wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY>
 ```
