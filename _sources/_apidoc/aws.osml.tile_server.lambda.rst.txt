@@ -1,0 +1,4 @@
+aws.osml.tile\_server.lambda namespace
+======================================
+
+.. py:module:: aws.osml.tile_server.lambda
