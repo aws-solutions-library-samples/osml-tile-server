@@ -8,7 +8,6 @@ permissions:
 
 jobs:
   docs:
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,6 +24,7 @@ jobs:
         run: |
           tox -e docs
       - name: Deploy
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         uses: peaceiris/actions-gh-pages@v3.9.3
         with:
           publish_branch: gh-pages
