@@ -1,4 +1,4 @@
-#  Copyright 2023 Amazon.com, Inc. or its affiliates.
+#  Copyright 2024 Amazon.com, Inc. or its affiliates.
 
 import inspect
 import io
@@ -18,9 +18,9 @@ from osgeo import gdalconst
 from starlette.responses import FileResponse, StreamingResponse
 
 from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustmentType
+from aws.osml.tile_server.app_config import ServerConfig
 from aws.osml.tile_server.utils import get_media_type, get_tile_factory_pool, perform_gdal_translation
 
-from .common import BOUNDS_FILE_EXTENSION, INFO_FILE_EXTENSION, METADATA_FILE_EXTENSION, STATISTICS_FILE_EXTENSION
 from .database import ViewpointStatusTable
 from .models import (
     ViewpointApiNames,
@@ -146,8 +146,7 @@ class ViewpointRouter:
                 expire_time=None,
             )
 
-            # Place this request into SQS, then the worker will pick up in order to
-            # download the image from S3 to Local (TODO rename to EFS once implemented)
+            # Place this request into SQS, then the worker will pick up in order to download the image from S3
             self.viewpoint_queue.send_request(new_viewpoint_request.model_dump())
 
             return self.viewpoint_database.create_viewpoint(new_viewpoint_request)
@@ -220,7 +219,9 @@ class ViewpointRouter:
 
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.METADATA)
 
-            return FileResponse(viewpoint_item.local_object_path + METADATA_FILE_EXTENSION, media_type="application/json")
+            return FileResponse(
+                viewpoint_item.local_object_path + ServerConfig.METADATA_FILE_EXTENSION, media_type="application/json"
+            )
 
         @api_router.get("/{viewpoint_id}/bounds")
         def get_bounds(viewpoint_id: str) -> FileResponse:
@@ -235,7 +236,9 @@ class ViewpointRouter:
 
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.BOUNDS)
 
-            return FileResponse(viewpoint_item.local_object_path + BOUNDS_FILE_EXTENSION, media_type="application/json")
+            return FileResponse(
+                viewpoint_item.local_object_path + ServerConfig.BOUNDS_FILE_EXTENSION, media_type="application/json"
+            )
 
         @api_router.get("/{viewpoint_id}/info")
         def get_info(viewpoint_id: str) -> FileResponse:
@@ -250,7 +253,9 @@ class ViewpointRouter:
 
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.INFO)
 
-            return FileResponse(viewpoint_item.local_object_path + INFO_FILE_EXTENSION, media_type="application/json")
+            return FileResponse(
+                viewpoint_item.local_object_path + ServerConfig.INFO_FILE_EXTENSION, media_type="application/json"
+            )
 
         @api_router.get("/{viewpoint_id}/statistics")
         def get_statistics(viewpoint_id: str) -> FileResponse:
@@ -265,7 +270,9 @@ class ViewpointRouter:
 
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.STATISTICS)
 
-            return FileResponse(viewpoint_item.local_object_path + STATISTICS_FILE_EXTENSION, media_type="application/json")
+            return FileResponse(
+                viewpoint_item.local_object_path + ServerConfig.STATISTICS_FILE_EXTENSION, media_type="application/json"
+            )
 
         @api_router.get("/{viewpoint_id}/preview.{img_format}")
         def get_preview(

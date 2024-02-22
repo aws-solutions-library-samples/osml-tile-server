@@ -1,3 +1,5 @@
+#  Copyright 2024 Amazon.com, Inc. or its affiliates.
+
 import logging
 import os
 from dataclasses import dataclass
@@ -28,6 +30,13 @@ class ServerConfig:
     efs_mount_name: str = os.getenv("EFS_MOUNT_NAME", "ts-efs-volume")
     sts_arn: str = os.getenv("STS_ARN", None)
     tile_server_log_level = logging.INFO
+
+    OVERVIEW_FILE_EXTENSION = ".ovr"
+    AUXXML_FILE_EXTENSION = ".aux.xml"
+    METADATA_FILE_EXTENSION = ".metadata"
+    BOUNDS_FILE_EXTENSION = ".bounds"
+    INFO_FILE_EXTENSION = ".geojson"
+    STATISTICS_FILE_EXTENSION = ".stats"
 
 
 @dataclass

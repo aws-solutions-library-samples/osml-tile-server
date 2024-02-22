@@ -1,3 +1,5 @@
+#  Copyright 2024 Amazon.com, Inc. or its affiliates.
+
 import json
 import logging
 from decimal import Decimal
@@ -67,7 +69,7 @@ class ViewpointStatusTable:
         :param limit: Optional max number of viewpoints requested from dynamodb
         :param next_token: Optional token to begin a query from provided by the previous query response that
                 had more records available
-        :returns The list of available viewpoints in the table.
+        :return: The list of available viewpoints in the table.
         """
         query_params = {"FilterExpression": Attr("viewpoint_status").ne("DELETED")}
         if limit:

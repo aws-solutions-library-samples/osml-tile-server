@@ -1,3 +1,5 @@
+#  Copyright 2024 Amazon.com, Inc. or its affiliates.
+
 import json
 import logging
 from typing import Dict
