@@ -1,3 +1,6 @@
+#  Copyright 2024 Amazon.com, Inc. or its affiliates.
+
+# flake8: noqa
 from .aws_services import RefreshableBotoSession, initialize_aws_services, initialize_ddb, initialize_s3, initialize_sqs
 from .health_check import HealthCheck
 from .string_enums import AutoLowerStringEnum, AutoStringEnum, AutoUnderscoreStringEnum

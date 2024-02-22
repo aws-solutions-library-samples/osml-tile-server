@@ -1,3 +1,5 @@
+#  Copyright 2024 Amazon.com, Inc. or its affiliates.
+
 import json
 import logging
 import os
@@ -19,23 +21,17 @@ def lambda_handler(event: Dict[Any, Any], context: Any):
     'FAILED' with an expiry time of current time plus 1 day. If an exception occurs, it's logged and a 500-status code
     is returned with the error message.
 
-    Example usage:
-        event = {
-            "Records": [
-                {
-                    "body": "{\"viewpoint_id\": \"123\"}"
-                }
-            ]
-        }
-        context = {}
-        result = lambda_handler(event, context)
+        Example usage:
+            event = {"Records": [{"body": "{\"viewpoint_id\": \"123\"}"}]}
+            context = {}
+            result = lambda_handler(event, context)
 
-        print(result)
+            print(result)
 
     :param event: The event object that triggered the Lambda function. It contains information about the event source
-        and any data associated with the event.
+                    and any data associated with the event.
     :param context: The runtime information of the Lambda function. It provides methods and properties that allow you to
-        interact with the runtime environment.
+                    interact with the runtime environment.
     :return: A dictionary containing the response status code and body.
     """
 
