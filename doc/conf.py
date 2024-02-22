@@ -21,7 +21,7 @@ def run_apidoc(app):
         "--module-first",
         "--doc-project=API Reference",
         "--implicit-namespaces",
-        "--maxdepth=2",
+        "--maxdepth=4",
         "-t",
         template_dir,
         "-o",
@@ -54,13 +54,16 @@ author = "Amazon Web Services"
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    "sphinx.ext.autodoc",
+    "autoapi.extension",
+    #    "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
     #    "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinx_rtd_theme",
 ]
+autoapi_type = "python"
+autoapi_dirs = ["../src"]
 
 source_suffix = ".rst"
 master_doc = "index"
@@ -92,7 +95,7 @@ html_theme_options = {
     # Toc options
     "collapse_navigation": True,
     "sticky_navigation": True,
-    "navigation_depth": 2,
+    "navigation_depth": 4,
     "includehidden": True,
     "titles_only": False,
 }

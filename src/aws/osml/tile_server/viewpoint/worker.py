@@ -1,3 +1,5 @@
+#  Copyright 2024 Amazon.com, Inc. or its affiliates.
+
 import json
 import logging
 import time
@@ -20,14 +22,6 @@ from aws.osml.photogrammetry import ImageCoordinate
 from aws.osml.tile_server.app_config import ServerConfig
 from aws.osml.tile_server.utils import AutoLowerStringEnum, TileFactoryPool, get_standard_overviews, get_tile_factory_pool
 
-from .common import (
-    AUXXML_FILE_EXTENSION,
-    BOUNDS_FILE_EXTENSION,
-    INFO_FILE_EXTENSION,
-    METADATA_FILE_EXTENSION,
-    OVERVIEW_FILE_EXTENSION,
-    STATISTICS_FILE_EXTENSION,
-)
 from .database import DecimalEncoder, ViewpointStatusTable
 from .models import ViewpointModel, ViewpointStatus
 from .queue import ViewpointRequestQueue
@@ -129,7 +123,7 @@ class ViewpointWorker(Thread):
             self._download_supplementary_file(viewpoint_item, SupplementaryFileType.OVERVIEW)
             self._download_supplementary_file(viewpoint_item, SupplementaryFileType.AUX)
 
-    def create_tile_pyramid(self, viewpoint_item: ViewpointModel):
+    def create_tile_pyramid(self, viewpoint_item: ViewpointModel) -> None:
         """
         Main tile pyramid creation function. It creates a tile pyramid for a specific viewpoint item
         by considering its range adjustment and local object path.
@@ -140,8 +134,8 @@ class ViewpointWorker(Thread):
         try:
             tile_factory_pool = self.get_default_tile_factory_pool_for_viewpoint(viewpoint_item)
 
-            aux_file_path = Path(viewpoint_item.local_object_path + AUXXML_FILE_EXTENSION)
-            overview_file_path = Path(viewpoint_item.local_object_path + OVERVIEW_FILE_EXTENSION)
+            aux_file_path = Path(viewpoint_item.local_object_path + ServerConfig.AUXXML_FILE_EXTENSION)
+            overview_file_path = Path(viewpoint_item.local_object_path + ServerConfig.OVERVIEW_FILE_EXTENSION)
 
             if not self.stop_event.is_set() and not aux_file_path.is_file():
                 self._calculate_image_statistics(viewpoint_item)
@@ -323,8 +317,8 @@ class ViewpointWorker(Thread):
         message_bucket_name = viewpoint_item.bucket_name
         local_object_path = viewpoint_item.local_object_path
         extension_lookup = {
-            SupplementaryFileType.AUX: AUXXML_FILE_EXTENSION,
-            SupplementaryFileType.OVERVIEW: OVERVIEW_FILE_EXTENSION,
+            SupplementaryFileType.AUX: ServerConfig.AUXXML_FILE_EXTENSION,
+            SupplementaryFileType.OVERVIEW: ServerConfig.OVERVIEW_FILE_EXTENSION,
         }
         try:
             self.logger.info(f"Attempting to download optional {file_type.value} file for {message_viewpoint_id}")
@@ -362,14 +356,19 @@ class ViewpointWorker(Thread):
         )
         return tile_factory_pool
 
-    def _calculate_image_statistics(self, viewpoint_item: ViewpointModel):
-        """NOTE: This code forces GDAL to and compute the statistics / histograms for each band. This can be a
+    def _calculate_image_statistics(self, viewpoint_item: ViewpointModel) -> None:
+        """This code forces GDAL to and compute the statistics / histograms for each band. This can be a
         time-consuming operation, so we want to only do this once. GDAL will write those statistics into a
         .aux.xml file associated with the dataset, but it only appears to do so when the dataset object is
         cleaned up. So this code creates a temporary dataset, forces it to generate the statistics using the
         gdal.Info() command and then closes the dataset to ensure that the auxiliary file is created. This is
         somewhat of a hack but all future calls to gdal.Open (i.e. in the tile factory pool) should be able to
-        read the .aux.xml file and skip the expensive work of generating the statistics."""
+        read the .aux.xml file and skip the expensive work of generating the statistics.
+
+        :param viewpoint_item: the description of the viewpoint item
+        :return: a default tile factory pool
+        """
+
         self.logger.info(f"Calculating Image Statistics for {viewpoint_item.local_object_path}")
         start_time = time.perf_counter()
         temp_ds = gdal.Open(viewpoint_item.local_object_path)
@@ -399,7 +398,7 @@ class ViewpointWorker(Thread):
     @staticmethod
     def _write_metadata(tile_factory: TileFactoryPool, viewpoint_item: ViewpointModel) -> None:
         metadata = tile_factory.raster_dataset.GetMetadata()
-        with open(viewpoint_item.local_object_path + METADATA_FILE_EXTENSION, "w") as md_file:
+        with open(viewpoint_item.local_object_path + ServerConfig.METADATA_FILE_EXTENSION, "w") as md_file:
             md_file.write(json.dumps({"metadata": metadata}))
 
     @staticmethod
@@ -407,7 +406,7 @@ class ViewpointWorker(Thread):
         width = tile_factory.raster_dataset.RasterXSize
         height = tile_factory.raster_dataset.RasterYSize
         image_coordinates = [0, 0, width, height]
-        with open(viewpoint_item.local_object_path + BOUNDS_FILE_EXTENSION, "w") as bounds_file:
+        with open(viewpoint_item.local_object_path + ServerConfig.BOUNDS_FILE_EXTENSION, "w") as bounds_file:
             bounds_file.write(json.dumps({"bounds": image_coordinates}))
 
     @staticmethod
@@ -424,12 +423,12 @@ class ViewpointWorker(Thread):
             id=viewpoint_item.viewpoint_name, geometry=geojson.geometry.Polygon([coordinates]), properties={}
         )
         feature_collection = geojson.FeatureCollection(features=[feature])
-        with open(viewpoint_item.local_object_path + INFO_FILE_EXTENSION, "w") as info_file:
+        with open(viewpoint_item.local_object_path + ServerConfig.INFO_FILE_EXTENSION, "w") as info_file:
             info_file.write(geojson.dumps(feature_collection))
 
     @staticmethod
     def _write_statistics(viewpoint_item: ViewpointModel) -> None:
         gdal_options = gdal.InfoOptions(format="json", showMetadata=False)
         gdal_info = gdal.Info(viewpoint_item.local_object_path, options=gdal_options)
-        with open(viewpoint_item.local_object_path + STATISTICS_FILE_EXTENSION, "w") as stats_file:
+        with open(viewpoint_item.local_object_path + ServerConfig.STATISTICS_FILE_EXTENSION, "w") as stats_file:
             stats_file.write(json.dumps({"image_statistics": gdal_info}))

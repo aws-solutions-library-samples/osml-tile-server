@@ -7,7 +7,6 @@ The OversightML Tile Server is a lightweight, cloud-based tile server which allo
 .. toctree::
    :maxdepth: 1
 
-   _apidoc/aws.osml.tile_server
 
 Indices and tables
 __________________

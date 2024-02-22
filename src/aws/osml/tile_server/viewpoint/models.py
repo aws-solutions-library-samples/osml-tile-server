@@ -1,3 +1,5 @@
+#  Copyright 2024 Amazon.com, Inc. or its affiliates.
+
 import logging
 from enum import auto
 from typing import List, Optional
@@ -40,9 +42,7 @@ class ViewpointApiNames(str, AutoLowerStringEnum):
 
 class ViewpointStatus(str, AutoUnderscoreStringEnum):
     """
-    Provides status options for a viewpoint.
-
-    These states represent the state of processing or readiness for a viewpoint.
+    Provides status options for a viewpoint that represents the state of processing or readiness for a viewpoint.
 
     :cvar NOT_FOUND: Viewpoint isn't found.
     :cvar REQUESTED: Viewpoint requested.
@@ -62,9 +62,7 @@ class ViewpointStatus(str, AutoUnderscoreStringEnum):
 
 class ViewpointRequest(BaseModel):
     """
-    Represents a request to create or update a viewpoint.
-
-    All fields are required.
+    Represents a request to create or update a viewpoint. All fields are required.
 
     :param bucket_name: The name of the bucket, the Minimum length is 1.
     :param object_key: The key of the object, the Minimum length is 1.
@@ -82,8 +80,7 @@ class ViewpointRequest(BaseModel):
 
 class ViewpointModel(BaseModel):
     """
-    Represents the model data for a viewpoint, including its ID, name, status, bucket name, object key, tile size,
-    range adjustment, local object path, and error message.
+    Represents the model data for a viewpoint.
 
     :param viewpoint_id: The ID to associate with the viewpoint.
     :param viewpoint_name: The name of the viewpoint.
@@ -120,9 +117,7 @@ class ViewpointListResponse(BaseModel):
 
 class ViewpointUpdate(BaseModel):
     """
-    Represents an update operation for a viewpoint.
-
-    This includes fields to update the viewpoint's ID, name, tile size, and range adjustment.
+    Represents the model for a viewpoint update operation.
 
     :param viewpoint_id: The ID of the viewpoint.
     :param viewpoint_name: The name of the viewpoint.
