@@ -52,6 +52,20 @@ repos:
     hooks:
       - id: copyright
         name: update copyright
+        exclude: |
+          (?x)^(
+            doc/.*|
+            ^\..+|
+            .+\.md|
+            test/data/.*|
+            LICENSE|
+            tox.ini|
+            pyproject.toml|
+            setup.cfg|
+            setup.py|
+            py.typed|
+            test-integ/aws/osml/tile_server/data/.*
+          )$
       - id: copyright-required
         name: require copyright
         exclude: |
@@ -65,5 +79,6 @@ repos:
             pyproject.toml|
             setup.cfg|
             setup.py|
+            py.typed|
             test-integ/aws/osml/tile_server/data/.*
           )$
