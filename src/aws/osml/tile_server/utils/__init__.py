@@ -1,4 +1,4 @@
-#  Copyright 2024 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
 
 # flake8: noqa
 from .aws_services import RefreshableBotoSession, initialize_aws_services, initialize_ddb, initialize_s3, initialize_sqs
