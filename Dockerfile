@@ -1,3 +1,5 @@
+# Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+
 FROM public.ecr.aws/amazonlinux/amazonlinux:2023 as osml_tile_server
 
 # Only override if you're using a mirror with a cert pulled in using cert-base as a build parameter
