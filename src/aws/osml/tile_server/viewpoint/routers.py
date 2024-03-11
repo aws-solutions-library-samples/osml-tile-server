@@ -10,6 +10,7 @@ from secrets import token_hex
 from typing import Any, Dict
 
 import dateutil.parser
+from asgi_correlation_id import correlation_id
 from boto3.resources.base import ServiceResource
 from cryptography.fernet import Fernet
 from fastapi import APIRouter, HTTPException, Query, Response
@@ -40,8 +41,8 @@ class ViewpointRouter:
 
     def __init__(
         self,
-        viewpoint_database: ViewpointStatusTable,
-        viewpoint_queue: ViewpointRequestQueue,
+        aws_ddb: ServiceResource,
+        aws_sqs: ServiceResource,
         aws_s3: ServiceResource,
         encryptor: Fernet,
     ) -> None:
@@ -56,11 +57,12 @@ class ViewpointRouter:
 
         :return: None
         """
-        self.viewpoint_database = viewpoint_database
-        self.viewpoint_queue = viewpoint_queue
+        logger = logging.getLogger("uvicorn.access")
+        self.viewpoint_database = ViewpointStatusTable(aws_ddb, logger)
+        self.viewpoint_queue = ViewpointRequestQueue(aws_sqs, ServerConfig.viewpoint_request_queue, logger)
         self.s3 = aws_s3
         self.encryptor = encryptor
-        self.logger = logging.getLogger("uvicorn")
+        self.logger = logger
 
     @property
     def router(self):
@@ -88,6 +90,10 @@ class ViewpointRouter:
 
             :return: List of viewpoints with details from the table.
             """
+            # ThreadingLocalContextFilter.set_context({"request_id": get_request_id()})
+            logger = logging.getLogger()
+            logger.info("test")
+
             current_function_name = inspect.stack()[0].function
             current_route = [route for route in api_router.routes if route.name == current_function_name][0]
             current_endpoint = current_route.endpoint
@@ -145,11 +151,13 @@ class ViewpointRouter:
                 error_message=None,
                 expire_time=None,
             )
+            db_response = self.viewpoint_database.create_viewpoint(new_viewpoint_request)
 
+            attributes = {"correlation_id": {"StringValue": correlation_id.get(), "DataType": "String"}}
             # Place this request into SQS, then the worker will pick up in order to download the image from S3
-            self.viewpoint_queue.send_request(new_viewpoint_request.model_dump())
+            self.viewpoint_queue.send_request(new_viewpoint_request.model_dump(), attributes)
 
-            return self.viewpoint_database.create_viewpoint(new_viewpoint_request)
+            return db_response
 
         @api_router.delete("/{viewpoint_id}")
         def delete_viewpoint(viewpoint_id: str) -> ViewpointModel:
@@ -160,6 +168,8 @@ class ViewpointRouter:
 
             :return ViewpointModel: Updated viewpoint item details from the table.
             """
+            # ThreadingLocalContextFilter.set_context({"request_id": get_request_id()})
+
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.UPDATE)
@@ -184,6 +194,8 @@ class ViewpointRouter:
 
             :return: Updated viewpoint item details from the table.
             """
+            # ThreadingLocalContextFilter.set_context({"request_id": get_request_id()})
+
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_request.viewpoint_id)
 
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.UPDATE)
@@ -203,6 +215,8 @@ class ViewpointRouter:
 
             :return: Details from the viewpoint item in the table.
             """
+            # ThreadingLocalContextFilter.set_context({"request_id": get_request_id()})
+
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
             return viewpoint_item
 
@@ -215,6 +229,8 @@ class ViewpointRouter:
 
             :return: Viewpoint metadata associated with the viewpoint item from the table.
             """
+            # ThreadingLocalContextFilter.set_context({"request_id": get_request_id()})
+
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.METADATA)
@@ -232,6 +248,8 @@ class ViewpointRouter:
 
             :return: Viewpoint bounds for the given table item.
             """
+            # ThreadingLocalContextFilter.set_context({"request_id": get_request_id()})
+
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.BOUNDS)
@@ -249,6 +267,8 @@ class ViewpointRouter:
 
             :return: Viewpoint info associated with the given id.
             """
+            # ThreadingLocalContextFilter.set_context({"request_id": get_request_id()})
+
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.INFO)
@@ -266,6 +286,8 @@ class ViewpointRouter:
 
             :return: Viewpoint statistics associated with the id.
             """
+            # ThreadingLocalContextFilter.set_context({"request_id": get_request_id()})
+
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.STATISTICS)
@@ -302,6 +324,8 @@ class ViewpointRouter:
 
             :return: StreamingResponse of preview binary with the appropriate mime type based on the img_format
             """
+            # ThreadingLocalContextFilter.set_context({"request_id": get_request_id()})
+
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
 
@@ -355,6 +379,8 @@ class ViewpointRouter:
 
             :return: StreamingResponse of tile image binary payload.
             """
+            # ThreadingLocalContextFilter.set_context({"request_id": get_request_id()})
+
             if z < 0:
                 raise HTTPException(
                     status_code=400, detail=f"Resolution Level for get tile request must be >= 0. Requested z={z}"
@@ -434,6 +460,7 @@ class ViewpointRouter:
 
             :return: StreamingResponse of cropped image binary with the appropriate mime type based on the img_format
             """
+            # ThreadingLocalContextFilter.set_context({"request_id": get_request_id()})
 
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
@@ -466,6 +493,8 @@ class ViewpointRouter:
 
         :return: Viewpoint detail
         """
+        # ThreadingLocalContextFilter.set_context({"request_id": get_request_id()})
+
         if current_status == ViewpointStatus.DELETED:
             raise HTTPException(
                 status_code=404,

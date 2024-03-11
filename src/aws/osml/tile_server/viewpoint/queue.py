@@ -1,7 +1,7 @@
 #  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
 
 import json
-import logging
+from logging import Logger, getLogger
 from typing import Dict
 
 from botocore.exceptions import ClientError
@@ -12,7 +12,7 @@ class ViewpointRequestQueue:
     A class used to represent the ViewpointRequestQueue.
     """
 
-    def __init__(self, aws_sqs, queue_name: str) -> None:
+    def __init__(self, aws_sqs, queue_name: str, logger: Logger = getLogger(__name__)) -> None:
         """
         Initializes a new instance of the ViewpointRequestQueue class which sends messages via Amazon's Simple Queue
         Service (SQS)
@@ -25,9 +25,9 @@ class ViewpointRequestQueue:
 
         self.sqs_client = aws_sqs
         self.queue = self.sqs_client.get_queue_by_name(QueueName=queue_name)
-        self.logger = logging.getLogger("uvicorn")
+        self.logger = logger
 
-    def send_request(self, request: Dict) -> None:
+    def send_request(self, request: Dict, attributes: Dict = None) -> None:
         """
         Send the message to an associated SQS queue.
 
@@ -36,6 +36,9 @@ class ViewpointRequestQueue:
         :raises ClientError: if unable to send a message.
         """
         try:
-            self.queue.send_message(MessageBody=json.dumps(request))
+            if attributes:
+                self.queue.send_message(MessageBody=json.dumps(request), MessageAttributes=attributes)
+            else:
+                self.queue.send_message(MessageBody=json.dumps(request))
         except ClientError as error:
             self.logger.error("Unable to send message visibility: {}".format(error))

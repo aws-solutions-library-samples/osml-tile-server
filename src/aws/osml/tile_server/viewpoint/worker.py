@@ -20,7 +20,13 @@ from osgeo import gdal, gdalconst
 from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustmentType
 from aws.osml.photogrammetry import ImageCoordinate
 from aws.osml.tile_server.app_config import ServerConfig
-from aws.osml.tile_server.utils import AutoLowerStringEnum, TileFactoryPool, get_standard_overviews, get_tile_factory_pool
+from aws.osml.tile_server.utils import (
+    AutoLowerStringEnum,
+    ThreadingLocalContextFilter,
+    TileFactoryPool,
+    get_standard_overviews,
+    get_tile_factory_pool,
+)
 
 from .database import DecimalEncoder, ViewpointStatusTable
 from .models import ViewpointModel, ViewpointStatus
@@ -42,9 +48,9 @@ class SupplementaryFileType(str, AutoLowerStringEnum):
 class ViewpointWorker(Thread):
     def __init__(
         self,
-        viewpoint_request_queue: ViewpointRequestQueue,
+        aws_sqs: ServiceResource,
         aws_s3: ServiceResource,
-        viewpoint_database: ViewpointStatusTable,
+        aws_ddb: ServiceResource,
         logger: Logger = logging.getLogger(__name__),
     ):
         """
@@ -59,9 +65,9 @@ class ViewpointWorker(Thread):
         """
         super().__init__()
         self.daemon = True
-        self.viewpoint_request_queue = viewpoint_request_queue
+        self.viewpoint_request_queue = ViewpointRequestQueue(aws_sqs, ServerConfig.viewpoint_request_queue, logger)
         self.s3 = aws_s3
-        self.viewpoint_database = viewpoint_database
+        self.viewpoint_database = ViewpointStatusTable(aws_ddb, logger)
         self.logger = logger
         self.stop_event = Event()
 
@@ -90,8 +96,16 @@ class ViewpointWorker(Thread):
         while not self.stop_event.is_set():
             self.logger.debug("Scanning for SQS messages")
             try:
-                messages = self.viewpoint_request_queue.queue.receive_messages(WaitTimeSeconds=5)
+                attributes = ["correlation_id"]
+                messages = self.viewpoint_request_queue.queue.receive_messages(
+                    MessageAttributeNames=attributes, WaitTimeSeconds=5
+                )
                 for message in messages:
+                    correlation_id = message.message_attributes.get("correlation_id", {}).get("StringValue")
+                    if correlation_id:
+                        ThreadingLocalContextFilter.set_context({"correlation_id": correlation_id})
+                    else:
+                        ThreadingLocalContextFilter.set_context()
                     self._process_message(message)
 
             except ClientError as err:
