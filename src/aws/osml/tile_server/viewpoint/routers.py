@@ -49,9 +49,9 @@ class ViewpointRouter:
         """
         The `ViewpointRouter` class is responsible for handling API endpoints related to viewpoints.
 
-        :param viewpoint_database: Instance of the ViewpointStatusTable class representing the viewpoint database.
+        :param aws_ddb: Instance of the ServiceResource class representing the AWS DDB service.
 
-        :param viewpoint_queue: Instance of the ViewpointRequestQueue class representing the viewpoint request queue.
+        :param aws_sqs: Instance of the ServiceResource class representing the AWS SQS service.
 
         :param aws_s3: Instance of the ServiceResource class representing the AWS S3 service.
 
@@ -90,10 +90,6 @@ class ViewpointRouter:
 
             :return: List of viewpoints with details from the table.
             """
-            # ThreadingLocalContextFilter.set_context({"request_id": get_request_id()})
-            logger = logging.getLogger()
-            logger.info("test")
-
             current_function_name = inspect.stack()[0].function
             current_route = [route for route in api_router.routes if route.name == current_function_name][0]
             current_endpoint = current_route.endpoint
@@ -168,8 +164,6 @@ class ViewpointRouter:
 
             :return ViewpointModel: Updated viewpoint item details from the table.
             """
-            # ThreadingLocalContextFilter.set_context({"request_id": get_request_id()})
-
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.UPDATE)
@@ -194,8 +188,6 @@ class ViewpointRouter:
 
             :return: Updated viewpoint item details from the table.
             """
-            # ThreadingLocalContextFilter.set_context({"request_id": get_request_id()})
-
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_request.viewpoint_id)
 
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.UPDATE)
@@ -215,8 +207,6 @@ class ViewpointRouter:
 
             :return: Details from the viewpoint item in the table.
             """
-            # ThreadingLocalContextFilter.set_context({"request_id": get_request_id()})
-
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
             return viewpoint_item
 
@@ -229,8 +219,6 @@ class ViewpointRouter:
 
             :return: Viewpoint metadata associated with the viewpoint item from the table.
             """
-            # ThreadingLocalContextFilter.set_context({"request_id": get_request_id()})
-
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.METADATA)
@@ -248,8 +236,6 @@ class ViewpointRouter:
 
             :return: Viewpoint bounds for the given table item.
             """
-            # ThreadingLocalContextFilter.set_context({"request_id": get_request_id()})
-
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.BOUNDS)
@@ -267,8 +253,6 @@ class ViewpointRouter:
 
             :return: Viewpoint info associated with the given id.
             """
-            # ThreadingLocalContextFilter.set_context({"request_id": get_request_id()})
-
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.INFO)
@@ -286,8 +270,6 @@ class ViewpointRouter:
 
             :return: Viewpoint statistics associated with the id.
             """
-            # ThreadingLocalContextFilter.set_context({"request_id": get_request_id()})
-
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
 
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.STATISTICS)
@@ -324,8 +306,6 @@ class ViewpointRouter:
 
             :return: StreamingResponse of preview binary with the appropriate mime type based on the img_format
             """
-            # ThreadingLocalContextFilter.set_context({"request_id": get_request_id()})
-
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
 
@@ -379,8 +359,6 @@ class ViewpointRouter:
 
             :return: StreamingResponse of tile image binary payload.
             """
-            # ThreadingLocalContextFilter.set_context({"request_id": get_request_id()})
-
             if z < 0:
                 raise HTTPException(
                     status_code=400, detail=f"Resolution Level for get tile request must be >= 0. Requested z={z}"
@@ -460,8 +438,6 @@ class ViewpointRouter:
 
             :return: StreamingResponse of cropped image binary with the appropriate mime type based on the img_format
             """
-            # ThreadingLocalContextFilter.set_context({"request_id": get_request_id()})
-
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
 
@@ -493,8 +469,6 @@ class ViewpointRouter:
 
         :return: Viewpoint detail
         """
-        # ThreadingLocalContextFilter.set_context({"request_id": get_request_id()})
-
         if current_status == ViewpointStatus.DELETED:
             raise HTTPException(
                 status_code=404,

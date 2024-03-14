@@ -56,10 +56,10 @@ class ViewpointWorker(Thread):
         """
         The `__init__` method of the `ViewpointWorker` class initializes a new instance of the `ViewpointWorker`.
 
-        :param viewpoint_request_queue: `ViewpointRequestQueue` class representing the queue for viewpoint requests.
-        :param aws_s3: An instance of the `ServiceResource` class representing the AWS S3 service.
-        :param viewpoint_database: `ViewpointStatusTable` class representing the database for viewpoint status.
-        :param logger: 'Logger' class representing the logger.  Defaults to the default python logger.
+        :param aws_sqs: An instance of the ServiceResource class representing the AWS SQS service.
+        :param aws_s3: An instance of the ServiceResource class representing the AWS S3 service.
+        :param aws_ddb: An instance of the ServiceResource class representing the AWS DDB service.
+        :param logger: Logger class representing the logger.  Defaults to the default python logger.
 
         :return: None
         """
