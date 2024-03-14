@@ -13,7 +13,7 @@ class ThreadingLocalContextFilter(Filter):
     set using the static methods of this class.
     """
 
-    def __init__(self, attribute_names: List[str]):
+    def __init__(self, attribute_names: List[str]) -> None:
         super().__init__()
         self.attribute_names = attribute_names
 
@@ -29,11 +29,12 @@ class ThreadingLocalContextFilter(Filter):
         return True
 
     @staticmethod
-    def set_context(context: Optional[dict]):
+    def set_context(context: Optional[dict]) -> None:
         """
         Set the context for the current thread. If None all context information is cleared.
 
         :param context: dict = the context to set
+        :return: None
         """
         if context is None:
             _LOG_CONTEXT.__dict__.clear()
@@ -42,6 +43,15 @@ class ThreadingLocalContextFilter(Filter):
 
 
 def configure_logger(logger: Logger, log_level: int, log_formatter: Formatter = None, log_filter: Filter = None) -> None:
+    """
+    Configure a given logger with the provided parameters.
+
+    :param logger: An instance of the Logger to configure
+    :param log_level: The log level to set
+    :param log_formatter: The log formatter to set on all handlers
+    :param log_filter: Log filter to apply to the logger
+    :return: None
+    """
     logger.setLevel(log_level)
     if log_formatter:
         for handler in logger.handlers:

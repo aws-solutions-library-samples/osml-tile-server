@@ -52,7 +52,7 @@ class ViewpointWorker(Thread):
         aws_s3: ServiceResource,
         aws_ddb: ServiceResource,
         logger: Logger = logging.getLogger(__name__),
-    ):
+    ) -> None:
         """
         The `__init__` method of the `ViewpointWorker` class initializes a new instance of the `ViewpointWorker`.
 

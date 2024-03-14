@@ -46,16 +46,33 @@ except ClientError as err:
     sys.exit(f"Fatal error occurred while initializing AWS services. Exiting. {err}")
 
 
+def configure_tile_server_logging() -> logging.Logger:
+    default_formatter = JsonFormatter(fmt="%(asctime)s %(levelname)s %(message)s", datefmt="%Y-%m-%dT%H:%M:%S")
+    correlation_formatter = JsonFormatter(
+        fmt="%(asctime)s %(levelname)s %(correlation_id)s %(message)s",
+        datefmt="%Y-%m-%dT%H:%M:%S",
+    )
+    worker_filter = ThreadingLocalContextFilter(["correlation_id"])
+    access_filter = CorrelationIdFilter(default_value="-")
+    log_level = ServerConfig.tile_server_log_level
+    uvicorn_logger = logging.getLogger("uvicorn")
+    configure_logger(uvicorn_logger, log_level, log_formatter=default_formatter)
+    worker_logger = uvicorn_logger.getChild("worker")
+    configure_logger(worker_logger, log_level, log_formatter=correlation_formatter, log_filter=worker_filter)
+    uvicorn_error_logger = logging.getLogger("uvicorn.error")
+    configure_logger(uvicorn_error_logger, log_level, log_formatter=default_formatter)
+    uvicorn_access_logger = logging.getLogger("uvicorn.access")
+    configure_logger(uvicorn_access_logger, log_level, log_formatter=correlation_formatter, log_filter=access_filter)
+
+    return worker_logger
+
+
 def initialize_viewpoint_router() -> ViewpointRouter:
     """
-    Initialize viewpoint-related components.
+    This function creates an instance of a ViewpointRouter using initialized AWS services.
+    Application will exit if the router fails to create.
 
-    This function creates instances of the ViewpointStatusTable,
-    ViewpointRequestQueue, and ViewpointRouter using initialized AWS services.
-
-    :return: Tuple containing initialized viewpoint components.
-
-    :raises: ClientError if the database client failed to initialize
+    :return: An instance of a ViewpointRouter.
     """
     initialize_token_key()
     sleep(1)
@@ -87,23 +104,7 @@ async def lifespan(app: FastAPI) -> AbstractAsyncContextManager[None] | FastAPI:
     """
     # startup functions before serving requests
 
-    # configure_logging()
-    default_formatter = JsonFormatter(fmt="%(asctime)s %(levelname)s %(message)s", datefmt="%Y-%m-%dT%H:%M:%S")
-    correlation_formatter = JsonFormatter(
-        fmt="%(asctime)s %(levelname)s %(correlation_id)s %(message)s",
-        datefmt="%Y-%m-%dT%H:%M:%S",
-    )
-    worker_filter = ThreadingLocalContextFilter(["correlation_id"])
-    access_filter = CorrelationIdFilter(default_value="-")
-    log_level = ServerConfig.tile_server_log_level
-    uvicorn_logger = logging.getLogger("uvicorn")
-    configure_logger(uvicorn_logger, log_level, log_formatter=default_formatter)
-    worker_logger = uvicorn_logger.getChild("worker")
-    configure_logger(worker_logger, log_level, log_formatter=correlation_formatter, log_filter=worker_filter)
-    uvicorn_error_logger = logging.getLogger("uvicorn.error")
-    configure_logger(uvicorn_error_logger, log_level, log_formatter=default_formatter)
-    uvicorn_access_logger = logging.getLogger("uvicorn.access")
-    configure_logger(uvicorn_access_logger, log_level, log_formatter=correlation_formatter, log_filter=access_filter)
+    worker_logger = configure_tile_server_logging()
 
     # create viewpoint worker
     viewpoint_worker = ViewpointWorker(aws_sqs, aws_s3, aws_ddb, worker_logger)

@@ -48,6 +48,7 @@ class ViewpointStatusTable:
         Initialize the ViewpointStatusTable and validate the table status.
 
         :param aws_ddb: An instance of the AWS DynamoDB service resource.
+        :param logger: An optional logger to use.  If none provided it creates a new one.
         :return: None
         :raises ClientError: If the table does not exist in the specified AWS region.
         """

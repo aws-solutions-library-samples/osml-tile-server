@@ -18,6 +18,7 @@ class ViewpointRequestQueue:
         Service (SQS)
 
         :param aws_sqs: AWS SQS client instance.
+        :param logger: An optional logger to use.  If none provided it creates a new one.
         :param queue_name: SQS Queue name to send messages to.
 
         :return: None
@@ -32,8 +33,8 @@ class ViewpointRequestQueue:
         Send the message to an associated SQS queue.
 
         :param request: A JSON request to assign the SQS message sent.
+        :param attributes: An optional set of attributes to attach to the message.
         :return: None
-        :raises ClientError: if unable to send a message.
         """
         try:
             if attributes:
