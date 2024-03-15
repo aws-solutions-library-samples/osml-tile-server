@@ -1,8 +1,8 @@
 #  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
 
 import json
-import logging
 from decimal import Decimal
+from logging import Logger, getLogger
 from typing import Any, Dict, Tuple
 
 from boto3.dynamodb.conditions import Attr
@@ -43,23 +43,22 @@ class ViewpointStatusTable:
     A class used to represent the ViewpointStatusTable.
     """
 
-    def __init__(self, aws_ddb: ServiceResource) -> None:
+    def __init__(self, aws_ddb: ServiceResource, logger: Logger = getLogger(__name__)) -> None:
         """
         Initialize the ViewpointStatusTable and validate the table status.
 
         :param aws_ddb: An instance of the AWS DynamoDB service resource.
+        :param logger: An optional logger to use.  If none provided it creates a new one.
         :return: None
         :raises ClientError: If the table does not exist in the specified AWS region.
         """
         self.ddb = aws_ddb
         self.table = self.ddb.Table(ServerConfig.viewpoint_status_table)
-        self.logger = logging.getLogger("uvicorn")
+        self.logger = logger
         try:
             self.table.table_status
         except ClientError:
-            self.logger.error(
-                "{} table does not exist in {}.".format(ServerConfig.viewpoint_status_table, ServerConfig.aws_region)
-            )
+            self.logger.error(f"{ServerConfig.viewpoint_status_table} table does not exist in {ServerConfig.aws_region}.")
             raise
 
     def get_viewpoints(self, limit: int = None, next_token: str = None) -> ViewpointListResponse:

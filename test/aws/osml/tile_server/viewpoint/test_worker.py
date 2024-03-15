@@ -220,6 +220,8 @@ class TestViewpointWorker(TestCase):
         mock_s3 = MagicMock(name="S3")
         mock_ddb = MagicMock(name="ddb")
         worker = ViewpointWorker(mock_queue, mock_s3, mock_ddb)
+        worker.viewpoint_request_queue = mock_queue
+        worker.viewpoint_database = mock_ddb
 
         worker._update_status(MOCK_VIEWPOINT_ITEM)
         updated_viewpoint_item = ViewpointModel(
@@ -248,6 +250,8 @@ class TestViewpointWorker(TestCase):
         mock_s3 = MagicMock(name="S3")
         mock_ddb = MagicMock(name="ddb")
         worker = ViewpointWorker(mock_queue, mock_s3, mock_ddb)
+        worker.viewpoint_request_queue = mock_queue
+        worker.viewpoint_database = mock_ddb
 
         worker._update_status(MOCK_VIEWPOINT_ITEM_3)
         updated_viewpoint_item = ViewpointModel(
