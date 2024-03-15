@@ -47,6 +47,11 @@ except ClientError as err:
 
 
 def configure_tile_server_logging() -> logging.Logger:
+    """
+    This function sets up the logging for the Tile Server.
+
+    :return: a Logger instance for the async worker to use.
+    """
     default_formatter = JsonFormatter(fmt="%(asctime)s %(levelname)s %(message)s", datefmt="%Y-%m-%dT%H:%M:%S")
     correlation_formatter = JsonFormatter(
         fmt="%(asctime)s %(levelname)s %(correlation_id)s %(message)s",
