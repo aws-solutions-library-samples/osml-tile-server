@@ -5,6 +5,8 @@ from dataclasses import dataclass
 
 @dataclass
 class TestConfig:
+    __test__ = False
+
     test_region = "us-west-2"
 
     test_bucket = "test-bucket"

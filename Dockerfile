@@ -63,7 +63,7 @@ RUN conda init && echo 'conda activate "${CONDA_TARGET_ENV:-base}"' >>  ~/.bashr
 # Copy our local application source into the container
 COPY . osml-tile-server
 
-# Install the model runner application from source
+# Install the tile server application from source
 RUN python3 -m pip install osml-tile-server/
 
 # Clean up the conda install

@@ -4,20 +4,27 @@ import logging
 import sys
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from time import sleep
-from typing import Tuple
 
 import uvicorn
+from asgi_correlation_id import CorrelationIdFilter, CorrelationIdMiddleware
 from botocore.exceptions import ClientError
 from cryptography.fernet import Fernet
 from fastapi import FastAPI, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi_versioning import VersionedFastAPI
 from osgeo import gdal
+from pythonjsonlogger.jsonlogger import JsonFormatter
 
 from .app_config import ServerConfig
-from .utils import HealthCheck, initialize_aws_services, initialize_token_key, read_token_key
-from .viewpoint.database import ViewpointStatusTable
-from .viewpoint.queue import ViewpointRequestQueue
+from .utils import (
+    HealthCheck,
+    ThreadingLocalContextFilter,
+    configure_logger,
+    initialize_aws_services,
+    initialize_token_key,
+    read_token_key,
+)
 from .viewpoint.routers import ViewpointRouter
 from .viewpoint.worker import ViewpointWorker
 
@@ -32,41 +39,54 @@ uvicorn_log_level_lookup = {
     logging.DEBUG: "debug",
 }
 
-# Configure logger
-logger = logging.getLogger("uvicorn")
-logger.setLevel(ServerConfig.tile_server_log_level)
 
 try:
     aws_ddb, aws_s3, aws_sqs = initialize_aws_services()
 except ClientError as err:
-    logger.error(f"Fatal error occurred while initializing AWS services. Exception: {err}")
-    sys.exit("Fatal error occurred while initializing AWS services. Exiting.")
+    sys.exit(f"Fatal error occurred while initializing AWS services. Exiting. {err}")
 
 
-def initialize_viewpoint_components() -> Tuple[ViewpointStatusTable, ViewpointRequestQueue, ViewpointRouter]:
+def configure_tile_server_logging() -> logging.Logger:
     """
-    Initialize viewpoint-related components.
+    This function sets up the logging for the Tile Server.
 
-    This function creates instances of the ViewpointStatusTable,
-    ViewpointRequestQueue, and ViewpointRouter using initialized AWS services.
+    :return: a Logger instance for the async worker to use.
+    """
+    default_formatter = JsonFormatter(fmt="%(asctime)s %(levelname)s %(message)s", datefmt="%Y-%m-%dT%H:%M:%S")
+    correlation_formatter = JsonFormatter(
+        fmt="%(asctime)s %(levelname)s %(correlation_id)s %(message)s",
+        datefmt="%Y-%m-%dT%H:%M:%S",
+    )
+    worker_filter = ThreadingLocalContextFilter(["correlation_id"])
+    access_filter = CorrelationIdFilter(default_value="-")
+    log_level = ServerConfig.tile_server_log_level
+    uvicorn_logger = logging.getLogger("uvicorn")
+    configure_logger(uvicorn_logger, log_level, log_formatter=default_formatter)
+    worker_logger = uvicorn_logger.getChild("worker")
+    configure_logger(worker_logger, log_level, log_formatter=correlation_formatter, log_filter=worker_filter)
+    uvicorn_error_logger = logging.getLogger("uvicorn.error")
+    configure_logger(uvicorn_error_logger, log_level, log_formatter=default_formatter)
+    uvicorn_access_logger = logging.getLogger("uvicorn.access")
+    configure_logger(uvicorn_access_logger, log_level, log_formatter=correlation_formatter, log_filter=access_filter)
 
-    :return: Tuple containing initialized viewpoint components.
+    return worker_logger
 
-    :raises: ClientError if the database client failed to initialize
+
+def initialize_viewpoint_router() -> ViewpointRouter:
+    """
+    This function creates an instance of a ViewpointRouter using initialized AWS services.
+    Application will exit if the router fails to create.
+
+    :return: An instance of a ViewpointRouter.
     """
     initialize_token_key()
     sleep(1)
 
-    try:
-        database = ViewpointStatusTable(aws_ddb)
-    except Exception as err:
-        logger.error(f"Fatal error occurred while initializing AWS services. Check your credentials! Exception: {err}")
-        sys.exit("Fatal error occurred while initializing AWS services. Exiting.")
-
-    request_queue = ViewpointRequestQueue(aws_sqs, ServerConfig.viewpoint_request_queue)
     encryptor = Fernet(read_token_key())
-    router = ViewpointRouter(database, request_queue, aws_s3, encryptor)
-    return database, request_queue, router
+    try:
+        return ViewpointRouter(aws_ddb, aws_sqs, aws_s3, encryptor)
+    except Exception as err:
+        sys.exit(f"Fatal error occurred while initializing AWS services. Check your credentials! Exiting. {err}")
 
 
 @asynccontextmanager
@@ -87,16 +107,22 @@ async def lifespan(app: FastAPI) -> AbstractAsyncContextManager[None] | FastAPI:
         They represent your AWS S3 bucket instance,
         your database instance and a queue of requests respectively.
     """
-    viewpoint_worker = ViewpointWorker(viewpoint_request_queue, aws_s3, viewpoint_database, logger)
+    # startup functions before serving requests
+
+    worker_logger = configure_tile_server_logging()
+
+    # create viewpoint worker
+    viewpoint_worker = ViewpointWorker(aws_sqs, aws_s3, aws_ddb, worker_logger)
     viewpoint_worker.start()
     yield
+    # shutdown functions after done serving requests
     viewpoint_worker.join(timeout=20)
 
 
 # Initialize FastAPI app
 app = FastAPI(title="OSML Tile Server")
 
-viewpoint_database, viewpoint_request_queue, viewpoint_router = initialize_viewpoint_components()
+viewpoint_router = initialize_viewpoint_router()
 
 # Include the viewpoint router in the FastAPI app
 app.include_router(viewpoint_router.router)
@@ -113,7 +139,7 @@ app = VersionedFastAPI(
         "url": "https://github.com/aws-solutions-library-samples/osml-tile-server/issues",
     },
     license_info={
-        "license": """© 2023 Amazon Web Services, Inc. or its affiliates. All Rights Reserved.
+        "license": """Copyright 2023-2024 Amazon Web Services, Inc. or its affiliates. All Rights Reserved.
         This AWS Content is provided subject to the terms of the AWS Customer Agreement
         available at https://aws.amazon.com/agreement or other written agreement between
         Customer and either Amazon Web Services, Inc. or Amazon Web Services EMEA SARL or both.""",
@@ -121,6 +147,14 @@ app = VersionedFastAPI(
     },
     lifespan=lifespan,
 )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["X-Requested-With", "X-Request-ID"],
+    expose_headers=["X-Request-ID"],
+)
+app.add_middleware(CorrelationIdMiddleware)
 
 
 @app.get("/", response_class=HTMLResponse)

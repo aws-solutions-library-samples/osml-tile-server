@@ -10,6 +10,7 @@ from secrets import token_hex
 from typing import Any, Dict
 
 import dateutil.parser
+from asgi_correlation_id import correlation_id
 from boto3.resources.base import ServiceResource
 from cryptography.fernet import Fernet
 from fastapi import APIRouter, HTTPException, Query, Response
@@ -40,27 +41,28 @@ class ViewpointRouter:
 
     def __init__(
         self,
-        viewpoint_database: ViewpointStatusTable,
-        viewpoint_queue: ViewpointRequestQueue,
+        aws_ddb: ServiceResource,
+        aws_sqs: ServiceResource,
         aws_s3: ServiceResource,
         encryptor: Fernet,
     ) -> None:
         """
         The `ViewpointRouter` class is responsible for handling API endpoints related to viewpoints.
 
-        :param viewpoint_database: Instance of the ViewpointStatusTable class representing the viewpoint database.
+        :param aws_ddb: Instance of the ServiceResource class representing the AWS DDB service.
 
-        :param viewpoint_queue: Instance of the ViewpointRequestQueue class representing the viewpoint request queue.
+        :param aws_sqs: Instance of the ServiceResource class representing the AWS SQS service.
 
         :param aws_s3: Instance of the ServiceResource class representing the AWS S3 service.
 
         :return: None
         """
-        self.viewpoint_database = viewpoint_database
-        self.viewpoint_queue = viewpoint_queue
+        logger = logging.getLogger("uvicorn.access")
+        self.viewpoint_database = ViewpointStatusTable(aws_ddb, logger)
+        self.viewpoint_queue = ViewpointRequestQueue(aws_sqs, ServerConfig.viewpoint_request_queue, logger)
         self.s3 = aws_s3
         self.encryptor = encryptor
-        self.logger = logging.getLogger("uvicorn")
+        self.logger = logger
 
     @property
     def router(self):
@@ -145,11 +147,13 @@ class ViewpointRouter:
                 error_message=None,
                 expire_time=None,
             )
+            db_response = self.viewpoint_database.create_viewpoint(new_viewpoint_request)
 
+            attributes = {"correlation_id": {"StringValue": correlation_id.get(), "DataType": "String"}}
             # Place this request into SQS, then the worker will pick up in order to download the image from S3
-            self.viewpoint_queue.send_request(new_viewpoint_request.model_dump())
+            self.viewpoint_queue.send_request(new_viewpoint_request.model_dump(), attributes)
 
-            return self.viewpoint_database.create_viewpoint(new_viewpoint_request)
+            return db_response
 
         @api_router.delete("/{viewpoint_id}")
         def delete_viewpoint(viewpoint_id: str) -> ViewpointModel:
@@ -434,7 +438,6 @@ class ViewpointRouter:
 
             :return: StreamingResponse of cropped image binary with the appropriate mime type based on the img_format
             """
-
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
 
