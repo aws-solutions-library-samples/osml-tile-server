@@ -1,0 +1,87 @@
+:py:mod:`tile_server.utils.aws_services`
+========================================
+
+.. py:module:: tile_server.utils.aws_services
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   tile_server.utils.aws_services.RefreshableBotoSession
+
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   tile_server.utils.aws_services.initialize_ddb
+   tile_server.utils.aws_services.initialize_s3
+   tile_server.utils.aws_services.initialize_sqs
+   tile_server.utils.aws_services.initialize_aws_services
+
+
+
+.. py:class:: RefreshableBotoSession
+
+
+   RefreshableBotoSession is a Boto3 helper class that allows for the creation of a refreshable session such that none
+   of the client/resources we want to call against will expire.
+
+   .. py:method:: _refresh() -> Dict[str, str]
+
+      Refresh the AWS credentials for the current session.
+
+      :return: Session credentials that were refreshed.
+
+
+   .. py:method:: refreshable_session() -> boto3.Session
+
+      Create a refreshable session which will automatically renew credentials when the credential expired.
+
+      :return: Refreshable credentials session to use for the task user.
+
+
+
+.. py:function:: initialize_ddb(session: boto3.Session) -> boto3.resources.base.ServiceResource
+
+   Initialize DynamoDB service and return a service resource.
+
+   :param: session: The credential session to use for the ServiceResource.
+   :return: DynamoDB service resource for consumption.
+
+
+.. py:function:: initialize_s3(session: boto3.Session) -> boto3.resources.base.ServiceResource
+
+   Initialize S3 service and return a service resource.
+
+   :param: session: The credential session to use for the ServiceResource.
+   :return: S3 service resource for consumption.
+
+
+.. py:function:: initialize_sqs(session: boto3.Session) -> boto3.resources.base.ServiceResource
+
+   Initialize SQS service and return a service resource.
+
+   :param: session: The credential session to use for the ServiceResource.
+   :return: SQS service resource for consumption.
+
+
+.. py:function:: initialize_aws_services() -> Tuple[boto3.resources.base.ServiceResource, boto3.resources.base.ServiceResource, boto3.resources.base.ServiceResource]
+
+   Initialize AWS services required by the application.
+
+   This function initializes DynamoDB, S3, and SQS services,
+   handling any exceptions that occur during the process.
+
+   :return: Tuple containing the initialized service resources for ddb, s3, and sqs clients.
+
+   :raises: SystemExit if any service fails to initialize.
+
+

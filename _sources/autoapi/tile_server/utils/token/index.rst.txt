@@ -1,0 +1,52 @@
+:py:mod:`tile_server.utils.token`
+=================================
+
+.. py:module:: tile_server.utils.token
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   tile_server.utils.token.initialize_token_key
+   tile_server.utils.token.read_token_key
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   tile_server.utils.token.TS_TOKEN_FILE_NAME
+   tile_server.utils.token.logger
+
+
+.. py:data:: TS_TOKEN_FILE_NAME
+   :value: 'ts-token'
+
+   
+
+.. py:data:: logger
+
+   
+
+.. py:function:: initialize_token_key() -> None
+
+   Initializes and stores a new encryption token key in a JSON file if one does not already exist.
+
+   :return: None
+
+
+.. py:function:: read_token_key() -> Optional[bytes]
+
+   Reads and returns the encryption token key from a JSON file.
+
+   :return: The encryption token key as a dictionary if the file exists and contains valid JSON, None otherwise.
+
+

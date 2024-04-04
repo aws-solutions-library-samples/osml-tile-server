@@ -1,0 +1,36 @@
+:py:mod:`tile_server.utils.health_check`
+========================================
+
+.. py:module:: tile_server.utils.health_check
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   tile_server.utils.health_check.HealthCheck
+
+
+
+
+.. py:class:: HealthCheck(/, **data: Any)
+
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+   A Pydantic model for a health check response.
+
+   Attributes:
+       status (str): Status of the health check. Defaults is "OK".
+
+   .. py:attribute:: status
+      :type: str
+      :value: 'OK'
+
+      
+
+

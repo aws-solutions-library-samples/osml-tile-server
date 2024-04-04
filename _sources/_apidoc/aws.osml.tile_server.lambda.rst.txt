@@ -1,0 +1,7 @@
+aws.osml.tile\_server.lambda 
+=============================
+
+.. automodule:: aws.osml.tile_server.lambda
+   :members:
+   :undoc-members:
+   :show-inheritance:

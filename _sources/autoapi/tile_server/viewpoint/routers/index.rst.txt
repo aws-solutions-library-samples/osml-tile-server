@@ -1,0 +1,45 @@
+:py:mod:`tile_server.viewpoint.routers`
+=======================================
+
+.. py:module:: tile_server.viewpoint.routers
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   tile_server.viewpoint.routers.ViewpointRouter
+
+
+
+
+.. py:class:: ViewpointRouter(aws_ddb: boto3.resources.base.ServiceResource, aws_sqs: boto3.resources.base.ServiceResource, aws_s3: boto3.resources.base.ServiceResource, encryptor: cryptography.fernet.Fernet)
+
+
+   A class used to represent the ViewpointRouter.
+
+   .. py:property:: router
+
+      Initializes a new instance of the ViewpointRouter class.
+
+      :return: None
+
+
+   .. py:method:: _validate_viewpoint_status(current_status: tile_server.viewpoint.models.ViewpointStatus, api_operation: tile_server.viewpoint.models.ViewpointApiNames) -> None
+      :staticmethod:
+
+      This is a helper function that is to validate if we can execute an operation based on the
+      given status
+
+      :param current_status: Current status of a viewpoint in the table.
+
+      :param api_operation: The associated API operation being used on the viewpoint.
+
+      :return: Viewpoint detail
+
+
+

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.tile_server.lambda.cleanup_dlq &mdash; OversightML Tile Server  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=eafc0fe6" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            OversightML Tile Server
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">OversightML Tile Server</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.tile_server.lambda.cleanup_dlq</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.tile_server.lambda.cleanup_dlq</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span>
+
+<span class="kn">import</span> <span class="nn">boto3</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="lambda_handler">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.tile_server.lambda.cleanup_dlq.html#aws.osml.tile_server.lambda.cleanup_dlq.lambda_handler">[docs]</a>
+<span class="k">def</span> <span class="nf">lambda_handler</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">context</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This Lambda function processes SQS queue messages, retrieving and updating the associated items from a DynamoDB</span>
+<span class="sd">    table. It expects an event object with a &quot;Records&quot; list which includes a &#39;viewpoint_id&#39;. If viewpoint_id is missing</span>
+<span class="sd">    or item is not found in the table, it returns a 404 response. If the item is found, its status is updated as</span>
+<span class="sd">    &#39;FAILED&#39; with an expiry time of current time plus 1 day. If an exception occurs, it&#39;s logged and a 500-status code</span>
+<span class="sd">    is returned with the error message.</span>
+
+<span class="sd">        Example usage:</span>
+<span class="sd">            event = {&quot;Records&quot;: [{&quot;body&quot;: &quot;{\&quot;viewpoint_id\&quot;: \&quot;123\&quot;}&quot;}]}</span>
+<span class="sd">            context = {}</span>
+<span class="sd">            result = lambda_handler(event, context)</span>
+
+<span class="sd">            print(result)</span>
+
+<span class="sd">    :param event: The event object that triggered the Lambda function. It contains information about the event source</span>
+<span class="sd">                    and any data associated with the event.</span>
+<span class="sd">    :param context: The runtime information of the Lambda function. It provides methods and properties that allow you to</span>
+<span class="sd">                    interact with the runtime environment.</span>
+<span class="sd">    :return: A dictionary containing the response status code and body.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Initialize ddb service</span>
+    <span class="n">ts_status_table</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;JOB_TABLE&quot;</span><span class="p">,</span> <span class="s2">&quot;TSJobTable&quot;</span><span class="p">)</span>
+    <span class="n">ddb</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">resource</span><span class="p">(</span><span class="s2">&quot;dynamodb&quot;</span><span class="p">)</span>
+    <span class="n">ddb_table</span> <span class="o">=</span> <span class="n">ddb</span><span class="o">.</span><span class="n">Table</span><span class="p">(</span><span class="n">ts_status_table</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Received an event from SQS: </span><span class="si">{</span><span class="n">event</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">event</span><span class="p">[</span><span class="s2">&quot;Records&quot;</span><span class="p">]:</span>
+            <span class="n">message_body</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">record</span><span class="p">[</span><span class="s2">&quot;body&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">message_body</span><span class="p">:</span>
+                <span class="n">viewpoint_id</span> <span class="o">=</span> <span class="n">message_body</span><span class="p">[</span><span class="s2">&quot;viewpoint_id&quot;</span><span class="p">]</span>
+
+                <span class="c1"># Get item from ddb</span>
+                <span class="n">item</span> <span class="o">=</span> <span class="n">ddb_table</span><span class="o">.</span><span class="n">get_item</span><span class="p">(</span><span class="n">Key</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;viewpoint_id&quot;</span><span class="p">:</span> <span class="n">viewpoint_id</span><span class="p">})</span>
+
+                <span class="k">if</span> <span class="n">item</span><span class="p">:</span>
+                    <span class="c1"># Set the item&#39;s status to FAILED and add expire_time</span>
+                    <span class="n">viewpoint_status</span> <span class="o">=</span> <span class="s2">&quot;FAILED&quot;</span>
+                    <span class="n">time_now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span>
+                    <span class="n">expire_time</span> <span class="o">=</span> <span class="n">time_now</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+                    <span class="c1"># Update the item in the ddb</span>
+                    <span class="n">response</span> <span class="o">=</span> <span class="n">ddb_table</span><span class="o">.</span><span class="n">update_item</span><span class="p">(</span>
+                        <span class="n">Key</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;viewpoint_id&quot;</span><span class="p">:</span> <span class="n">viewpoint_id</span><span class="p">},</span>
+                        <span class="n">UpdateExpression</span><span class="o">=</span><span class="s2">&quot;set viewpoint_status=:viewpoint_status, expire_time=:expire_time&quot;</span><span class="p">,</span>
+                        <span class="n">ExpressionAttributeValues</span><span class="o">=</span><span class="p">{</span>
+                            <span class="s2">&quot;:viewpoint_status&quot;</span><span class="p">:</span> <span class="n">viewpoint_status</span><span class="p">,</span>
+                            <span class="s2">&quot;:expire_time&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">expire_time</span><span class="o">.</span><span class="n">timestamp</span><span class="p">()),</span>
+                        <span class="p">},</span>
+                        <span class="n">ReturnValues</span><span class="o">=</span><span class="s2">&quot;ALL_NEW&quot;</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Update completed! </span><span class="si">{</span><span class="n">response</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># Return the result and the message should be removed from the DLQ</span>
+                    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;statusCode&quot;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> <span class="s2">&quot;body&quot;</span><span class="p">:</span> <span class="n">response</span><span class="p">}</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;statusCode&quot;</span><span class="p">:</span> <span class="mi">404</span><span class="p">,</span> <span class="s2">&quot;body&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;There&#39;s no viewpoint_id </span><span class="si">{</span><span class="n">viewpoint_id</span><span class="si">}</span><span class="s2"> found in DynamoDb!&quot;</span><span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;statusCode&quot;</span><span class="p">:</span> <span class="mi">404</span><span class="p">,</span> <span class="s2">&quot;body&quot;</span><span class="p">:</span> <span class="s2">&quot;There&#39;s no viewpoint_message found in DLQ!&quot;</span><span class="p">}</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">err</span><span class="o">.</span><span class="n">with_traceback</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;statusCode&quot;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span> <span class="s2">&quot;body&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Internal Service Error! </span><span class="si">{</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>
