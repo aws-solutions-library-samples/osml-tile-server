@@ -10,15 +10,19 @@ from secrets import token_hex
 from typing import Any, Dict
 
 import dateutil.parser
+import numpy as np
 from asgi_correlation_id import correlation_id
 from boto3.resources.base import ServiceResource
 from cryptography.fernet import Fernet
-from fastapi import APIRouter, HTTPException, Query, Response
+from fastapi import APIRouter, HTTPException, Query, Request, Response
 from fastapi_versioning import version
 from osgeo import gdalconst
 from starlette.responses import FileResponse, StreamingResponse
 
+import aws.osml.tile_server.ogc as ogc
 from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustmentType
+from aws.osml.image_processing import MapTileId, MapTileSetFactory
+from aws.osml.photogrammetry import ImageCoordinate
 from aws.osml.tile_server.app_config import ServerConfig
 from aws.osml.tile_server.utils import get_media_type, get_tile_factory_pool, perform_gdal_translation
 
@@ -210,8 +214,8 @@ class ViewpointRouter:
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
             return viewpoint_item
 
-        @api_router.get("/{viewpoint_id}/metadata")
-        def get_metadata(viewpoint_id: str) -> FileResponse:
+        @api_router.get("/{viewpoint_id}/image/metadata")
+        def get_image_metadata(viewpoint_id: str) -> FileResponse:
             """
             Get viewpoint metadata based on provided viewpoint id.
 
@@ -227,8 +231,8 @@ class ViewpointRouter:
                 viewpoint_item.local_object_path + ServerConfig.METADATA_FILE_EXTENSION, media_type="application/json"
             )
 
-        @api_router.get("/{viewpoint_id}/bounds")
-        def get_bounds(viewpoint_id: str) -> FileResponse:
+        @api_router.get("/{viewpoint_id}/image/bounds")
+        def get_image_bounds(viewpoint_id: str) -> FileResponse:
             """
             Get viewpoint bounds based on provided viewpoint id.
 
@@ -244,8 +248,8 @@ class ViewpointRouter:
                 viewpoint_item.local_object_path + ServerConfig.BOUNDS_FILE_EXTENSION, media_type="application/json"
             )
 
-        @api_router.get("/{viewpoint_id}/info")
-        def get_info(viewpoint_id: str) -> FileResponse:
+        @api_router.get("/{viewpoint_id}/image/info")
+        def get_image_info(viewpoint_id: str) -> FileResponse:
             """
             Get viewpoint info based on provided viewpoint id.
 
@@ -261,8 +265,8 @@ class ViewpointRouter:
                 viewpoint_item.local_object_path + ServerConfig.INFO_FILE_EXTENSION, media_type="application/json"
             )
 
-        @api_router.get("/{viewpoint_id}/statistics")
-        def get_statistics(viewpoint_id: str) -> FileResponse:
+        @api_router.get("/{viewpoint_id}/image/statistics")
+        def get_image_statistics(viewpoint_id: str) -> FileResponse:
             """
             Get viewpoint statistics based on provided viewpoint id.
 
@@ -278,8 +282,8 @@ class ViewpointRouter:
                 viewpoint_item.local_object_path + ServerConfig.STATISTICS_FILE_EXTENSION, media_type="application/json"
             )
 
-        @api_router.get("/{viewpoint_id}/preview.{img_format}")
-        def get_preview(
+        @api_router.get("/{viewpoint_id}/image/preview.{img_format}")
+        def get_image_preview(
             viewpoint_id: str,
             img_format: GDALImageFormats = Path(GDALImageFormats.PNG, description="Output image type."),
             max_size: int = 1024,
@@ -332,8 +336,8 @@ class ViewpointRouter:
                 preview_bytes = perform_gdal_translation(tile_factory.raster_dataset, preview_options)
                 return StreamingResponse(io.BytesIO(preview_bytes), media_type=get_media_type(img_format), status_code=200)
 
-        @api_router.get("/{viewpoint_id}/tiles/{z}/{x}/{y}.{tile_format}")
-        def get_tile(
+        @api_router.get("/{viewpoint_id}/image/tiles/{z}/{x}/{y}.{tile_format}")
+        def get_image_tile(
             viewpoint_id: str,
             z: int,
             x: int,
@@ -392,8 +396,8 @@ class ViewpointRouter:
             except Exception as err:
                 raise HTTPException(status_code=500, detail=f"Failed to fetch tile for image. {err}")
 
-        @api_router.get("/{viewpoint_id}/crop/{min_x},{min_y},{max_x},{max_y}.{img_format}")
-        def get_crop(
+        @api_router.get("/{viewpoint_id}/image/crop/{min_x},{min_y},{max_x},{max_y}.{img_format}")
+        def get_image_crop(
             viewpoint_id: str,
             min_x: int = Path(description="Unique viewpoint id"),
             min_y: int = Path(description="The left pixel coordinate of the desired crop."),
@@ -454,6 +458,219 @@ class ViewpointRouter:
 
                 crop_bytes = tile_factory.create_encoded_tile([min_x, min_y, crop_width, crop_height])
                 return StreamingResponse(io.BytesIO(crop_bytes), media_type=get_media_type(img_format), status_code=200)
+
+        @api_router.get("/{viewpoint_id}/map/tiles", response_model_exclude_none=True)
+        def get_map_tilesets(viewpoint_id: str, request: Request) -> ogc.TileSetList:
+            """
+            Retrieves the list of tilesets available for this viewpoint. This endpoint conforms to the
+            OGC API - Tiles: Tileset & Tilsets List specification.
+
+            :param viewpoint_id: the viewpoint id
+            :return: a list of tilesets that are available for this viewpoint
+            """
+            viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
+            self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.TILE)
+
+            return ogc.TileSetList(
+                tilesets=[
+                    ogc.TileSetItem(
+                        title="WebMercatorQuad",
+                        data_type=ogc.DataType.MAP,
+                        crs="http://www.opengis.net/def/crs/EPSG/0/3857",
+                        tile_matrix_set_uri="http://www.opengis.net/def/tilematrixset/OGC/1.0/WebMercatorQuad",
+                        links=[ogc.Link(href=f"{request.url}/WebMercatorQuad", rel="self", type="application/json")],
+                    ),
+                    ogc.TileSetItem(
+                        title="WebMercatorQuadx2",
+                        data_type=ogc.DataType.MAP,
+                        crs="http://www.opengis.net/def/crs/EPSG/0/3857",
+                        tile_matrix_set_uri="http://www.opengis.net/def/tilematrixset/OGC/1.0/WebMercatorQuadx2",
+                        links=[ogc.Link(href=f"{request.url}/WebMercatorQuadx2", rel="self", type="application/json")],
+                    ),
+                ]
+            )
+
+        @api_router.get("/{viewpoint_id}/map/tiles/{tile_matrix_set_id}", response_model_exclude_none=True)
+        def get_map_tileset_metadata(viewpoint_id: str, tile_matrix_set_id: str, request: Request) -> ogc.TileSetMetadata:
+            """
+            Retrieves the metadata for a specific tileset. This endpoint conforms to the OGC API - Tiles: Tileset &
+            Tilsets List specification.
+
+            :param viewpoint_id: the viewpoint id
+            :param tile_matrix_set_id: the name of the tile matrix set (e.g. WebMercatorQuad)
+            :return: the tileset metadata
+            """
+
+            try:
+                # Find the tile in the named tileset
+                tile_set = MapTileSetFactory.get_for_id(tile_matrix_set_id)
+                if not tile_set:
+                    raise ValueError(f"Unsupported tile set: {tile_matrix_set_id}")
+
+                viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
+                self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.TILE)
+
+                tile_format = GDALImageFormats.PNG
+                compression = GDALCompressionOptions.NONE
+                output_type = gdalconst.GDT_Byte
+
+                tile_factory_pool = get_tile_factory_pool(
+                    tile_format, compression, viewpoint_item.local_object_path, output_type, viewpoint_item.range_adjustment
+                )
+                with tile_factory_pool.checkout_in_context() as tile_factory:
+                    # Use the sensor model to find the geographic location of the 4 image corners
+                    width = tile_factory.raster_dataset.RasterXSize
+                    height = tile_factory.raster_dataset.RasterYSize
+
+                    image_corners = [[0, 0], [width, 0], [width, height], [0, height]]
+                    geo_image_corners = [
+                        tile_factory.sensor_model.image_to_world(ImageCoordinate(corner)) for corner in image_corners
+                    ]
+
+                    # Create the 2D geospatial bounding box for the image by taking the min/max values of the
+                    # geographic image corners
+                    geo_image_corner_latitudes = [corner.latitude for corner in geo_image_corners]
+                    geo_image_corner_longitude = [corner.longitude for corner in geo_image_corners]
+                    bounding_box = ogc.BoundingBox2D(
+                        lower_left=(
+                            np.degrees(min(geo_image_corner_longitude)),
+                            np.degrees(min(geo_image_corner_latitudes)),
+                        ),
+                        upper_right=(
+                            np.degrees(max(geo_image_corner_longitude)),
+                            np.degrees(max(geo_image_corner_latitudes)),
+                        ),
+                    )
+
+                    # Generate tile matrix limits for each resolution level in the pyramid
+                    highest_single_tile_matrix_number = 0
+                    tile_matrix_set_limits = []
+                    for tile_matrix in range(0, 25):
+                        # Calculate the tile limits for this resolution level
+                        min_tile_col, min_tile_row, max_tile_col, max_tile_row = tile_set.get_tile_matrix_limits_for_area(
+                            boundary_coordinates=geo_image_corners, tile_matrix=tile_matrix
+                        )
+
+                        tile_matrix_set_limits.append(
+                            ogc.TileMatrixLimits(
+                                tile_matrix=str(tile_matrix),
+                                min_tile_row=min_tile_row,
+                                max_tile_row=max_tile_row,
+                                min_tile_col=min_tile_col,
+                                max_tile_col=max_tile_col,
+                            )
+                        )
+
+                        # This keeps track of the last resolution level where the entire image fit into a single
+                        # map tile.
+                        if min_tile_col == max_tile_col and min_tile_row == max_tile_row:
+                            highest_single_tile_matrix_number = tile_matrix
+
+                        # Check to see if the collection of map tiles at this level is bigger than the full
+                        # resolution image. If so we can stop generating tile matrix limits since any additional
+                        # levels are likely to be beyond the resolution of the data itself.
+                        center_tile = tile_set.get_tile(
+                            MapTileId(
+                                tile_matrix=tile_matrix,
+                                tile_row=int((max_tile_row + min_tile_row) / 2),
+                                tile_col=int((max_tile_col + min_tile_col) / 2),
+                            )
+                        )
+                        max_tile_span = max(1 + max_tile_col - min_tile_col, 1 + max_tile_row - min_tile_row) * max(
+                            center_tile.size
+                        )
+                        max_pixel_span = max(width, height)
+                        if max_tile_span > max_pixel_span:
+                            break
+
+                    # Create a point that is at the center of the image at the resolution level that would
+                    # show a thumbnail or overview on the map. The actual requirements for this center point
+                    # field are underspecified in the OGC API, so we're giving them a starting point where the
+                    # user could see the whole image and drill down into an area of interest.
+                    center_point = ogc.TilePoint(
+                        coordinates=(
+                            np.degrees(np.mean(geo_image_corner_longitude)),
+                            np.degrees(np.mean(geo_image_corner_latitudes)),
+                        ),
+                        tile_matrix=str(highest_single_tile_matrix_number),
+                    )
+
+                    return ogc.TileSetMetadata(
+                        data_type=ogc.DataType.MAP,
+                        crs="http://www.opengis.net/def/crs/EPSG/0/3857",
+                        links=[ogc.Link(href=f"{request.url}", rel="self", type="application/json")],
+                        tile_matrix_set_limits=tile_matrix_set_limits,
+                        bounding_box=bounding_box,
+                        center_point=center_point,
+                    )
+
+            except Exception as err:
+                raise HTTPException(status_code=500, detail=f"Failed to fetch tile set metadata. {err}")
+
+        @api_router.get("/{viewpoint_id}/map/tiles/{tile_matrix_set_id}/{tile_matrix}/{tile_row}/{tile_col}.{tile_format}")
+        def get_map_tile(
+            viewpoint_id: str,
+            tile_matrix_set_id: str,
+            tile_matrix: int,
+            tile_row: int,
+            tile_col: int,
+            tile_format: GDALImageFormats = Path(GDALImageFormats.PNG, description="Output image type. Defaults to PNG."),
+            compression: GDALCompressionOptions = Query(
+                GDALCompressionOptions.NONE, description="Compression Algorithm for image."
+            ),
+        ) -> Response:
+            """
+            Create a tile by warping the image into an orthophoto and clipping it at the appropriate resolution/bounds
+            for the requested tile. This endpoint conforms to the OGC API - Tiles specification.
+
+            :param viewpoint_id: the viewpoint id
+            :param tile_matrix_set_id: the name of the tile matrix set (e.g. WebMercatorQuad)
+            :param tile_matrix: the zoom level or tile matrix it
+            :param tile_row: the tile row in the tile matrix
+            :param tile_col: the tile column in the tile matrix
+            :param tile_format: the desired output format
+            :param compression: the desired compression
+            :return: a binary image containing the map tile created from this viewpoint
+            """
+            if tile_matrix < 0:
+                raise HTTPException(
+                    status_code=400, detail=f"Resolution Level for get tile request must be >= 0. Requested z={tile_matrix}"
+                )
+
+            try:
+                viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
+                self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.TILE)
+
+                output_type = None
+                if viewpoint_item.range_adjustment is not RangeAdjustmentType.NONE:
+                    output_type = gdalconst.GDT_Byte
+
+                tile_factory_pool = get_tile_factory_pool(
+                    tile_format, compression, viewpoint_item.local_object_path, output_type, viewpoint_item.range_adjustment
+                )
+                with tile_factory_pool.checkout_in_context() as tile_factory:
+                    if tile_factory is None:
+                        raise HTTPException(
+                            status_code=500, detail=f"Unable to read tiles from viewpoint {viewpoint_item.viewpoint_id}"
+                        )
+
+                    # Find the tile in the named tileset
+                    tile_set = MapTileSetFactory.get_for_id(tile_matrix_set_id)
+                    if not tile_set:
+                        raise ValueError(f"Unsupported tile set: {tile_matrix_set_id}")
+                    tile_id = MapTileId(tile_matrix=tile_matrix, tile_row=tile_row, tile_col=tile_col)
+                    tile = tile_set.get_tile(tile_id)
+
+                    # Create an orthophoto for this tile
+                    image_bytes = tile_factory.create_orthophoto_tile(geo_bbox=tile.bounds, tile_size=tile.size)
+
+                if image_bytes is None:
+                    # OGC Tiles API Section 7.1.7.B indicates that a 204 should be returned for empty tiles
+                    return Response(status_code=204)
+
+                return StreamingResponse(io.BytesIO(image_bytes), media_type=get_media_type(tile_format), status_code=200)
+            except Exception as err:
+                raise HTTPException(status_code=500, detail=f"Failed to fetch tile for image. {err}")
 
         return api_router
 
