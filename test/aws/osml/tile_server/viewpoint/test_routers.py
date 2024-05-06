@@ -265,7 +265,7 @@ class TestRoutersE2E(unittest.TestCase):
 
     def test_e2e_get_metadata_valid(self):
         viewpoint_id = self.mock_create_viewpoint()
-        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/metadata")
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/image/metadata")
 
         assert response.status_code == 200
 
@@ -276,19 +276,19 @@ class TestRoutersE2E(unittest.TestCase):
     def test_e2e_get_metadata_invalid(self):
         self.mock_create_viewpoint()
         with self.assertRaises(Exception):
-            response = self.client.get(f"/latest/viewpoints/{TEST_INVALID_VIEWPOINT_ID}/metadata")
+            response = self.client.get(f"/latest/viewpoints/{TEST_INVALID_VIEWPOINT_ID}/image/metadata")
             assert response.status_code == 402
 
     def test_e2e_get_bounds_valid(self):
         viewpoint_id = self.mock_create_viewpoint()
-        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/bounds")
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/image/bounds")
 
         assert response.status_code == 200
         assert response.json()["bounds"] == [0, 0, 1024, 1024]
 
     def test_e2e_get_info_valid(self):
         viewpoint_id = self.mock_create_viewpoint()
-        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/info")
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/image/info")
 
         assert response.status_code == 200
         response_data = response.json()
@@ -299,7 +299,7 @@ class TestRoutersE2E(unittest.TestCase):
 
     def test_e2e_get_statistics_valid(self):
         viewpoint_id = self.mock_create_viewpoint()
-        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/statistics")
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/image/statistics")
 
         assert response.status_code == 200
         response_data = response.json()
@@ -310,25 +310,25 @@ class TestRoutersE2E(unittest.TestCase):
 
     def test_e2e_get_preview(self):
         viewpoint_id = self.mock_create_viewpoint()
-        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/preview.JPEG")
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/image/preview.JPEG")
         assert response.status_code == 200
         assert response.headers.get("content-type") == "image/jpeg"
         assert len(response.content) == 250282
 
     def test_e2e_get_tile_valid(self):
         viewpoint_id = self.mock_create_viewpoint()
-        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/tiles/10/10/10.NITF")
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/image/tiles/10/10/10.NITF")
         assert response.status_code == 200
 
     def test_e2e_get_tile_invalid(self):
         viewpoint_id = self.mock_create_viewpoint()
-        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/tiles/10/10/10.bad")
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/image/tiles/10/10/10.bad")
 
         assert response.status_code == 422
 
     def test_e2e_get_crop_min_max(self):
         viewpoint_id = self.mock_create_viewpoint()
-        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/crop/32,32,64,64.PNG")
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/image/crop/32,32,64,64.PNG")
         assert response.status_code == 200
         assert response.headers.get("content-type") == "image/png"
         assert len(response.content) == 748
@@ -336,10 +336,39 @@ class TestRoutersE2E(unittest.TestCase):
     def test_e2e_get_crop_height_width(self):
         viewpoint_id = self.mock_create_viewpoint()
         query_params = {"width": 32, "height": 32}
-        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/crop/32,32,128,128.PNG", params=query_params)
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/image/crop/32,32,128,128.PNG", params=query_params)
         assert response.status_code == 200
         assert response.headers.get("content-type") == "image/png"
         assert len(response.content) == 748
+
+    def test_e2e_get_map_tilesets(self):
+        viewpoint_id = self.mock_create_viewpoint()
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/map/tiles")
+        assert response.status_code == 200
+        assert response.headers.get("content-type") == "application/json"
+        json_response = response.json()
+        assert "tilesets" in json_response
+        assert len(json_response["tilesets"]) > 0
+
+    def test_e2e_get_map_tileset_metadata(self):
+        viewpoint_id = self.mock_create_viewpoint()
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/map/tiles/WebMercatorQuad")
+        assert response.status_code == 200
+        assert response.headers.get("content-type") == "application/json"
+        json_response = response.json()
+        assert "dataType" in json_response
+        assert "tileMatrixSetLimits" in json_response
+        assert len(json_response["tileMatrixSetLimits"]) > 0
+
+    def test_e2e_get_map_tile_empty(self):
+        viewpoint_id = self.mock_create_viewpoint()
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/map/tiles/WebMercatorQuad/10/10/10.PNG")
+        assert response.status_code == 204
+
+    def test_e2e_get_map_tile_valid(self):
+        viewpoint_id = self.mock_create_viewpoint()
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/map/tiles/WebMercatorQuad/0/0/0.PNG")
+        assert response.status_code == 200
 
 
 if __name__ == "__main__":
