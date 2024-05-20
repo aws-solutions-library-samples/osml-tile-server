@@ -18,6 +18,7 @@ from botocore.exceptions import ClientError
 from osgeo import gdal, gdalconst
 
 from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustmentType
+from aws.osml.image_processing import GDALTileFactory
 from aws.osml.photogrammetry import ImageCoordinate
 from aws.osml.tile_server.app_config import ServerConfig
 from aws.osml.tile_server.utils import (
@@ -161,10 +162,10 @@ class ViewpointWorker(Thread):
                     f"METRIC: TileFactory Create Time: {end_time - start_time} for {viewpoint_item.local_object_path}"
                 )
 
-                image_bytes = None
                 if not self.stop_event.is_set() and not overview_file_path.is_file():
                     self._create_image_pyramid(tile_factory, viewpoint_item)
-                    image_bytes = self._verify_tile_creation(tile_factory, viewpoint_item)
+
+                image_bytes = self._verify_tile_creation(tile_factory, viewpoint_item)
 
                 if not image_bytes:
                     raise ValueError("Image is empty.")
@@ -400,7 +401,7 @@ class ViewpointWorker(Thread):
         end_time = time.perf_counter()
         self.logger.info(f"METRIC: BuildOverviews Time: {end_time - start_time}" f" for {viewpoint_item.local_object_path}")
 
-    def _verify_tile_creation(self, tile_factory: TileFactoryPool, viewpoint_item: ViewpointModel) -> bytes:
+    def _verify_tile_creation(self, tile_factory: GDALTileFactory, viewpoint_item: ViewpointModel) -> bytes:
         self.logger.info(f"Verifying tile creation for {viewpoint_item.local_object_path}.")
         start_time = time.perf_counter()
         tile_size = viewpoint_item.tile_size
