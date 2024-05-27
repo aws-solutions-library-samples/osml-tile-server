@@ -51,29 +51,32 @@ class ViewpointRouter:
         encryptor: Fernet,
     ) -> None:
         """
-        The `ViewpointRouter` class is responsible for handling API endpoints related to viewpoints.
+        The `ViewpointRouter` class is responsible for creating an API router for endpoints related to viewpoints.
 
         :param aws_ddb: Instance of the ServiceResource class representing the AWS DDB service.
-
         :param aws_sqs: Instance of the ServiceResource class representing the AWS SQS service.
-
         :param aws_s3: Instance of the ServiceResource class representing the AWS S3 service.
-
         :return: None
         """
         logger = logging.getLogger("uvicorn.access")
-        self.viewpoint_database = ViewpointStatusTable(aws_ddb, logger)
-        self.viewpoint_queue = ViewpointRequestQueue(aws_sqs, ServerConfig.viewpoint_request_queue, logger)
+
+        # These parameters are not really optional but we need to be able to construct the router to generate
+        # documentation for these endpoints. We need to refactor this class to make better use of dependency
+        # injection which will resolve this oddity.
+        if aws_ddb is not None:
+            self.viewpoint_database = ViewpointStatusTable(aws_ddb, logger)
+        if aws_sqs is not None:
+            self.viewpoint_queue = ViewpointRequestQueue(aws_sqs, ServerConfig.viewpoint_request_queue, logger)
         self.s3 = aws_s3
         self.encryptor = encryptor
         self.logger = logger
 
     @property
-    def router(self):
+    def router(self) -> APIRouter:
         """
-        Initializes a new instance of the ViewpointRouter class.
+        Create and return a new instance of an APIRouter that is configured to handle the viewpoint endpoints.
 
-        :return: None
+        :return: the API router
         """
         api_router = APIRouter(
             prefix="/viewpoints",
@@ -86,12 +89,11 @@ class ViewpointRouter:
         @version(1, 0)
         def list_viewpoints(max_results: int | None = None, next_token: str | None = None) -> ViewpointListResponse:
             """
-            Get a list of viewpoints in the database.
+            Retrieve a list of available viewpoints. Viewpoints are resources that are created to make images
+            stored in the cloud available through these service APIs.
 
             :param max_results: Optional max number of viewpoints requested
-
             :param next_token: Optional token to begin a query from provided by the previous query response.
-
             :return: List of viewpoints with details from the table.
             """
             current_function_name = inspect.stack()[0].function
@@ -129,10 +131,11 @@ class ViewpointRouter:
         @api_router.post("/", status_code=201)
         def create_viewpoint(viewpoint_request: ViewpointRequest) -> Dict[str, Any]:
             """
-            Create a viewpoint item, then copy the imagery file from S3 to EFS, then create an item into the database.
+            Create a new viewpoint for an image stored in the cloud. This operation tells the tile server to
+            parse and index information about the source image necessary to improve performance of all following
+            calls to the tile server API.
 
             :param viewpoint_request: client's request which contains name, file source, and range type.
-
             :return: Status associated with the request to create the viewpoint in the table.
             """
             # Create unique viewpoint_id
@@ -162,10 +165,10 @@ class ViewpointRouter:
         @api_router.delete("/{viewpoint_id}")
         def delete_viewpoint(viewpoint_id: str) -> ViewpointModel:
             """
-            Remove the file from the EFS and update the database to indicate that it has been deleted.
+            Delete a viewpoint when it is no longer needed. This notifies the tile server to clean up any cached
+            information and release resources allocated to the viewpoint that are no longer necessary.
 
             :param viewpoint_id: Unique viewpoint id to get from the table.
-
             :return ViewpointModel: Updated viewpoint item details from the table.
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
@@ -186,10 +189,10 @@ class ViewpointRouter:
         @api_router.put("/", status_code=201)
         def update_viewpoint(viewpoint_request: ViewpointUpdate) -> ViewpointModel:
             """
-            Update the viewpoint item in DynamoDB based on the given viewpoint_id.
+            Change a viewpoint that already exists. This operation can be called to update an existing viewpoint
+            when the display options have changed or when the image has moved to a new location.
 
             :param viewpoint_request: Client's request, which contains name, file source, and range type.
-
             :return: Updated viewpoint item details from the table.
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_request.viewpoint_id)
@@ -205,10 +208,10 @@ class ViewpointRouter:
         @api_router.get("/{viewpoint_id}")
         def describe_viewpoint(viewpoint_id: str) -> ViewpointModel:
             """
-            Get viewpoint details based on provided viewpoint id.
+            Retrieve the current status information about a viewpoint along with a detailed description of all
+            options chosen.
 
             :param viewpoint_id: Unique viewpoint id to get from the table.
-
             :return: Details from the viewpoint item in the table.
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
@@ -217,10 +220,10 @@ class ViewpointRouter:
         @api_router.get("/{viewpoint_id}/image/metadata")
         def get_image_metadata(viewpoint_id: str) -> FileResponse:
             """
-            Get viewpoint metadata based on provided viewpoint id.
+            Get the metadata associated with the image. The specific format and amount of information will vary based
+            on the source image format and image type.
 
             :param viewpoint_id: Unique viewpoint id to get from the table.
-
             :return: Viewpoint metadata associated with the viewpoint item from the table.
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
@@ -234,10 +237,11 @@ class ViewpointRouter:
         @api_router.get("/{viewpoint_id}/image/bounds")
         def get_image_bounds(viewpoint_id: str) -> FileResponse:
             """
-            Get viewpoint bounds based on provided viewpoint id.
+            Get the [min X, min Y, max X, max Y] boundary of the image in pixels. [0, 0] is assumed to be in the upper
+            left corner of the image with x increasing in columns to the right and y increasing in rows down. The
+            boundary coordinates are the upper left and lower right corners of the cropped region.
 
             :param viewpoint_id: Unique viewpoint id to get from the table.
-
             :return: Viewpoint bounds for the given table item.
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
@@ -251,10 +255,9 @@ class ViewpointRouter:
         @api_router.get("/{viewpoint_id}/image/info")
         def get_image_info(viewpoint_id: str) -> FileResponse:
             """
-            Get viewpoint info based on provided viewpoint id.
+            Get a sample GeoJSON feature that represents the extent / boundary of this image in the world.
 
             :param viewpoint_id: Unique viewpoint id to get from the table.
-
             :return: Viewpoint info associated with the given id.
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
@@ -271,7 +274,6 @@ class ViewpointRouter:
             Get viewpoint statistics based on provided viewpoint id.
 
             :param viewpoint_id: Unique viewpoint id to get from the table.
-
             :return: Viewpoint statistics associated with the id.
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
@@ -294,20 +296,14 @@ class ViewpointRouter:
             ),
         ) -> Response:
             """
-            Get preview of viewpoint in the requested format
+            Get a preview/thumbnail image in the requested format
 
             :param viewpoint_id: Unique viewpoint id to get from the table.
-
             :param img_format: The Desired format for preview output, valid options are defined by GDALImageFormats.
-
             :param max_size: Max size of the preview image, defaults to 1024 pixels.
-
             :param width: Preview width in pixels that supersedes scale if > 0.
-
             :param height: Preview height in pixels that supersedes scale if > 0.
-
             :param compression: GDAL image compression format to use.
-
             :return: StreamingResponse of preview binary with the appropriate mime type based on the img_format
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
@@ -348,19 +344,14 @@ class ViewpointRouter:
             ),
         ) -> Response:
             """
+            Create a tile of this image using the options set when creating the viewpoint.
 
             :param viewpoint_id: Unique viewpoint id to get from the table.
-
             :param z: Resolution-level in the image pyramid 0 = full resolution, 1 = full/2, 2 = full/4, ...
-
             :param x: Tile row location in pixels for the given tile.
-
             :param y: Tile column location in pixels for the given tile.
-
             :param tile_format: Desired format for tile output, valid options are defined by GDALImageFormats.
-
             :param compression: GDAL tile compression format.
-
             :return: StreamingResponse of tile image binary payload.
             """
             if z < 0:
@@ -398,9 +389,9 @@ class ViewpointRouter:
 
         @api_router.get("/{viewpoint_id}/image/crop/{min_x},{min_y},{max_x},{max_y}.{img_format}")
         def get_image_crop(
-            viewpoint_id: str,
-            min_x: int = Path(description="Unique viewpoint id"),
-            min_y: int = Path(description="The left pixel coordinate of the desired crop."),
+            viewpoint_id: str = Path(description="Unique identifier for this viewpoint"),
+            min_x: int = Path(description="The left pixel coordinate of the desired crop."),
+            min_y: int = Path(description="The upper pixel coordinate of the desired crop."),
             max_x: int = Path(description="The right pixel coordinate of the desired crop."),
             max_y: int = Path(description="The lower pixel coordinate of the pixel crop."),
             img_format: GDALImageFormats = Path(
@@ -408,7 +399,7 @@ class ViewpointRouter:
                 description="Desired format for cropped output. Valid options are defined by GDALImageFormats.",
             ),
             compression: GDALCompressionOptions = Query(
-                default=GDALCompressionOptions.NONE, description="GDAL compression algorithm for image."
+                default=GDALCompressionOptions.NONE, description="Desired compression algorithm for image."
             ),
             width: int = Query(
                 default=None,
@@ -420,26 +411,20 @@ class ViewpointRouter:
             ),
         ) -> Response:
             """
-            Crop a portion of the viewpoint.
+            Crop out an arbitrary region of the full resolution image given a bounding box in pixel coordinates.
+            [0, 0] is assumed to be in the upper left corner of the image with x increasing in columns to the
+            right and y increasing in rows down. The [min_x, min_y, max_x, max_y] coordinates are the upper
+            left and lower right corners of the cropped region.
 
             :param viewpoint_id: Unique viewpoint id to get from the table as a crop.
-
             :param min_x: The left pixel coordinate of the desired crop.
-
             :param min_y: The upper pixel coordinate of the desired crop.
-
             :param max_x: The right pixel coordinate of the desired crop.
-
             :param max_y: The lower pixel coordinate of the pixel crop.
-
             :param img_format: Desired format for cropped output. Valid options are defined by GDALImageFormats.
-
-            :param compression: GDAL compression algorithm for image.
-
+            :param compression: Desired compression algorithm for the output image.
             :param width: Optional width in px of the desired crop, if provided, max_x will be ignored.
-
             :param height: Optional height in px of the desired crop, if provided, max_y will be ignored.
-
             :return: StreamingResponse of cropped image binary with the appropriate mime type based on the img_format
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)

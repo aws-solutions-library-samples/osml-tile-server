@@ -5,8 +5,40 @@ import shutil
 from sphinx.ext import apidoc
 
 
+def generate_openapi_spec() -> None:
+    """
+    This function creates a temporary FastAPI application that contains the endpoint routes used by this service.
+    It then uses that application to generate an OpenAPI YAML file describing the endpoints stored in
+    ./_spec/openapi.yaml
+    """
+    import yaml
+    from fastapi import FastAPI
+
+    from aws.osml.tile_server.viewpoint.routers import ViewpointRouter
+
+    app_skeleton = FastAPI(
+        title="OSML Tile Server",
+        description="A minimalistic tile server for imagery hosted in the cloud",
+        contact={
+            "name": "Amazon Web Services",
+            "email": "aws-osml-admin@amazon.com",
+            "url": "https://github.com/aws-solutions-library-samples/osml-tile-server/issues",
+        },
+    )
+    viewpoint_router = ViewpointRouter(None, None, None, None).router
+    app_skeleton.include_router(viewpoint_router)
+
+    os.makedirs("./_spec", exist_ok=True)
+    with open("./_spec/openapi.yaml", "w") as f:
+        yaml.dump(app_skeleton.openapi(), f)
+
+
 def run_apidoc(app):
     """Generate doc stubs using sphinx-apidoc."""
+
+    # Generate an OpenAPI YAML file as part of extracting documentation from the source code.
+    generate_openapi_spec()
+
     module_dir = os.path.join(app.srcdir, "../src/aws")
     output_dir = os.path.join(app.srcdir, "_apidoc")
     template_dir = os.path.join(app.srcdir, "_templates")
@@ -60,6 +92,7 @@ extensions = [
     #    "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
+    "sphinxcontrib.openapi",
     "sphinx_rtd_theme",
 ]
 autoapi_type = "python"
