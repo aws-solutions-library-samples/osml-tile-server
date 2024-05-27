@@ -21,6 +21,7 @@ tox_conda_tmp*
 /.mypy_cache
 
 /doc/_apidoc/
+/doc/_spec/
 /build
 /dist
 /htmlcov

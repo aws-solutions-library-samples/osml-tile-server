@@ -21,11 +21,15 @@ def initialize_token_key() -> None:
 
     :return: None
     """
-    file_path = path.join(f"/{ServerConfig.efs_mount_name}", TS_TOKEN_FILE_NAME)
-    if not path.isfile(file_path):
-        key = Fernet.generate_key()
-        with open(file_path, "w") as token_file:
-            json.dump({"token": b64encode(key).decode("ascii")}, token_file)
+    try:
+        file_path = path.join(f"/{ServerConfig.efs_mount_name}", TS_TOKEN_FILE_NAME)
+        if not path.isfile(file_path):
+            key = Fernet.generate_key()
+            with open(file_path, "w") as token_file:
+                json.dump({"token": b64encode(key).decode("ascii")}, token_file)
+    except Exception as err:
+        logger.error(f"Unable to initialize token key! {err}")
+        return None
 
 
 def read_token_key() -> Optional[bytes]:
@@ -41,5 +45,5 @@ def read_token_key() -> Optional[bytes]:
             return b64decode(token)
     except Exception as err:
         # Handle the case where the file is empty or not valid JSON
-        logger.error(f"Not able to token key from json file {file_path} wth error: {err}")
+        logger.error(f"Not able to read token key from json file {file_path} wth error: {err}")
         return None

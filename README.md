@@ -1,8 +1,13 @@
 # OversightML Tile Server
 
-The OversightML Tile Server (TS) is a lightweight, cloud-based tile server which allows you to quickly pass an image from S3 bucket to get metadata, image statistics, and set of tiles in real-time.
+The OversightML Tile Server (TS) is a lightweight, cloud-based tile server which provides RESTful APIs for accessing
+pixels and metadata for imagery stored in the cloud. Key features include:
+* Works with imagery conforming to [Cloud Optimized GeoTIFF (COG)](https://www.cogeo.org/) and [National Imagery Transmission Format (NITF)](https://en.wikipedia.org/wiki/National_Imagery_Transmission_Format) standards
+* Creates both orthophoto map and unwarped image tiles. Map tiles are produced by on-the-fly warping of a raw input image pyramid.
+* Outputs images in PNG, TIFF, JPEG formats. Can also output NITFs for tiles without warping
+* Conforms to [OGC API - Tiles](https://ogcapi.ogc.org/tiles/) specification
 
-### Table of Contents
+## Table of Contents
 * [Getting Started](#getting-started)
   * [Package Layout](#package-layout)
   * [Prerequisites](prerequisites)
