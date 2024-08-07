@@ -4,7 +4,6 @@ import json
 import logging
 import time
 import traceback
-from datetime import UTC, datetime, timedelta
 from enum import auto
 from logging import Logger
 from math import degrees
@@ -210,7 +209,6 @@ class ViewpointWorker(Thread):
         self.logger.info(f"MESSAGE: {message.body}")
         message_attributes = json.loads(message.body)
         viewpoint_item = ViewpointModel.model_validate_json(json.dumps(message_attributes, cls=DecimalEncoder))
-
         if viewpoint_item.viewpoint_status != ViewpointStatus.REQUESTED:
             self.logger.error(
                 f"Cannot process {viewpoint_item.viewpoint_id} due to the incorrect "
@@ -235,13 +233,8 @@ class ViewpointWorker(Thread):
 
         :return: None.
         """
-        if viewpoint_item.viewpoint_status == ViewpointStatus.FAILED:
-            time_now = datetime.now(UTC)
-            expire_time = time_now + timedelta(days=1)
-            viewpoint_item.expire_time = int(expire_time.timestamp())
-        else:
-            viewpoint_item.viewpoint_status = ViewpointStatus.READY
-
+        viewpoint_item.expire_time = None
+        viewpoint_item.viewpoint_status = ViewpointStatus.READY
         self.viewpoint_database.update_viewpoint(viewpoint_item)
 
     def _create_local_tmp_directory(self, viewpoint_item: ViewpointModel) -> str:

@@ -140,7 +140,7 @@ class ViewpointRouter:
             """
             # Create unique viewpoint_id
             viewpoint_id = token_hex(16)
-
+            expire_time = datetime.now(UTC) + timedelta(days=ServerConfig.ddb_ttl_days)
             # These will be stored in ddb
             new_viewpoint_request = ViewpointModel(
                 viewpoint_id=viewpoint_id,
@@ -152,7 +152,7 @@ class ViewpointRouter:
                 viewpoint_status=ViewpointStatus.REQUESTED,
                 local_object_path=None,
                 error_message=None,
-                expire_time=None,
+                expire_time=int(expire_time.timestamp()),
             )
             db_response = self.viewpoint_database.create_viewpoint(new_viewpoint_request)
 

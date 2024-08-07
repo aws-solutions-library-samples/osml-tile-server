@@ -1,31 +1,42 @@
+# Temporary files
 *~
 *#
 *.swp
-*.iml
 *.DS_Store
-*.tox
-*.idea
-*venv
+*.iml
 *aggregated_results.txt
 
+# IDE directories
+.idea/
+.vscode/
+
+# Virtual environments
+venv/
+.tox/
+
+# Python bytecode
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Distribution / packaging
 *.egg-info/
+build/
+dist/
+
+# Coverage reports
+.coverage
+.coverage.*
+htmlcov/
+
+# Test and cache directories
+.cache
+.pytest_cache/
+.mypy_cache/
+test_tmp/
 tox_conda_tmp*
 
-/.coverage
-/.coverage.*
-/.cache
-/.pytest_cache
-/.mypy_cache
-
-/doc/_apidoc/
-/doc/_spec/
-/build
-/dist
-/htmlcov
-/test_tmp
-
-local_viewpoint_cache/
-.vscode/
+# Documentation build directories
+doc/_apidoc/
+doc/_spec/
+doc/autoapi/
