@@ -4,7 +4,8 @@ version: "3.8"
 services:
   tile-server:
     build:
-      context: .
+      context: ..
+      dockerfile: Dockerfile.tile_server
     container_name: "osml-tile-server"
     user: root
     ports:
