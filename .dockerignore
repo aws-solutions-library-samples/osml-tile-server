@@ -1,25 +1,10 @@
-*~
-*#
-*.swp
-**/*.iml
-**/*.DS_Store
-**/*.tox
-**/*.idea
-**/*venv
-**/__pycache__/
-**/*.py[cod]
-**/*$py.class
-**/*.egg-info/
-**/.coverage
-**/.coverage.*
-**/.cache
-**/.pytest_cache
-**/.mypy_cache
-**/doc/_apidoc/
-**/build
-**/dist
-**/htmlcov
-**/.github
-**/doc
-**/local_viewpoint_cache/*
-**/test_tmp
+# Ignore everything
+*
+
+# Allow files and directories
+!/setup.cfg
+!/setup.py
+!/pyproject.toml
+!/docker
+!/conda
+!/src
