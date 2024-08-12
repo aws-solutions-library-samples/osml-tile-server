@@ -6,15 +6,15 @@ import logging
 import shutil
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from secrets import token_hex
 from typing import Any, Dict
+from urllib import parse
 
 import dateutil.parser
 import numpy as np
 from asgi_correlation_id import correlation_id
 from boto3.resources.base import ServiceResource
 from cryptography.fernet import Fernet
-from fastapi import APIRouter, HTTPException, Query, Request, Response
+from fastapi import APIRouter, HTTPException, Query, Request, Response, status
 from fastapi_versioning import version
 from osgeo import gdalconst
 from starlette.responses import FileResponse, StreamingResponse
@@ -82,7 +82,7 @@ class ViewpointRouter:
             prefix="/viewpoints",
             tags=["viewpoints"],
             dependencies=[],
-            responses={404: {"description": "Not found!"}},
+            responses={status.HTTP_404_NOT_FOUND: {"description": "Not found!"}},
         )
 
         @api_router.get("/")
@@ -109,12 +109,14 @@ class ViewpointRouter:
                     expiration_dt = dateutil.parser.isoparse(expiration_iso)
                     now = datetime.now(UTC)
                 except Exception as err:
-                    raise HTTPException(status_code=400, detail=f"Invalid next_token. {err}")
+                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid next_token. {err}")
                 if expiration_dt < now:
-                    raise HTTPException(status_code=400, detail="next_token expired. Please submit a new request.")
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST, detail="next_token expired. Please submit a new request."
+                    )
                 if decrypted_endpoint_version != endpoint_version:
                     raise HTTPException(
-                        status_code=400,
+                        status_code=status.HTTP_400_BAD_REQUEST,
                         detail="next_token is not compatible with this endpoint version. Please submit a new request.",
                     )
             else:
@@ -128,22 +130,35 @@ class ViewpointRouter:
                 results.next_token = encrypted_token
             return results
 
-        @api_router.post("/", status_code=201)
-        def create_viewpoint(viewpoint_request: ViewpointRequest) -> Dict[str, Any]:
+        @api_router.post("/", status_code=status.HTTP_201_CREATED)
+        def create_viewpoint(viewpoint_request: ViewpointRequest, response: Response) -> Dict[str, Any]:
             """
             Create a new viewpoint for an image stored in the cloud. This operation tells the tile server to
             parse and index information about the source image necessary to improve performance of all following
             calls to the tile server API.
 
             :param viewpoint_request: client's request which contains name, file source, and range type.
+            :param request: A handle to the FastAPI request object.
             :return: Status associated with the request to create the viewpoint in the table.
             """
-            # Create unique viewpoint_id
-            viewpoint_id = token_hex(16)
             expire_time = datetime.now(UTC) + timedelta(days=ServerConfig.ddb_ttl_days)
-            # These will be stored in ddb
+
+            # check if the viewpoint already exists.  If so, return existing viewpoint with status code 202
+            try:
+                existing_viewpoint = self.viewpoint_database.get_viewpoint(viewpoint_request.viewpoint_id).model_dump()
+                response.status_code = status.HTTP_202_ACCEPTED
+                return existing_viewpoint
+            except Exception:
+                pass
+            # validate viewpoint id prior to creating viewpoint
+            if not self._validate_viewpoint_id(viewpoint_request.viewpoint_id):
+                # raise ValueError("Invalid viewpoint_id: must not contain whitespace and be URL safe.")
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Invalid viewpoint_id: must not contain whitespace and be URL safe.",
+                )
             new_viewpoint_request = ViewpointModel(
-                viewpoint_id=viewpoint_id,
+                viewpoint_id=viewpoint_request.viewpoint_id,
                 viewpoint_name=viewpoint_request.viewpoint_name,
                 bucket_name=viewpoint_request.bucket_name,
                 object_key=viewpoint_request.object_key,
@@ -186,7 +201,7 @@ class ViewpointRouter:
 
             return self.viewpoint_database.update_viewpoint(viewpoint_item)
 
-        @api_router.put("/", status_code=201)
+        @api_router.put("/", status_code=status.HTTP_201_CREATED)
         def update_viewpoint(viewpoint_request: ViewpointUpdate) -> ViewpointModel:
             """
             Change a viewpoint that already exists. This operation can be called to update an existing viewpoint
@@ -330,7 +345,9 @@ class ViewpointRouter:
                     preview_options["height"] = height
 
                 preview_bytes = perform_gdal_translation(tile_factory.raster_dataset, preview_options)
-                return StreamingResponse(io.BytesIO(preview_bytes), media_type=get_media_type(img_format), status_code=200)
+                return StreamingResponse(
+                    io.BytesIO(preview_bytes), media_type=get_media_type(img_format), status_code=status.HTTP_200_OK
+                )
 
         @api_router.get("/{viewpoint_id}/image/tiles/{z}/{x}/{y}.{tile_format}")
         def get_image_tile(
@@ -356,7 +373,8 @@ class ViewpointRouter:
             """
             if z < 0:
                 raise HTTPException(
-                    status_code=400, detail=f"Resolution Level for get tile request must be >= 0. Requested z={z}"
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Resolution Level for get tile request must be >= 0. Requested z={z}",
                 )
 
             try:
@@ -373,7 +391,8 @@ class ViewpointRouter:
                 with tile_factory_pool.checkout_in_context() as tile_factory:
                     if tile_factory is None:
                         raise HTTPException(
-                            status_code=500, detail=f"Unable to read tiles from viewpoint {viewpoint_item.viewpoint_id}"
+                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail=f"Unable to read tiles from viewpoint {viewpoint_item.viewpoint_id}",
                         )
 
                     tile_size = viewpoint_item.tile_size
@@ -383,9 +402,13 @@ class ViewpointRouter:
                         output_size=(tile_size, tile_size),
                     )
 
-                return StreamingResponse(io.BytesIO(image_bytes), media_type=get_media_type(tile_format), status_code=200)
+                return StreamingResponse(
+                    io.BytesIO(image_bytes), media_type=get_media_type(tile_format), status_code=status.HTTP_200_OK
+                )
             except Exception as err:
-                raise HTTPException(status_code=500, detail=f"Failed to fetch tile for image. {err}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to fetch tile for image. {err}"
+                )
 
         @api_router.get("/{viewpoint_id}/image/crop/{min_x},{min_y},{max_x},{max_y}.{img_format}")
         def get_image_crop(
@@ -442,7 +465,9 @@ class ViewpointRouter:
                 crop_height = height if height is not None else max_y - min_y
 
                 crop_bytes = tile_factory.create_encoded_tile([min_x, min_y, crop_width, crop_height])
-                return StreamingResponse(io.BytesIO(crop_bytes), media_type=get_media_type(img_format), status_code=200)
+                return StreamingResponse(
+                    io.BytesIO(crop_bytes), media_type=get_media_type(img_format), status_code=status.HTTP_200_OK
+                )
 
         @api_router.get("/{viewpoint_id}/map/tiles", response_model_exclude_none=True)
         def get_map_tilesets(viewpoint_id: str, request: Request) -> ogc.TileSetList:
@@ -483,6 +508,7 @@ class ViewpointRouter:
 
             :param viewpoint_id: the viewpoint id
             :param tile_matrix_set_id: the name of the tile matrix set (e.g. WebMercatorQuad)
+            :param request: A handle to the FastAPI request object.
             :return: the tileset metadata
             """
 
@@ -590,7 +616,9 @@ class ViewpointRouter:
                     )
 
             except Exception as err:
-                raise HTTPException(status_code=500, detail=f"Failed to fetch tile set metadata. {err}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to fetch tile set metadata. {err}"
+                )
 
         @api_router.get("/{viewpoint_id}/map/tiles/{tile_matrix_set_id}/{tile_matrix}/{tile_row}/{tile_col}.{tile_format}")
         def get_map_tile(
@@ -619,7 +647,8 @@ class ViewpointRouter:
             """
             if tile_matrix < 0:
                 raise HTTPException(
-                    status_code=400, detail=f"Resolution Level for get tile request must be >= 0. Requested z={tile_matrix}"
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Resolution Level for get tile request must be >= 0. Requested z={tile_matrix}",
                 )
 
             try:
@@ -636,7 +665,8 @@ class ViewpointRouter:
                 with tile_factory_pool.checkout_in_context() as tile_factory:
                     if tile_factory is None:
                         raise HTTPException(
-                            status_code=500, detail=f"Unable to read tiles from viewpoint {viewpoint_item.viewpoint_id}"
+                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail=f"Unable to read tiles from viewpoint {viewpoint_item.viewpoint_id}",
                         )
 
                     # Find the tile in the named tileset
@@ -651,11 +681,15 @@ class ViewpointRouter:
 
                 if image_bytes is None:
                     # OGC Tiles API Section 7.1.7.B indicates that a 204 should be returned for empty tiles
-                    return Response(status_code=204)
+                    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-                return StreamingResponse(io.BytesIO(image_bytes), media_type=get_media_type(tile_format), status_code=200)
+                return StreamingResponse(
+                    io.BytesIO(image_bytes), media_type=get_media_type(tile_format), status_code=status.HTTP_200_OK
+                )
             except Exception as err:
-                raise HTTPException(status_code=500, detail=f"Failed to fetch tile for image. {err}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to fetch tile for image. {err}"
+                )
 
         return api_router
 
@@ -666,18 +700,32 @@ class ViewpointRouter:
         given status
 
         :param current_status: Current status of a viewpoint in the table.
-
         :param api_operation: The associated API operation being used on the viewpoint.
-
         :return: Viewpoint detail
         """
         if current_status == ViewpointStatus.DELETED:
             raise HTTPException(
-                status_code=404,
+                status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Cannot view {api_operation} for this image since this has already been " f"deleted.",
             )
         elif current_status == ViewpointStatus.REQUESTED:
             raise HTTPException(
-                status_code=400,
+                status_code=status.HTTP_400_BAD_REQUEST,
                 detail="This viewpoint has been requested and not in READY state. Please try again " "later.",
             )
+
+    @staticmethod
+    def _validate_viewpoint_id(viewpoint_id: str) -> bool:
+        """
+        This is a helper function to validate that the user supplied viewpoint ID does not contain whitespace and
+        is URL safe.
+
+        :param id: The viewpoint_id input string.
+        :return: True/False if the viewpoint ID is valid or not.
+        """
+        try:
+            no_whitespace = "".join(viewpoint_id.split())
+            encoded = parse.quote(no_whitespace, safe="")
+        except Exception:
+            return False
+        return viewpoint_id == encoded

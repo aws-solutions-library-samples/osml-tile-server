@@ -20,6 +20,7 @@ class TestConfig:
     test_bounds_path: str = os.path.join(test_data_directory, "test-sample.nitf.bounds")
     test_info_path: str = os.path.join(test_data_directory, "test-sample.nitf.geojson")
 
+    test_viewpoint_id: str = "1234"
     test_viewpoint_name: str = "test-name"
 
     test_viewpoint_table_name: str = "TSJobTable"

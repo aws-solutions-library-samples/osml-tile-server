@@ -20,6 +20,7 @@ TEST_INVALID_VIEWPOINT_ID = "invalid-viewpoint-id"
 TEST_BODY = {
     "bucket_name": TestConfig.test_bucket,
     "object_key": TestConfig.test_object_key,
+    "viewpoint_id": TestConfig.test_viewpoint_id,
     "viewpoint_name": TestConfig.test_viewpoint_name,
     "tile_size": 512,
     "range_adjustment": "NONE",
@@ -28,6 +29,7 @@ TEST_BODY = {
 INVALID_TEST_BODY = {
     "bucket_name": None,
     "object_key": TestConfig.test_object_key,
+    "viewpoint_id": TestConfig.test_viewpoint_id,
     "viewpoint_name": TestConfig.test_viewpoint_name,
     "tile_size": 512,
     "range_adjustment": "NONE",
@@ -203,9 +205,13 @@ class TestRoutersE2E(unittest.TestCase):
 
     def test_e2e_list_viewpoints_valid(self):
         """Test listing multiple valid viewpoints."""
+        test_body_2 = TEST_BODY.copy()
+        test_body_3 = TEST_BODY.copy()
+        test_body_2["viewpoint_id"] = "5678"
+        test_body_3["viewpoint_id"] = "9012"
         self.client.post("/latest/viewpoints/", json=TEST_BODY)
-        self.client.post("/latest/viewpoints/", json=TEST_BODY)
-        self.client.post("/latest/viewpoints/", json=TEST_BODY)
+        self.client.post("/latest/viewpoints/", json=test_body_2)
+        self.client.post("/latest/viewpoints/", json=test_body_3)
 
         response = self.client.get("/latest/viewpoints/")
 
@@ -227,6 +233,13 @@ class TestRoutersE2E(unittest.TestCase):
 
             response_data["expire_time"] = None
             self.assertEqual(response_data, expected_json_result)
+
+    def test_e2e_create_viewpoint_duplicate_id(self):
+        """Test creating a viewpoint with invalid data."""
+        response = self.client.post("/latest/viewpoints/", json=TEST_BODY)
+        response2 = self.client.post("/latest/viewpoints/", json=TEST_BODY)
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response2.status_code, 202)
 
     def test_e2e_create_viewpoint_invalid(self):
         """Test creating a viewpoint with invalid data."""
