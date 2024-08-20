@@ -1,24 +1,23 @@
 # Copyright 2024 Amazon.com, Inc. or its affiliates.
 
-FROM public.ecr.aws/amazonlinux/amazonlinux:2023-minimal as tile_server
+FROM public.ecr.aws/amazonlinux/amazonlinux:2023-minimal as build
 
 # Build time arguments
 ARG BUILD_CERT=/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
 ARG PIP_INSTALL_LOCATION=https://pypi.org/simple/
 ARG MINICONDA_VERSION=Miniconda3-latest-Linux-x86_64
 ARG MINICONDA_URL=https://repo.anaconda.com/miniconda/${MINICONDA_VERSION}.sh
-ARG CONDA_ENV_NAME="osml_data_intake"
-# Define required packages to install
-ARG PACKAGES="wget shadow-utils"
+ENV PATH=/opt/conda/bin:$PATH
+ARG CONDA_ENV_NAME="osml_tile_server"
 
 # Give sudo permissions
 USER root
 
 # Configure, update, and refresh yum environment
-RUN dnf update -y && dnf clean all && dnf makecache
-
-# Install all our dependencies
-RUN dnf install -y $PACKAGES
+RUN dnf update -y && \
+    dnf install -y wget shadow-utils gcc && \
+    dnf clean all  && \
+    rm -rf /var/cache/dnf
 
 # Install Miniconda
 RUN wget -c ${MINICONDA_URL} && \
@@ -27,24 +26,41 @@ RUN wget -c ${MINICONDA_URL} && \
     rm ${MINICONDA_VERSION}.sh && \
     ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
 
-# Add conda to the path
-ENV PATH=/opt/conda/bin:$PATH
-
 # Copy conda ENV
 COPY conda/environment.yml .
 
 # Install python with conda
-RUN conda env create -n ${CONDA_ENV_NAME} --file environment.yml
+RUN conda env create -n ${CONDA_ENV_NAME} --file environment.yml && \
+    conda clean -afy && \
+    find /opt/conda/ -follow -type f -name '*.a' -delete && \
+    find /opt/conda/ -follow -type f -name '*.pyc' -delete && \
+    find /opt/conda/ -follow -type f -name '*.js.map' -delete && \
+    rm -rf /opt/conda/pkgs
+
+# Copy the application source code
+COPY . osml-tile-server
+
+# Install the model runner application
+RUN . /opt/conda/etc/profile.d/conda.sh && \
+    conda activate ${CONDA_TARGET_ENV} && \
+    python3 -m pip install --no-cache-dir osml-tile-server/.
+
+FROM public.ecr.aws/amazonlinux/amazonlinux:2023-minimal as tile_server
 
 # Add conda to the path
-ENV PATH=/opt/conda/envs/${CONDA_ENV_NAME}/bin/:$PATH
+ENV PATH=/opt/conda/bin:$PATH
 ENV PYTHONPATH=/opt/conda/envs/${CONDA_ENV_NAME}/bin
+ENV CONDA_ENV_NAME="osml_tile_server"
+
+# Copy the conda environment from the build stage
+COPY --from=build /opt/conda /opt/conda
+RUN ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
 
 # We now replace the image’s existing Python with Python from the conda environment:
 RUN BASE_PYTHON_PATH=$(command -v python3) \
-    && CONDA_PYTHON_PATH="/opt/conda/envs/${CONDA_ENV_NAME}/bin/python" \
+    && CONDA_PYTHON_PATH="/opt/conda/envs/${CONDA_ENV_NAME}/bin/python3" \
     && if [ ! -f "$CONDA_PYTHON_PATH" ]; then echo "Python not found in conda environment"; exit 1; fi \
-    && mv $BASE_PYTHON_PATH ${BASE_PYTHON_PATH}-clean \
+    && rm -rf $BASE_PYTHON_PATH \
     && ln -sf $CONDA_PYTHON_PATH $BASE_PYTHON_PATH
 
 # Clean up any dangling conda resources
@@ -54,16 +70,12 @@ RUN conda clean -afy
 ADD . .
 
 # Install the package into the base image
-RUN python3 -m pip install .
+RUN python3 -m pip install --no-cache-dir .
 
 # Set up a health check at that port
 HEALTHCHECK NONE
 
 # Make sure we expose our ports
 EXPOSE 8080
-
-# Set up a user to run the container as and assume it
-RUN adduser tileserver
-USER tileserver
 
 ENTRYPOINT ["/bin/bash", "-c", "uvicorn --host 0.0.0.0 --port 8080 aws.osml.tile_server.main:app"]
