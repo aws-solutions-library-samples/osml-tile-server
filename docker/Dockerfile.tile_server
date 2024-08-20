@@ -1,60 +1,81 @@
-# Copyright 2024 Amazon.com, Inc. or its affiliates.
+# Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
 
 FROM public.ecr.aws/amazonlinux/amazonlinux:2023-minimal as tile_server
 
-# Build time arguments
+# Only override if you're using a mirror with a cert pulled in using cert-base as a build parameter
 ARG BUILD_CERT=/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
 ARG PIP_INSTALL_LOCATION=https://pypi.org/simple/
-ARG MINICONDA_VERSION=Miniconda3-latest-Linux-x86_64
-ARG MINICONDA_URL=https://repo.anaconda.com/miniconda/${MINICONDA_VERSION}.sh
-ARG CONDA_ENV_NAME="osml_data_intake"
-# Define required packages to install
-ARG PACKAGES="wget shadow-utils"
 
 # Give sudo permissions
 USER root
 
-# Configure, update, and refresh yum environment
-RUN dnf update -y && dnf clean all && dnf makecache
+# Set working directory to home
+WORKDIR /home
 
-# Install all our dependencies
-RUN dnf install -y $PACKAGES
+# Configure, update, and refresh yum enviornment
+RUN dnf update -y && \
+    dnf install -y wget shadow-utils gcc && \
+    dnf clean all  && \
+    rm -rf /var/cache/dnf
 
-# Install Miniconda
-RUN wget -c ${MINICONDA_URL} && \
-    chmod +x ${MINICONDA_VERSION}.sh && \
-    ./${MINICONDA_VERSION}.sh -b -f -p /opt/conda && \
-    rm ${MINICONDA_VERSION}.sh && \
-    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
+# Install miniconda
+ARG MINICONDA_VERSION=Miniconda3-latest-Linux-x86_64
+ARG MINICONDA_URL=https://repo.anaconda.com/miniconda/${MINICONDA_VERSION}.sh
+RUN wget -c ${MINICONDA_URL} \
+    && chmod +x ${MINICONDA_VERSION}.sh \
+    && ./${MINICONDA_VERSION}.sh -b -f -p /opt/conda \
+    && rm ${MINICONDA_VERSION}.sh \
+    && ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
 
-# Add conda to the path
+# Add conda to the path so we can execute it by name
 ENV PATH=/opt/conda/bin:$PATH
 
-# Copy conda ENV
+# Set all the ENV vars needed for build
+ENV CONDA_TARGET_ENV=osml_tile_server
+ENV CC="clang"
+ENV CXX="clang++"
+ENV ARCHFLAGS="-arch x86_64"
+ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/conda/lib/:/opt/conda/bin:/usr/include:/usr/local/"
+ENV PROJ_LIB=/opt/conda/share/proj
+
+# Copy our conda env configuration
 COPY conda/environment.yml .
 
-# Install python with conda
-RUN conda env create -n ${CONDA_ENV_NAME} --file environment.yml
+# Create the conda env
+RUN conda env create -n ${CONDA_TARGET_ENV} --file environment.yml && \
+    conda clean -afy && \
+    find /opt/conda/ -follow -type f -name '*.a' -delete && \
+    find /opt/conda/ -follow -type f -name '*.pyc' -delete && \
+    find /opt/conda/ -follow -type f -name '*.js.map' -delete && \
+    rm -rf /opt/conda/pkgs
 
-# Add conda to the path
-ENV PATH=/opt/conda/envs/${CONDA_ENV_NAME}/bin/:$PATH
-ENV PYTHONPATH=/opt/conda/envs/${CONDA_ENV_NAME}/bin
+# Create /entry.sh which will be our new shell entry point/
+# This performs actions to configure the environment
+# before starting a new shell (which inherits the env).
+# The exec is important as this allows signals to passpw.
+RUN     (echo '#!/bin/bash' \
+    &&   echo '__conda_setup="$(/opt/conda/bin/conda shell.bash hook 2> /dev/null)"' \
+    &&   echo 'eval "$__conda_setup"' \
+    &&   echo 'conda activate "${CONDA_TARGET_ENV:-base}"' \
+    &&   echo '>&2 echo "ENTRYPOINT: CONDA_DEFAULT_ENV=${CONDA_DEFAULT_ENV}"' \
+    &&   echo 'exec "$@"'\
+    ) >> /entry.sh && chmod +x /entry.sh
 
-# We now replace the image’s existing Python with Python from the conda environment:
-RUN BASE_PYTHON_PATH=$(command -v python3) \
-    && CONDA_PYTHON_PATH="/opt/conda/envs/${CONDA_ENV_NAME}/bin/python" \
-    && if [ ! -f "$CONDA_PYTHON_PATH" ]; then echo "Python not found in conda environment"; exit 1; fi \
-    && mv $BASE_PYTHON_PATH ${BASE_PYTHON_PATH}-clean \
-    && ln -sf $CONDA_PYTHON_PATH $BASE_PYTHON_PATH
+# Tell the docker build process to use this for RUN.
+# the default shell on Linux is ["/bin/sh", "-c"], and on Windows is ["cmd", "/S", "/C"]
+SHELL ["/entry.sh", "/bin/bash", "-c"]
 
-# Clean up any dangling conda resources
+# Configure .bashrc to drop into a conda env and immediately activate our TARGET env
+RUN conda init && echo 'conda activate "${CONDA_TARGET_ENV:-base}"' >>  ~/.bashrc
+
+# Copy our local application source into the container
+COPY . osml-tile-server
+
+# Install the tile server application from source
+RUN python3 -m pip install --no-cache-dir osml-tile-server/
+
+# Clean up the conda install
 RUN conda clean -afy
-
-# Copy the function code to root directory
-ADD . .
-
-# Install the package into the base image
-RUN python3 -m pip install .
 
 # Set up a health check at that port
 HEALTHCHECK NONE
@@ -64,6 +85,8 @@ EXPOSE 8080
 
 # Set up a user to run the container as and assume it
 RUN adduser tileserver
+RUN chown -R tileserver:tileserver osml-tile-server/
 USER tileserver
 
-ENTRYPOINT ["/bin/bash", "-c", "uvicorn --host 0.0.0.0 --port 8080 aws.osml.tile_server.main:app"]
+# Set the entry point script
+ENTRYPOINT ["/entry.sh", "/bin/bash", "-c", "uvicorn --host 0.0.0.0 --port 8080 aws.osml.tile_server.main:app"]
