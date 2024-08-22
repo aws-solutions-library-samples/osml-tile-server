@@ -2,6 +2,7 @@ name: docker publish
 
 on:
   workflow_call:
+  workflow_dispatch:
 
 env:
   REGISTRY: awsosml
@@ -25,7 +26,7 @@ jobs:
       - uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.tile_server
+          file: docker/Dockerfile.tile_server
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
