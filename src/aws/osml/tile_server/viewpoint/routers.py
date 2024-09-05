@@ -196,7 +196,7 @@ class ViewpointRouter:
             viewpoint_item.viewpoint_status = ViewpointStatus.DELETED
             viewpoint_item.local_object_path = None
             time_now = datetime.utcnow()
-            expire_time = time_now + timedelta(1)
+            expire_time = time_now + timedelta(seconds=1)
             viewpoint_item.expire_time = int(expire_time.timestamp())
 
             return self.viewpoint_database.update_viewpoint(viewpoint_item)
@@ -631,6 +631,7 @@ class ViewpointRouter:
             compression: GDALCompressionOptions = Query(
                 GDALCompressionOptions.NONE, description="Compression Algorithm for image."
             ),
+            invert_y: bool = Query(False, description="Invert the TMS tile y-index."),
         ) -> Response:
             """
             Create a tile by warping the image into an orthophoto and clipping it at the appropriate resolution/bounds
@@ -643,6 +644,7 @@ class ViewpointRouter:
             :param tile_col: the tile column in the tile matrix
             :param tile_format: the desired output format
             :param compression: the desired compression
+            :param invert_y: whether to invert the tile y index
             :return: a binary image containing the map tile created from this viewpoint
             """
             if tile_matrix < 0:
@@ -650,7 +652,8 @@ class ViewpointRouter:
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Resolution Level for get tile request must be >= 0. Requested z={tile_matrix}",
                 )
-
+            if invert_y:
+                tile_row = self._invert_tile_row_index(tile_row, tile_matrix)
             try:
                 viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
                 self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.TILE)
@@ -729,3 +732,7 @@ class ViewpointRouter:
         except Exception:
             return False
         return viewpoint_id == encoded
+
+    @staticmethod
+    def _invert_tile_row_index(tile_row: int, tile_matrix: int) -> int:
+        return 2**tile_matrix - 1 - tile_row

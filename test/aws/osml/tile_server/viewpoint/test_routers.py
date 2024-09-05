@@ -4,7 +4,8 @@ import json
 import os
 import shutil
 import unittest
-from unittest.mock import patch
+from unittest import TestCase
+from unittest.mock import MagicMock, patch
 
 import boto3
 import pytest
@@ -43,20 +44,24 @@ VALID_UPDATE_TEST_BODY = {
 }
 
 
-class TestRouters(unittest.TestCase):
+class TestRouters(TestCase):
     """Unit tests for API endpoints in tile_server."""
 
-    @patch("aws.osml.tile_server.utils.initialize_token_key")
-    @patch("aws.osml.tile_server.utils.read_token_key", return_value=Fernet.generate_key())
-    def setUp(self, mock_read_token, mock_init_token):
+    @patch("aws.osml.tile_server.viewpoint.database.ViewpointStatusTable", MagicMock())
+    @patch("aws.osml.tile_server.viewpoint.queue.ViewpointRequestQueue", MagicMock())
+    def setUp(self):
         """Set up the test client."""
-        from aws.osml.tile_server.main import app
+        from aws.osml.tile_server.viewpoint import ViewpointRouter
 
-        self.client = TestClient(app)
+        mock_ddb = MagicMock()
+        mock_sqs = MagicMock()
+        mock_s3 = MagicMock()
+        mock_encryptor = MagicMock()
+        self.router = ViewpointRouter(mock_ddb, mock_sqs, mock_s3, mock_encryptor)
 
     def tearDown(self):
         """Clean up the test client."""
-        self.client = None
+        self.router = None
 
     @pytest.mark.skip(reason="Test not implemented")
     def test_list_viewpoints(self):
@@ -110,9 +115,16 @@ class TestRouters(unittest.TestCase):
     def test_validate_viewpoint_status(self):
         pass
 
+    def test_invert_tile_row_index(self):
+        sample_tile_row = 347
+        sample_tile_matrix = 10
+        expected_inverted_tile_row = 676
+        inverted_tile_row = self.router._invert_tile_row_index(sample_tile_row, sample_tile_matrix)
+        assert inverted_tile_row == expected_inverted_tile_row
+
 
 @mock_aws
-class TestRoutersE2E(unittest.TestCase):
+class TestRoutersE2E(TestCase):
     """End-to-end tests for the tile_server API."""
 
     @patch("aws.osml.tile_server.utils.initialize_token_key")
@@ -415,6 +427,16 @@ class TestRoutersE2E(unittest.TestCase):
         viewpoint_id = self.mock_create_viewpoint()
         response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/map/tiles/WebMercatorQuad/0/0/0.PNG")
         self.assertEqual(response.status_code, 200)
+
+    def test_e2e_get_map_tile_inverted(self):
+        """Test retrieving a valid map tile with inverted y index."""
+        viewpoint_id = self.mock_create_viewpoint()
+        response = self.client.get(
+            f"/latest/viewpoints/{viewpoint_id}/map/tiles/WebMercatorQuad/18/105605/192967.PNG?invert_y=true"
+        )
+        self.assertEqual(response.status_code, 200)
+        response = self.client.get(f"/latest/viewpoints/{viewpoint_id}/map/tiles/WebMercatorQuad/18/105605/192967.PNG")
+        self.assertEqual(response.status_code, 204)
 
 
 if __name__ == "__main__":
