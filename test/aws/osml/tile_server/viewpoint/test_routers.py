@@ -14,8 +14,6 @@ from fastapi.testclient import TestClient
 from moto import mock_aws
 from test_config import TestConfig
 
-from aws.osml.tile_server.viewpoint.models import ViewpointStatus
-
 TEST_INVALID_VIEWPOINT_ID = "invalid-viewpoint-id"
 
 TEST_BODY = {
@@ -263,9 +261,7 @@ class TestRoutersE2E(TestCase):
         viewpoint_id = self.mock_create_viewpoint()
         response = self.client.delete(f"/latest/viewpoints/{viewpoint_id}")
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["viewpoint_status"], ViewpointStatus.DELETED)
-        self.assertIsNone(response.json()["local_object_path"])
+        self.assertEqual(response.status_code, 204)
 
     def test_e2e_update_viewpoint_valid(self):
         """Test updating a valid viewpoint."""

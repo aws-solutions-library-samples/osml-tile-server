@@ -197,6 +197,28 @@ class ViewpointStatusTable:
                 status_code=500, detail=f"Something went wrong when updating an item in ViewpointStatusTable! Error: {err}"
             )
 
+    def delete_viewpoint(self, viewpoint_id: str) -> str:
+        """
+        Delete a viewpoint from the DynamoDB table.
+
+        :param viewpoint_id: The ID of the viewpoint to be deleted.
+        :return: the viewpoint_id of the deleted viewpoint.
+        :raises HTTPException: If an error occurs while deleting the viewpoint.
+        """
+        try:
+            self.table.delete_item(Key={"viewpoint_id": viewpoint_id})
+            return viewpoint_id
+        except ClientError as err:
+            raise HTTPException(
+                status_code=err.response["Error"]["Code"],
+                detail=f"Cannot delete viewpoint from ViewpointStatusTable, error: {err.response['Error']['Message']}",
+            )
+        except Exception as err:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Something went wrong when deleting a viewpoint from ViewpointStatusTable! Error: {err}",
+            )
+
     @staticmethod
     def get_update_params(body: Dict) -> Tuple[str, Dict[str, Any]]:
         """

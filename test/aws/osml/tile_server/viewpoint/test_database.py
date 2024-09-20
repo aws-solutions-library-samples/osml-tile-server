@@ -418,3 +418,45 @@ class TestViewpointStatusTable(TestCase):
 
         self.assertEqual(update_expression, "SET name = :name, age = :age, aws_employee = :aws_employee")
         self.assertEqual(update_attr, {":name": "John Doe", ":age": 42, ":aws_employee": True})
+
+    def test_delete_viewpoint(self):
+        """Test deleting a viewpoint from the DynamoDB table."""
+        from aws.osml.tile_server.viewpoint import ViewpointStatusTable
+
+        viewpoint_status_table = ViewpointStatusTable(self.ddb)
+
+        # Create a viewpoint to be deleted
+        viewpoint_status_table.create_viewpoint(MOCK_VIEWPOINT_1)
+
+        # Delete the viewpoint
+        viewpoint_status_table.delete_viewpoint(MOCK_VIEWPOINT_1.viewpoint_id)
+
+        # Try to retrieve the deleted viewpoint
+        with pytest.raises(HTTPException):
+            viewpoint_status_table.get_viewpoint(MOCK_VIEWPOINT_1.viewpoint_id)
+
+    def test_delete_viewpoint_client_error(self):
+        """Test handling of ClientError during viewpoint deletion."""
+        from aws.osml.tile_server.viewpoint import ViewpointStatusTable
+
+        viewpoint_status_table = ViewpointStatusTable(self.ddb)
+
+        mock_table = MagicMock()
+        mock_table.delete_item.side_effect = ClientError({"Error": {"Code": 500, "Message": "Mock Error"}}, "delete_item")
+        viewpoint_status_table.table = mock_table
+
+        with pytest.raises(HTTPException):
+            viewpoint_status_table.delete_viewpoint(MOCK_VIEWPOINT_1.viewpoint_id)
+
+    def test_delete_viewpoint_other_exception(self):
+        """Test handling of a general exception during viewpoint deletion."""
+        from aws.osml.tile_server.viewpoint import ViewpointStatusTable
+
+        viewpoint_status_table = ViewpointStatusTable(self.ddb)
+
+        mock_table = MagicMock()
+        mock_table.delete_item.side_effect = ValueError()
+        viewpoint_status_table.table = mock_table
+
+        with pytest.raises(HTTPException):
+            viewpoint_status_table.delete_viewpoint(MOCK_VIEWPOINT_1.viewpoint_id)
