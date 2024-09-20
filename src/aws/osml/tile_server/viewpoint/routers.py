@@ -176,29 +176,25 @@ class ViewpointRouter:
 
             return db_response
 
-        @api_router.delete("/{viewpoint_id}")
-        def delete_viewpoint(viewpoint_id: str) -> ViewpointModel:
+        @api_router.delete("/{viewpoint_id}", status_code=status.HTTP_204_NO_CONTENT)
+        def delete_viewpoint(viewpoint_id: str) -> None:
             """
             Delete a viewpoint when it is no longer needed. This notifies the tile server to clean up any cached
             information and release resources allocated to the viewpoint that are no longer necessary.
 
             :param viewpoint_id: Unique viewpoint id to get from the table.
-            :return ViewpointModel: Updated viewpoint item details from the table.
+            :return: None
             """
-            viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
+            try:
+                viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
+            except Exception:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"viewpoint_id {viewpoint_id} not found.")
 
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.UPDATE)
 
             if viewpoint_item:
                 shutil.rmtree(Path(viewpoint_item.local_object_path).parent, ignore_errors=True)
-
-            viewpoint_item.viewpoint_status = ViewpointStatus.DELETED
-            viewpoint_item.local_object_path = None
-            time_now = datetime.utcnow()
-            expire_time = time_now + timedelta(seconds=1)
-            viewpoint_item.expire_time = int(expire_time.timestamp())
-
-            return self.viewpoint_database.update_viewpoint(viewpoint_item)
+            self.viewpoint_database.delete_viewpoint(viewpoint_id)
 
         @api_router.put("/", status_code=status.HTTP_201_CREATED)
         def update_viewpoint(viewpoint_request: ViewpointUpdate) -> ViewpointModel:
