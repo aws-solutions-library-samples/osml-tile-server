@@ -1,7 +1,6 @@
 #  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
 
 import inspect
-import io
 import logging
 import shutil
 from datetime import UTC, datetime, timedelta
@@ -17,7 +16,7 @@ from cryptography.fernet import Fernet
 from fastapi import APIRouter, HTTPException, Query, Request, Response, status
 from fastapi_versioning import version
 from osgeo import gdalconst
-from starlette.responses import FileResponse, StreamingResponse
+from starlette.responses import FileResponse
 
 import aws.osml.tile_server.ogc as ogc
 from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustmentType
@@ -319,7 +318,7 @@ class ViewpointRouter:
             :param width: Preview width in pixels that supersedes scale if > 0.
             :param height: Preview height in pixels that supersedes scale if > 0.
             :param compression: GDAL image compression format to use.
-            :return: StreamingResponse of preview binary with the appropriate mime type based on the img_format
+            :return: Response of preview binary with the appropriate mime type based on the img_format
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
@@ -345,9 +344,7 @@ class ViewpointRouter:
                     preview_options["height"] = height
 
                 preview_bytes = perform_gdal_translation(tile_factory.raster_dataset, preview_options)
-                return StreamingResponse(
-                    io.BytesIO(preview_bytes), media_type=get_media_type(img_format), status_code=status.HTTP_200_OK
-                )
+                return Response(bytes(preview_bytes), media_type=get_media_type(img_format), status_code=status.HTTP_200_OK)
 
         @api_router.get("/{viewpoint_id}/image/tiles/{z}/{x}/{y}.{tile_format}")
         def get_image_tile(
@@ -369,14 +366,13 @@ class ViewpointRouter:
             :param y: Tile column location in pixels for the given tile.
             :param tile_format: Desired format for tile output, valid options are defined by GDALImageFormats.
             :param compression: GDAL tile compression format.
-            :return: StreamingResponse of tile image binary payload.
+            :return: Response of tile image binary payload.
             """
             if z < 0:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Resolution Level for get tile request must be >= 0. Requested z={z}",
                 )
-
             try:
                 viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
                 self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.TILE)
@@ -384,7 +380,6 @@ class ViewpointRouter:
                 output_type = None
                 if viewpoint_item.range_adjustment is not RangeAdjustmentType.NONE:
                     output_type = gdalconst.GDT_Byte
-
                 tile_factory_pool = get_tile_factory_pool(
                     tile_format, compression, viewpoint_item.local_object_path, output_type, viewpoint_item.range_adjustment
                 )
@@ -401,9 +396,8 @@ class ViewpointRouter:
                         src_window=[x * src_tile_size, y * src_tile_size, src_tile_size, src_tile_size],
                         output_size=(tile_size, tile_size),
                     )
-
-                return StreamingResponse(
-                    io.BytesIO(image_bytes), media_type=get_media_type(tile_format), status_code=status.HTTP_200_OK
+                return Response(
+                    content=bytes(image_bytes), media_type=get_media_type(tile_format), status_code=status.HTTP_200_OK
                 )
             except Exception as err:
                 raise HTTPException(
@@ -448,7 +442,7 @@ class ViewpointRouter:
             :param compression: Desired compression algorithm for the output image.
             :param width: Optional width in px of the desired crop, if provided, max_x will be ignored.
             :param height: Optional height in px of the desired crop, if provided, max_y will be ignored.
-            :return: StreamingResponse of cropped image binary with the appropriate mime type based on the img_format
+            :return: Response of cropped image binary with the appropriate mime type based on the img_format
             """
             viewpoint_item = self.viewpoint_database.get_viewpoint(viewpoint_id)
             self._validate_viewpoint_status(viewpoint_item.viewpoint_status, ViewpointApiNames.PREVIEW)
@@ -465,9 +459,7 @@ class ViewpointRouter:
                 crop_height = height if height is not None else max_y - min_y
 
                 crop_bytes = tile_factory.create_encoded_tile([min_x, min_y, crop_width, crop_height])
-                return StreamingResponse(
-                    io.BytesIO(crop_bytes), media_type=get_media_type(img_format), status_code=status.HTTP_200_OK
-                )
+                return Response(bytes(crop_bytes), media_type=get_media_type(img_format), status_code=status.HTTP_200_OK)
 
         @api_router.get("/{viewpoint_id}/map/tiles", response_model_exclude_none=True)
         def get_map_tilesets(viewpoint_id: str, request: Request) -> ogc.TileSetList:
@@ -686,9 +678,7 @@ class ViewpointRouter:
                     # OGC Tiles API Section 7.1.7.B indicates that a 204 should be returned for empty tiles
                     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-                return StreamingResponse(
-                    io.BytesIO(image_bytes), media_type=get_media_type(tile_format), status_code=status.HTTP_200_OK
-                )
+                return Response(bytes(image_bytes), media_type=get_media_type(tile_format), status_code=status.HTTP_200_OK)
             except Exception as err:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to fetch tile for image. {err}"
