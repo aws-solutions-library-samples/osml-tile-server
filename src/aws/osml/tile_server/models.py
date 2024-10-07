@@ -1,15 +1,12 @@
 #  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
 
-import logging
 from enum import auto
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
 from aws.osml.gdal import RangeAdjustmentType
-from aws.osml.tile_server.utils import AutoLowerStringEnum, AutoUnderscoreStringEnum
-
-logger = logging.getLogger("uvicorn")
+from aws.osml.tile_server.utils.string_enums import AutoLowerStringEnum, AutoUnderscoreStringEnum
 
 
 class ViewpointApiNames(str, AutoLowerStringEnum):
@@ -109,7 +106,7 @@ class ViewpointModel(BaseModel):
 
 class ViewpointListResponse(BaseModel):
     """
-    Represents the return structure of a request for viewpoints
+    Represents the return structure of a request for viewpoints.
     """
 
     items: List[ViewpointModel]
@@ -130,3 +127,23 @@ class ViewpointUpdate(BaseModel):
     viewpoint_name: str
     tile_size: int
     range_adjustment: RangeAdjustmentType
+
+
+def validate_viewpoint_status(current_status: ViewpointStatus, api_operation: ViewpointApiNames) -> None:
+    """
+    This is a helper function that is to validate if we can execute an operation based on the
+    given status
+
+    :param current_status: Current status of a viewpoint in the table.
+    :param api_operation: The associated API operation being used on the viewpoint.
+    :return: None.
+    :raises: ValueError if the viewpoint is DELETED or REQUESTED.
+    """
+    if current_status == ViewpointStatus.DELETED:
+        raise ValueError(
+            f"Cannot view {api_operation} for this image since this has already been deleted.",
+        )
+    elif current_status == ViewpointStatus.REQUESTED:
+        raise ValueError(
+            "This viewpoint has been requested and not in READY state. Please try again later.",
+        )

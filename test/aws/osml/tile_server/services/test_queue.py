@@ -1,4 +1,4 @@
-# Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
 
 import json
 import unittest
@@ -30,7 +30,7 @@ class TestViewpointRequestQueue(TestCase):
 
     def test_viewpoint_request_queue_initialization(self):
         """Test the initialization of the ViewpointRequestQueue."""
-        from aws.osml.tile_server.viewpoint import ViewpointRequestQueue
+        from aws.osml.tile_server.services import ViewpointRequestQueue
 
         mock_queue_name = TestConfig.test_viewpoint_request_queue_name
         viewpoint_request_queue = ViewpointRequestQueue(self.sqs, mock_queue_name)
@@ -40,7 +40,7 @@ class TestViewpointRequestQueue(TestCase):
 
     def test_send_request_success(self):
         """Test sending a request successfully to the SQS queue."""
-        from aws.osml.tile_server.viewpoint import ViewpointRequestQueue
+        from aws.osml.tile_server.services import ViewpointRequestQueue
 
         mock_queue_name = TestConfig.test_viewpoint_request_queue_name
         viewpoint_request_queue = ViewpointRequestQueue(self.sqs, mock_queue_name)
@@ -55,7 +55,7 @@ class TestViewpointRequestQueue(TestCase):
 
     def test_send_request_client_error(self):
         """Test handling a ClientError when sending a request."""
-        from aws.osml.tile_server.viewpoint import ViewpointRequestQueue
+        from aws.osml.tile_server.services import ViewpointRequestQueue
 
         mock_queue_name = TestConfig.test_viewpoint_request_queue_name
         viewpoint_request_queue = ViewpointRequestQueue(self.sqs, mock_queue_name)
