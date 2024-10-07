@@ -4,13 +4,13 @@ import base64
 import unittest
 from unittest.mock import mock_open, patch
 
-from aws.osml.tile_server.utils import initialize_token_key, read_token_key
+from aws.osml.tile_server.services import initialize_token_key, read_token_key
 
 
 class TestToken(unittest.TestCase):
     """Unit tests for token key management functions."""
 
-    @patch("aws.osml.tile_server.utils.token.path.isfile")
+    @patch("aws.osml.tile_server.services.token.path.isfile")
     @patch("builtins.open", new_callable=mock_open)
     def test_initialize_token_key_file_does_not_exist(self, mocked_open, mocked_isfile):
         """Test token key initialization when the file does not exist."""
@@ -22,7 +22,7 @@ class TestToken(unittest.TestCase):
         handle = mocked_open.return_value
         handle.write.assert_called()
 
-    @patch("aws.osml.tile_server.utils.token.path.isfile")
+    @patch("aws.osml.tile_server.services.token.path.isfile")
     @patch("builtins.open", new_callable=mock_open)
     def test_initialize_token_key_file_exists(self, mocked_open, mocked_isfile):
         """Test token key initialization when the file already exists."""

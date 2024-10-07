@@ -69,7 +69,7 @@ export AWS_SECRET_ACCESS_KEY=<wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY>
 
 Start the Tile Server using
 ```shell
-docker compose up -d
+docker compose -f docker/docker-compose.yml up -d
 ```
 
 To view the live log output while the server is running
@@ -79,12 +79,12 @@ docker logs -f osml-tile-server
 
 To stop the tile server
 ```shell
-docker compose down
+docker compose -f docker/docker-compose.yml down
 ```
 
 To rebuild the docker image after making a code change, use
 ```shell
-docker compose up -d --build
+docker compose -f docker/docker-compose.yml up -d --build
 ```
 
 In another terminal to invoke the rest server and return the viewpoint on a single image, run the following command:
@@ -103,7 +103,7 @@ curl -X 'POST' \
 }'
 ```
 
-Additionally, you can head over to FastAPI homepage and be able to execute various of API calls by visiting
+Additionally, you can view the API in the browser and execute various API calls by visiting
 
 ```
 http://0.0.0.0:8080/latest/docs or http://0.0.0.0:8080/latest/redoc

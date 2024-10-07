@@ -20,6 +20,13 @@ from aws.osml.gdal import GDALCompressionOptions, GDALImageFormats, RangeAdjustm
 from aws.osml.image_processing import GDALTileFactory
 from aws.osml.photogrammetry import ImageCoordinate
 from aws.osml.tile_server.app_config import ServerConfig
+from aws.osml.tile_server.services import (
+    DecimalEncoder,
+    ViewpointModel,
+    ViewpointRequestQueue,
+    ViewpointStatus,
+    ViewpointStatusTable,
+)
 from aws.osml.tile_server.utils import (
     AutoLowerStringEnum,
     ThreadingLocalContextFilter,
@@ -27,10 +34,6 @@ from aws.osml.tile_server.utils import (
     get_standard_overviews,
     get_tile_factory_pool,
 )
-
-from .database import DecimalEncoder, ViewpointStatusTable
-from .models import ViewpointModel, ViewpointStatus
-from .queue import ViewpointRequestQueue
 
 
 class SupplementaryFileType(str, AutoLowerStringEnum):

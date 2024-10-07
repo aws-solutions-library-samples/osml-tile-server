@@ -15,8 +15,8 @@ from test_config import TestConfig
 class TestTileServer(unittest.TestCase):
     """Integration tests for the OSML Tile Server using mocked AWS services."""
 
-    @patch("aws.osml.tile_server.utils.initialize_token_key")
-    @patch("aws.osml.tile_server.utils.read_token_key", return_value=Fernet.generate_key())
+    @patch("aws.osml.tile_server.services.initialize_token_key")
+    @patch("aws.osml.tile_server.services.read_token_key", return_value=Fernet.generate_key())
     def setUp(self, mock_read_token, mock_init_token):
         """Set up the mock AWS services and the test client."""
         from aws.osml.tile_server.app_config import BotoConfig

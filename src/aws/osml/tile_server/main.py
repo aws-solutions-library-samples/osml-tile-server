@@ -1,14 +1,10 @@
 #  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
 
 import logging
-import sys
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
-from time import sleep
 
 import uvicorn
 from asgi_correlation_id import CorrelationIdFilter, CorrelationIdMiddleware
-from botocore.exceptions import ClientError
-from cryptography.fernet import Fernet
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
@@ -17,16 +13,9 @@ from osgeo import gdal
 from pythonjsonlogger.jsonlogger import JsonFormatter
 
 from .app_config import ServerConfig
-from .utils import (
-    HealthCheck,
-    ThreadingLocalContextFilter,
-    configure_logger,
-    initialize_aws_services,
-    initialize_token_key,
-    read_token_key,
-)
-from .viewpoint.routers import ViewpointRouter
-from .viewpoint.worker import ViewpointWorker
+from .services import get_aws_services
+from .utils import HealthCheck, ThreadingLocalContextFilter, configure_logger
+from .viewpoint import ViewpointWorker, viewpoint_router
 
 # Configure GDAL to throw Python exceptions on errors
 gdal.UseExceptions()
@@ -38,12 +27,6 @@ uvicorn_log_level_lookup = {
     logging.INFO: "info",
     logging.DEBUG: "debug",
 }
-
-
-try:
-    aws_ddb, aws_s3, aws_sqs = initialize_aws_services()
-except ClientError as err:
-    sys.exit(f"Fatal error occurred while initializing AWS services. Exiting. {err}")
 
 
 def configure_tile_server_logging() -> logging.Logger:
@@ -72,23 +55,6 @@ def configure_tile_server_logging() -> logging.Logger:
     return worker_logger
 
 
-def initialize_viewpoint_router() -> ViewpointRouter:
-    """
-    This function creates an instance of a ViewpointRouter using initialized AWS services.
-    Application will exit if the router fails to create.
-
-    :return: An instance of a ViewpointRouter.
-    """
-    initialize_token_key()
-    sleep(1)
-
-    encryptor = Fernet(read_token_key())
-    try:
-        return ViewpointRouter(aws_ddb, aws_sqs, aws_s3, encryptor)
-    except Exception as err:
-        sys.exit(f"Fatal error occurred while initializing AWS services. Check your credentials! Exiting. {err}")
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AbstractAsyncContextManager[None] | FastAPI:
     """
@@ -108,11 +74,11 @@ async def lifespan(app: FastAPI) -> AbstractAsyncContextManager[None] | FastAPI:
         your database instance and a queue of requests respectively.
     """
     # startup functions before serving requests
-
     worker_logger = configure_tile_server_logging()
 
     # create viewpoint worker
-    viewpoint_worker = ViewpointWorker(aws_sqs, aws_s3, aws_ddb, worker_logger)
+    aws = get_aws_services()
+    viewpoint_worker = ViewpointWorker(aws.sqs, aws.s3, aws.ddb, worker_logger)
     viewpoint_worker.start()
     yield
     # shutdown functions after done serving requests
@@ -122,10 +88,8 @@ async def lifespan(app: FastAPI) -> AbstractAsyncContextManager[None] | FastAPI:
 # Initialize FastAPI app
 app = FastAPI(title="OSML Tile Server")
 
-viewpoint_router = initialize_viewpoint_router()
-
 # Include the viewpoint router in the FastAPI app
-app.include_router(viewpoint_router.router)
+app.include_router(viewpoint_router)
 
 # Apply API versioning
 app = VersionedFastAPI(
