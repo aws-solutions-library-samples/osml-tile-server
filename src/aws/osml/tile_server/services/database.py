@@ -11,8 +11,7 @@ from botocore.exceptions import ClientError
 from fastapi import HTTPException
 
 from aws.osml.tile_server.app_config import ServerConfig
-
-from .models import ViewpointListResponse, ViewpointModel
+from aws.osml.tile_server.models import ViewpointListResponse, ViewpointModel
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -30,7 +29,7 @@ class DecimalEncoder(json.JSONEncoder):
         Converts all Decimal instances to int else returns default conversion.
 
         :param obj: Object for JSON Encoding.
-        :return: Integer representation of Decimal else default JSON Conversion
+        :return: Integer representation of Decimal else default JSON Conversion.
         """
 
         if isinstance(obj, Decimal):
@@ -65,9 +64,9 @@ class ViewpointStatusTable:
         """
         Get viewpoint items from the dynamodb table, if limit nor next_token are provided, it returns all records.
 
-        :param limit: Optional max number of viewpoints requested from dynamodb
+        :param limit: Optional max number of viewpoints requested from dynamodb.
         :param next_token: Optional token to begin a query from provided by the previous query response that
-                had more records available
+                had more records available.
         :return: The list of available viewpoints in the table.
         """
         query_params = {"FilterExpression": Attr("viewpoint_status").ne("DELETED")}
@@ -109,7 +108,7 @@ class ViewpointStatusTable:
 
     def get_paged_viewpoints(self, query_params: Dict) -> ViewpointListResponse:
         """
-        Get a page of viewpoint items from the dynamodb table
+        Get a page of viewpoint items from the dynamodb table.
 
         :param: The query parameters to use for constructing the page of viewpoints.
         :return: Page of viewpoints associated with the query parameters.

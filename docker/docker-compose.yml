@@ -5,7 +5,7 @@ services:
   tile-server:
     build:
       context: ..
-      dockerfile: Dockerfile.tile_server
+      dockerfile: docker/Dockerfile.tile_server
     container_name: "osml-tile-server"
     user: root
     ports:

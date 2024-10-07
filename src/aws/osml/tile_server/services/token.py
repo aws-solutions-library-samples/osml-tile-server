@@ -2,13 +2,15 @@
 
 import json
 import logging
+import os.path
 from base64 import b64decode, b64encode
 from os import path
+from time import sleep
 from typing import Optional
 
 from cryptography.fernet import Fernet
 
-from ..app_config import ServerConfig
+from aws.osml.tile_server.app_config import ServerConfig
 
 TS_TOKEN_FILE_NAME = "ts-token"
 
@@ -22,6 +24,8 @@ def initialize_token_key() -> None:
     :return: None
     """
     try:
+        if not os.path.exists(f"/{ServerConfig.efs_mount_name}"):
+            os.makedirs(f"/{ServerConfig.efs_mount_name}")
         file_path = path.join(f"/{ServerConfig.efs_mount_name}", TS_TOKEN_FILE_NAME)
         if not path.isfile(file_path):
             key = Fernet.generate_key()
@@ -47,3 +51,15 @@ def read_token_key() -> Optional[bytes]:
         # Handle the case where the file is empty or not valid JSON
         logger.error(f"Not able to read token key from json file {file_path} wth error: {err}")
         return None
+
+
+def get_encryptor() -> Fernet:
+    """
+    This initializes a token and returns the associated Fernet object.
+    If a token is already present a new one is not created.
+
+    :return:
+    """
+    initialize_token_key()
+    sleep(0.1)
+    return Fernet(read_token_key())

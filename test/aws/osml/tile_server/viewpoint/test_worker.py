@@ -9,7 +9,8 @@ import pytest
 from botocore.exceptions import ClientError
 
 from aws.osml.gdal import RangeAdjustmentType
-from aws.osml.tile_server.viewpoint import SupplementaryFileType, ViewpointModel, ViewpointStatus
+from aws.osml.tile_server.models import ViewpointModel, ViewpointStatus
+from aws.osml.tile_server.viewpoint import SupplementaryFileType
 
 
 class TestViewpointWorker(TestCase):

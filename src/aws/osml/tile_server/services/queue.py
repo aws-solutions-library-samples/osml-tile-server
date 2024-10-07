@@ -15,12 +15,11 @@ class ViewpointRequestQueue:
     def __init__(self, aws_sqs, queue_name: str, logger: Logger = getLogger(__name__)) -> None:
         """
         Initializes a new instance of the ViewpointRequestQueue class which sends messages via Amazon's Simple Queue
-        Service (SQS)
+        Service (SQS).
 
         :param aws_sqs: AWS SQS client instance.
         :param logger: An optional logger to use.  If none provided it creates a new one.
         :param queue_name: SQS Queue name to send messages to.
-
         :return: None
         """
 

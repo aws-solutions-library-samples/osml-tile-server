@@ -11,7 +11,7 @@ from moto import mock_aws
 from test_config import TestConfig
 
 from aws.osml.gdal import RangeAdjustmentType
-from aws.osml.tile_server.viewpoint import ViewpointModel, ViewpointStatus
+from aws.osml.tile_server.models import ViewpointModel, ViewpointStatus
 
 # Mock Viewpoint Models
 MOCK_VIEWPOINT_1 = ViewpointModel(
@@ -87,14 +87,14 @@ class TestViewpointStatusTable(TestCase):
 
     def test_viewpoint_status_table_initialization(self):
         """Test the initialization of ViewpointStatusTable."""
-        from aws.osml.tile_server.viewpoint import ViewpointStatusTable
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         viewpoint_status_table = ViewpointStatusTable(self.ddb)
         self.assertEqual(viewpoint_status_table.ddb, self.ddb)
 
     def test_viewpoint_status_table_bad_table(self):
         """Test initialization of ViewpointStatusTable with a bad table."""
-        from aws.osml.tile_server.viewpoint import ViewpointStatusTable
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         mock_ddb = MagicMock()
         mock_table = MagicMock()
@@ -108,7 +108,8 @@ class TestViewpointStatusTable(TestCase):
 
     def test_get_viewpoints_no_params(self):
         """Test retrieval of all viewpoints with no parameters."""
-        from aws.osml.tile_server.viewpoint import ViewpointListResponse, ViewpointStatusTable
+        from aws.osml.tile_server.models import ViewpointListResponse
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         viewpoint_status_table = ViewpointStatusTable(self.ddb)
 
@@ -123,7 +124,8 @@ class TestViewpointStatusTable(TestCase):
 
     def test_get_viewpoints_with_limit(self):
         """Test retrieval of viewpoints with a limit."""
-        from aws.osml.tile_server.viewpoint import ViewpointListResponse, ViewpointStatusTable
+        from aws.osml.tile_server.models import ViewpointListResponse
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         viewpoint_status_table = ViewpointStatusTable(self.ddb)
 
@@ -138,7 +140,8 @@ class TestViewpointStatusTable(TestCase):
 
     def test_get_viewpoints_with_next_token(self):
         """Test retrieval of viewpoints with a next_token."""
-        from aws.osml.tile_server.viewpoint import ViewpointListResponse, ViewpointStatusTable
+        from aws.osml.tile_server.models import ViewpointListResponse
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         viewpoint_status_table = ViewpointStatusTable(self.ddb)
 
@@ -151,7 +154,8 @@ class TestViewpointStatusTable(TestCase):
 
     def test_get_viewpoints_with_limit_and_next_token(self):
         """Test retrieval of viewpoints with both limit and next_token."""
-        from aws.osml.tile_server.viewpoint import ViewpointListResponse, ViewpointStatusTable
+        from aws.osml.tile_server.models import ViewpointListResponse
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         viewpoint_status_table = ViewpointStatusTable(self.ddb)
 
@@ -164,7 +168,7 @@ class TestViewpointStatusTable(TestCase):
 
     def test_get_viewpoints_client_error(self):
         """Test handling of ClientError during viewpoint retrieval."""
-        from aws.osml.tile_server.viewpoint import ViewpointStatusTable
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         viewpoint_status_table = ViewpointStatusTable(self.ddb)
 
@@ -179,7 +183,7 @@ class TestViewpointStatusTable(TestCase):
 
     def test_get_viewpoints_key_error(self):
         """Test handling of KeyError during viewpoint retrieval."""
-        from aws.osml.tile_server.viewpoint import ViewpointStatusTable
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         viewpoint_status_table = ViewpointStatusTable(self.ddb)
 
@@ -192,7 +196,7 @@ class TestViewpointStatusTable(TestCase):
 
     def test_get_viewpoints_other_exception(self):
         """Test handling of a general exception during viewpoint retrieval."""
-        from aws.osml.tile_server.viewpoint import ViewpointStatusTable
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         viewpoint_status_table = ViewpointStatusTable(self.ddb)
 
@@ -205,7 +209,8 @@ class TestViewpointStatusTable(TestCase):
 
     def test_get_all_viewpoints(self):
         """Test retrieving all viewpoints with no pagination."""
-        from aws.osml.tile_server.viewpoint import ViewpointListResponse, ViewpointStatusTable
+        from aws.osml.tile_server.models import ViewpointListResponse
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         viewpoint_status_table = ViewpointStatusTable(self.ddb)
 
@@ -220,7 +225,8 @@ class TestViewpointStatusTable(TestCase):
 
     def test_get_paged_viewpoints(self):
         """Test retrieving paged viewpoints."""
-        from aws.osml.tile_server.viewpoint import ViewpointListResponse, ViewpointStatusTable
+        from aws.osml.tile_server.models import ViewpointListResponse
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         viewpoint_status_table = ViewpointStatusTable(self.ddb)
 
@@ -233,7 +239,8 @@ class TestViewpointStatusTable(TestCase):
 
     def test_get_paged_viewpoints_last_page(self):
         """Test retrieving the last page of paged viewpoints."""
-        from aws.osml.tile_server.viewpoint import ViewpointListResponse, ViewpointStatusTable
+        from aws.osml.tile_server.models import ViewpointListResponse
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         viewpoint_status_table = ViewpointStatusTable(self.ddb)
 
@@ -248,7 +255,7 @@ class TestViewpointStatusTable(TestCase):
 
     def test_get_single_viewpoint(self):
         """Test retrieving a single viewpoint by ID."""
-        from aws.osml.tile_server.viewpoint import ViewpointStatusTable
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         viewpoint_status_table = ViewpointStatusTable(self.ddb)
 
@@ -259,7 +266,7 @@ class TestViewpointStatusTable(TestCase):
 
     def test_get_viewpoint_client_error(self):
         """Test handling of ClientError when retrieving a single viewpoint."""
-        from aws.osml.tile_server.viewpoint import ViewpointStatusTable
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         viewpoint_status_table = ViewpointStatusTable(self.ddb)
         viewpoint_status_table.create_viewpoint(MOCK_VIEWPOINT_1)
@@ -273,7 +280,7 @@ class TestViewpointStatusTable(TestCase):
 
     def test_get_viewpoint_key_error(self):
         """Test handling of KeyError when retrieving a single viewpoint."""
-        from aws.osml.tile_server.viewpoint import ViewpointStatusTable
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         viewpoint_status_table = ViewpointStatusTable(self.ddb)
         viewpoint_status_table.create_viewpoint(MOCK_VIEWPOINT_1)
@@ -283,7 +290,7 @@ class TestViewpointStatusTable(TestCase):
 
     def test_get_viewpoint_other_exception(self):
         """Test handling of a general exception when retrieving a single viewpoint."""
-        from aws.osml.tile_server.viewpoint import ViewpointStatusTable
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         viewpoint_status_table = ViewpointStatusTable(self.ddb)
         viewpoint_status_table.create_viewpoint(MOCK_VIEWPOINT_1)
@@ -297,7 +304,7 @@ class TestViewpointStatusTable(TestCase):
 
     def test_create_viewpoint(self):
         """Test creation of a new viewpoint."""
-        from aws.osml.tile_server.viewpoint import ViewpointStatusTable
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         viewpoint_status_table = ViewpointStatusTable(self.ddb)
 
@@ -318,7 +325,7 @@ class TestViewpointStatusTable(TestCase):
 
     def test_create_viewpoint_client_error(self):
         """Test handling of ClientError during viewpoint creation."""
-        from aws.osml.tile_server.viewpoint import ViewpointStatusTable
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         viewpoint_status_table = ViewpointStatusTable(self.ddb)
 
@@ -331,7 +338,7 @@ class TestViewpointStatusTable(TestCase):
 
     def test_update_viewpoint(self):
         """Test updating an existing viewpoint."""
-        from aws.osml.tile_server.viewpoint import ViewpointStatusTable
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         viewpoint_status_table = ViewpointStatusTable(self.ddb)
 
@@ -355,7 +362,7 @@ class TestViewpointStatusTable(TestCase):
 
     def test_update_viewpoint_client_error(self):
         """Test handling of ClientError during viewpoint update."""
-        from aws.osml.tile_server.viewpoint import ViewpointStatusTable
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         viewpoint_status_table = ViewpointStatusTable(self.ddb)
 
@@ -382,7 +389,7 @@ class TestViewpointStatusTable(TestCase):
 
     def test_update_viewpoint_other_exception(self):
         """Test handling of a general exception during viewpoint update."""
-        from aws.osml.tile_server.viewpoint import ViewpointStatusTable
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         viewpoint_status_table = ViewpointStatusTable(self.ddb)
 
@@ -409,7 +416,7 @@ class TestViewpointStatusTable(TestCase):
 
     def test_update_params(self):
         """Test generation of update parameters for a viewpoint."""
-        from aws.osml.tile_server.viewpoint import ViewpointStatusTable
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         viewpoint_status_table = ViewpointStatusTable(self.ddb)
 
@@ -421,7 +428,7 @@ class TestViewpointStatusTable(TestCase):
 
     def test_delete_viewpoint(self):
         """Test deleting a viewpoint from the DynamoDB table."""
-        from aws.osml.tile_server.viewpoint import ViewpointStatusTable
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         viewpoint_status_table = ViewpointStatusTable(self.ddb)
 
@@ -437,7 +444,7 @@ class TestViewpointStatusTable(TestCase):
 
     def test_delete_viewpoint_client_error(self):
         """Test handling of ClientError during viewpoint deletion."""
-        from aws.osml.tile_server.viewpoint import ViewpointStatusTable
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         viewpoint_status_table = ViewpointStatusTable(self.ddb)
 
@@ -450,7 +457,7 @@ class TestViewpointStatusTable(TestCase):
 
     def test_delete_viewpoint_other_exception(self):
         """Test handling of a general exception during viewpoint deletion."""
-        from aws.osml.tile_server.viewpoint import ViewpointStatusTable
+        from aws.osml.tile_server.services import ViewpointStatusTable
 
         viewpoint_status_table = ViewpointStatusTable(self.ddb)
 

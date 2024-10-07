@@ -14,7 +14,7 @@ def generate_openapi_spec() -> None:
     import yaml
     from fastapi import FastAPI
 
-    from aws.osml.tile_server.viewpoint.routers import ViewpointRouter
+    from aws.osml.tile_server.viewpoint import viewpoint_router
 
     app_skeleton = FastAPI(
         title="OSML Tile Server",
@@ -25,7 +25,6 @@ def generate_openapi_spec() -> None:
             "url": "https://github.com/aws-solutions-library-samples/osml-tile-server/issues",
         },
     )
-    viewpoint_router = ViewpointRouter(None, None, None, None).router
     app_skeleton.include_router(viewpoint_router)
 
     os.makedirs("./_spec", exist_ok=True)

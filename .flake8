@@ -1,6 +1,6 @@
 [flake8]
-ignore = E203, W503, W605, I100, I201, N818, I101
 max-line-length = 125
+max-complexity = 10
 exclude =
     build/
     .git
