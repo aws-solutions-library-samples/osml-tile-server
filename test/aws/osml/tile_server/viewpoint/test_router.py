@@ -5,10 +5,9 @@ import os
 import shutil
 import unittest
 from unittest import TestCase
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import boto3
-import pytest
 from cryptography.fernet import Fernet
 from fastapi.testclient import TestClient
 from moto import mock_aws
@@ -42,92 +41,12 @@ VALID_UPDATE_TEST_BODY = {
 }
 
 
-class TestRouters(TestCase):
-    """Unit tests for API endpoints in tile_server."""
-
-    @patch("aws.osml.tile_server.viewpoint.database.ViewpointStatusTable", MagicMock())
-    @patch("aws.osml.tile_server.viewpoint.queue.ViewpointRequestQueue", MagicMock())
-    def setUp(self):
-        """Set up the test client."""
-        from aws.osml.tile_server.viewpoint import ViewpointRouter
-
-        mock_ddb = MagicMock()
-        mock_sqs = MagicMock()
-        mock_s3 = MagicMock()
-        mock_encryptor = MagicMock()
-        self.router = ViewpointRouter(mock_ddb, mock_sqs, mock_s3, mock_encryptor)
-
-    def tearDown(self):
-        """Clean up the test client."""
-        self.router = None
-
-    @pytest.mark.skip(reason="Test not implemented")
-    def test_list_viewpoints(self):
-        pass
-
-    @pytest.mark.skip(reason="Test not implemented")
-    def test_create_viewpoint(self):
-        pass
-
-    @pytest.mark.skip(reason="Test not implemented")
-    def test_delete_viewpoint(self):
-        pass
-
-    @pytest.mark.skip(reason="Test not implemented")
-    def test_update_viewpoint(self):
-        pass
-
-    @pytest.mark.skip(reason="Test not implemented")
-    def test_describe_viewpoint(self):
-        pass
-
-    @pytest.mark.skip(reason="Test not implemented")
-    def test_get_metadata(self):
-        pass
-
-    @pytest.mark.skip(reason="Test not implemented")
-    def test_get_bounds(self):
-        pass
-
-    @pytest.mark.skip(reason="Test not implemented")
-    def test_get_info(self):
-        pass
-
-    @pytest.mark.skip(reason="Test not implemented")
-    def test_get_statistics(self):
-        pass
-
-    @pytest.mark.skip(reason="Test not implemented")
-    def test_get_preview(self):
-        pass
-
-    @pytest.mark.skip(reason="Test not implemented")
-    def test_get_tile(self):
-        pass
-
-    @pytest.mark.skip(reason="Test not implemented")
-    def test_get_crop(self):
-        pass
-
-    @pytest.mark.skip(reason="Test not implemented")
-    def test_validate_viewpoint_status(self):
-        pass
-
-    def test_invert_tile_row_index(self):
-        sample_tile_row = 347
-        sample_tile_matrix = 10
-        expected_inverted_tile_row = 676
-        inverted_tile_row = self.router._invert_tile_row_index(sample_tile_row, sample_tile_matrix)
-        assert inverted_tile_row == expected_inverted_tile_row
-
-
 @mock_aws
-class TestRoutersE2E(TestCase):
+class TestRouterE2E(TestCase):
     """End-to-end tests for the tile_server API."""
 
-    @patch("aws.osml.tile_server.utils.initialize_token_key")
-    @patch("aws.osml.tile_server.utils.read_token_key", return_value=Fernet.generate_key())
-    def setUp(self, mock_read_token, mock_init_token):
+    @patch("aws.osml.tile_server.services.get_encryptor", return_value=Fernet(Fernet.generate_key()))
+    def setUp(self, mock_encryptor):
         """Set up virtual AWS resources and the test client."""
         from aws.osml.tile_server.app_config import BotoConfig
 
