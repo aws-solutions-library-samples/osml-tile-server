@@ -1,0 +1,41 @@
+tile_server.ogc.common_geodata
+==============================
+
+.. py:module:: tile_server.ogc.common_geodata
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   tile_server.ogc.common_geodata.DataType
+
+
+Module Contents
+---------------
+
+.. py:class:: DataType
+
+   Bases: :py:obj:`str`, :py:obj:`enum.Enum`
+
+
+   Common data types defined by the OGC APIs. Note this list may be extended in the future (e.g. point clouds, meshes,
+   etc.).
+
+
+   .. py:attribute:: MAP
+      :value: 'map'
+
+
+
+   .. py:attribute:: VECTOR
+      :value: 'vector'
+
+
+
+   .. py:attribute:: COVERAGE
+      :value: 'coverage'
+
+
+

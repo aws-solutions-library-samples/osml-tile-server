@@ -1,0 +1,568 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tile_server.ogc &mdash; OversightML Tile Server  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="tile_server.ogc.common_core" href="common_core/index.html" />
+    <link rel="prev" title="tile_server" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            OversightML Tile Server
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">tile_server</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../index.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">tile_server.ogc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../services/index.html">tile_server.services</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../utils/index.html">tile_server.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../viewpoint/index.html">tile_server.viewpoint</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../index.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">OversightML Tile Server</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">tile_server</a></li>
+      <li class="breadcrumb-item active">tile_server.ogc</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/autoapi/tile_server/ogc/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-tile_server.ogc">
+<span id="tile-server-ogc"></span><h1>tile_server.ogc<a class="headerlink" href="#module-tile_server.ogc" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="common_core/index.html">tile_server.ogc.common_core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_geodata/index.html">tile_server.ogc.common_geodata</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tms/index.html">tile_server.ogc.tms</a></li>
+</ul>
+</div>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tile_server.ogc.ConformanceDeclaration" title="tile_server.ogc.ConformanceDeclaration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConformanceDeclaration</span></code></a></p></td>
+<td><p>This class defines the resource returned from the /conformance path in an OGC compliant API.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tile_server.ogc.ExceptionResponse" title="tile_server.ogc.ExceptionResponse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExceptionResponse</span></code></a></p></td>
+<td><p>OGC schema for exceptions based on RFC 7807.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tile_server.ogc.LandingPage" title="tile_server.ogc.LandingPage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LandingPage</span></code></a></p></td>
+<td><p>This class defines a common landing page for an OGC API.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tile_server.ogc.Link" title="tile_server.ogc.Link"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Link</span></code></a></p></td>
+<td><p>OGC Web API Standards use RFC 8288 (Web Linking) to express relationships between resources. Resource</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tile_server.ogc.DataType" title="tile_server.ogc.DataType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DataType</span></code></a></p></td>
+<td><p>Common data types defined by the OGC APIs. Note this list may be extended in the future (e.g. point clouds, meshes,</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tile_server.ogc.BoundingBox2D" title="tile_server.ogc.BoundingBox2D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BoundingBox2D</span></code></a></p></td>
+<td><p>A minimum bounding rectangle surrounding a 2D resource.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tile_server.ogc.TileMatrixLimits" title="tile_server.ogc.TileMatrixLimits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TileMatrixLimits</span></code></a></p></td>
+<td><p>Limits for the tileRow and tileCol values within a tileMatrix in a tileset. This defines the boundary of a</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tile_server.ogc.TilePoint" title="tile_server.ogc.TilePoint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TilePoint</span></code></a></p></td>
+<td><p>A specific tile location within a tileset.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tile_server.ogc.TileSetItem" title="tile_server.ogc.TileSetItem"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TileSetItem</span></code></a></p></td>
+<td><p>A minimal tileset element for use within a list of tilesets linking to full description of those tilesets.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tile_server.ogc.TileSetList" title="tile_server.ogc.TileSetList"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TileSetList</span></code></a></p></td>
+<td><p>Usage docs: <a class="reference external" href="https://docs.pydantic.dev/2.9/concepts/models/">https://docs.pydantic.dev/2.9/concepts/models/</a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tile_server.ogc.TileSetMetadata" title="tile_server.ogc.TileSetMetadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TileSetMetadata</span></code></a></p></td>
+<td><p>Usage docs: <a class="reference external" href="https://docs.pydantic.dev/2.9/concepts/models/">https://docs.pydantic.dev/2.9/concepts/models/</a></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="package-contents">
+<h2>Package Contents<a class="headerlink" href="#package-contents" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.ogc.ConformanceDeclaration">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.ogc.</span></span><span class="sig-name descname"><span class="pre">ConformanceDeclaration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**data:</span> <span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tile_server.ogc.ConformanceDeclaration" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pydantic.BaseModel</span></code></p>
+<p>This class defines the resource returned from the /conformance path in an OGC compliant API.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.ConformanceDeclaration.conforms_to">
+<span class="sig-name descname"><span class="pre">conforms_to</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#tile_server.ogc.ConformanceDeclaration.conforms_to" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.ogc.ExceptionResponse">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.ogc.</span></span><span class="sig-name descname"><span class="pre">ExceptionResponse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**data:</span> <span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tile_server.ogc.ExceptionResponse" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pydantic.BaseModel</span></code></p>
+<p>OGC schema for exceptions based on RFC 7807.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.ExceptionResponse.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#tile_server.ogc.ExceptionResponse.type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.ExceptionResponse.title">
+<span class="sig-name descname"><span class="pre">title</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.ExceptionResponse.title" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.ExceptionResponse.status">
+<span class="sig-name descname"><span class="pre">status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.ExceptionResponse.status" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.ExceptionResponse.detail">
+<span class="sig-name descname"><span class="pre">detail</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.ExceptionResponse.detail" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.ExceptionResponse.instance">
+<span class="sig-name descname"><span class="pre">instance</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.ExceptionResponse.instance" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.ogc.LandingPage">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.ogc.</span></span><span class="sig-name descname"><span class="pre">LandingPage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**data:</span> <span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tile_server.ogc.LandingPage" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pydantic.BaseModel</span></code></p>
+<p>This class defines a common landing page for an OGC API.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.LandingPage.title">
+<span class="sig-name descname"><span class="pre">title</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.LandingPage.title" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.LandingPage.description">
+<span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.LandingPage.description" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.LandingPage.attribution">
+<span class="sig-name descname"><span class="pre">attribution</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.LandingPage.attribution" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.LandingPage.links">
+<span class="sig-name descname"><span class="pre">links</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#tile_server.ogc.Link" title="tile_server.ogc.Link"><span class="pre">Link</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#tile_server.ogc.LandingPage.links" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.ogc.Link">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.ogc.</span></span><span class="sig-name descname"><span class="pre">Link</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**data:</span> <span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tile_server.ogc.Link" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pydantic.BaseModel</span></code></p>
+<p>OGC Web API Standards use RFC 8288 (Web Linking) to express relationships between resources. Resource
+representations defined in these Standards commonly include a “links” element. A “links” element is an array of
+individual hyperlink elements. These “links” elements provide a convention for associating related resources.</p>
+<p>The individual hyperlink elements that make up a “links” element are defined using this class.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.Link.href">
+<span class="sig-name descname"><span class="pre">href</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#tile_server.ogc.Link.href" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.Link.rel">
+<span class="sig-name descname"><span class="pre">rel</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.Link.rel" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.Link.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.Link.type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.Link.templated">
+<span class="sig-name descname"><span class="pre">templated</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.Link.templated" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.Link.var_base">
+<span class="sig-name descname"><span class="pre">var_base</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.Link.var_base" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.Link.hreflang">
+<span class="sig-name descname"><span class="pre">hreflang</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.Link.hreflang" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.Link.title">
+<span class="sig-name descname"><span class="pre">title</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.Link.title" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.Link.length">
+<span class="sig-name descname"><span class="pre">length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.Link.length" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.ogc.DataType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.ogc.</span></span><span class="sig-name descname"><span class="pre">DataType</span></span><a class="headerlink" href="#tile_server.ogc.DataType" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>Common data types defined by the OGC APIs. Note this list may be extended in the future (e.g. point clouds, meshes,
+etc.).</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.DataType.MAP">
+<span class="sig-name descname"><span class="pre">MAP</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'map'</span></em><a class="headerlink" href="#tile_server.ogc.DataType.MAP" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.DataType.VECTOR">
+<span class="sig-name descname"><span class="pre">VECTOR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'vector'</span></em><a class="headerlink" href="#tile_server.ogc.DataType.VECTOR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.DataType.COVERAGE">
+<span class="sig-name descname"><span class="pre">COVERAGE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'coverage'</span></em><a class="headerlink" href="#tile_server.ogc.DataType.COVERAGE" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.ogc.BoundingBox2D">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.ogc.</span></span><span class="sig-name descname"><span class="pre">BoundingBox2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**data:</span> <span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tile_server.ogc.BoundingBox2D" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pydantic.BaseModel</span></code></p>
+<p>A minimum bounding rectangle surrounding a 2D resource.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.BoundingBox2D.lower_left">
+<span class="sig-name descname"><span class="pre">lower_left</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#tile_server.ogc.BoundingBox2D.lower_left" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.BoundingBox2D.upper_right">
+<span class="sig-name descname"><span class="pre">upper_right</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#tile_server.ogc.BoundingBox2D.upper_right" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.BoundingBox2D.crs">
+<span class="sig-name descname"><span class="pre">crs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.BoundingBox2D.crs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.ogc.TileMatrixLimits">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.ogc.</span></span><span class="sig-name descname"><span class="pre">TileMatrixLimits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**data:</span> <span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tile_server.ogc.TileMatrixLimits" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pydantic.BaseModel</span></code></p>
+<p>Limits for the tileRow and tileCol values within a tileMatrix in a tileset. This defines the boundary of a
+2D resource within a given tileset resolution level.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TileMatrixLimits.tile_matrix">
+<span class="sig-name descname"><span class="pre">tile_matrix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#tile_server.ogc.TileMatrixLimits.tile_matrix" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TileMatrixLimits.min_tile_row">
+<span class="sig-name descname"><span class="pre">min_tile_row</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></em><a class="headerlink" href="#tile_server.ogc.TileMatrixLimits.min_tile_row" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TileMatrixLimits.max_tile_row">
+<span class="sig-name descname"><span class="pre">max_tile_row</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></em><a class="headerlink" href="#tile_server.ogc.TileMatrixLimits.max_tile_row" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TileMatrixLimits.min_tile_col">
+<span class="sig-name descname"><span class="pre">min_tile_col</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></em><a class="headerlink" href="#tile_server.ogc.TileMatrixLimits.min_tile_col" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TileMatrixLimits.max_tile_col">
+<span class="sig-name descname"><span class="pre">max_tile_col</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></em><a class="headerlink" href="#tile_server.ogc.TileMatrixLimits.max_tile_col" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.ogc.TilePoint">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.ogc.</span></span><span class="sig-name descname"><span class="pre">TilePoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**data:</span> <span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tile_server.ogc.TilePoint" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pydantic.BaseModel</span></code></p>
+<p>A specific tile location within a tileset.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TilePoint.coordinates">
+<span class="sig-name descname"><span class="pre">coordinates</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#tile_server.ogc.TilePoint.coordinates" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TilePoint.crs">
+<span class="sig-name descname"><span class="pre">crs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.TilePoint.crs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TilePoint.tile_matrix">
+<span class="sig-name descname"><span class="pre">tile_matrix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.TilePoint.tile_matrix" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.ogc.TileSetItem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.ogc.</span></span><span class="sig-name descname"><span class="pre">TileSetItem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**data:</span> <span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tile_server.ogc.TileSetItem" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pydantic.BaseModel</span></code></p>
+<p>A minimal tileset element for use within a list of tilesets linking to full description of those tilesets.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TileSetItem.title">
+<span class="sig-name descname"><span class="pre">title</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.TileSetItem.title" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TileSetItem.data_type">
+<span class="sig-name descname"><span class="pre">data_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="common_geodata/index.html#tile_server.ogc.common_geodata.DataType" title="tile_server.ogc.common_geodata.DataType"><span class="pre">tile_server.ogc.common_geodata.DataType</span></a></em><a class="headerlink" href="#tile_server.ogc.TileSetItem.data_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TileSetItem.links">
+<span class="sig-name descname"><span class="pre">links</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="common_core/index.html#tile_server.ogc.common_core.Link" title="tile_server.ogc.common_core.Link"><span class="pre">tile_server.ogc.common_core.Link</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#tile_server.ogc.TileSetItem.links" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TileSetItem.crs">
+<span class="sig-name descname"><span class="pre">crs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#tile_server.ogc.TileSetItem.crs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TileSetItem.tile_matrix_set_uri">
+<span class="sig-name descname"><span class="pre">tile_matrix_set_uri</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.TileSetItem.tile_matrix_set_uri" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.ogc.TileSetList">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.ogc.</span></span><span class="sig-name descname"><span class="pre">TileSetList</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**data:</span> <span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tile_server.ogc.TileSetList" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pydantic.BaseModel</span></code></p>
+<p>Usage docs: <a class="reference external" href="https://docs.pydantic.dev/2.9/concepts/models/">https://docs.pydantic.dev/2.9/concepts/models/</a></p>
+<p>A base class for creating Pydantic models.</p>
+<dl>
+<dt>Attributes:</dt><dd><p>__class_vars__: The names of the class variables defined on the model.
+__private_attributes__: Metadata about the private attributes of the model.
+__signature__: The synthesized <code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code> [<code class="xref py py-obj docutils literal notranslate"><span class="pre">Signature</span></code>][inspect.Signature] of the model.</p>
+<p>__pydantic_complete__: Whether model building is completed, or if there are still undefined fields.
+__pydantic_core_schema__: The core schema of the model.
+__pydantic_custom_init__: Whether the model has a custom <code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code> function.
+__pydantic_decorators__: Metadata containing the decorators defined on the model.</p>
+<blockquote>
+<div><p>This replaces <code class="xref py py-obj docutils literal notranslate"><span class="pre">Model.__validators__</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">Model.__root_validators__</span></code> from Pydantic V1.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>__pydantic_generic_metadata__: Metadata for generic models; contains data used for a similar purpose to</dt><dd><p>__args__, __origin__, __parameters__ in typing-module generics. May eventually be replaced by these.</p>
+</dd>
+</dl>
+<p>__pydantic_parent_namespace__: Parent namespace of the model, used for automatic rebuilding of models.
+__pydantic_post_init__: The name of the post-init method for the model, if defined.
+__pydantic_root_model__: Whether the model is a [<code class="xref py py-obj docutils literal notranslate"><span class="pre">RootModel</span></code>][pydantic.root_model.RootModel].
+__pydantic_serializer__: The <code class="xref py py-obj docutils literal notranslate"><span class="pre">pydantic-core</span></code> <code class="xref py py-obj docutils literal notranslate"><span class="pre">SchemaSerializer</span></code> used to dump instances of the model.
+__pydantic_validator__: The <code class="xref py py-obj docutils literal notranslate"><span class="pre">pydantic-core</span></code> <code class="xref py py-obj docutils literal notranslate"><span class="pre">SchemaValidator</span></code> used to validate instances of the model.</p>
+<dl class="simple">
+<dt>__pydantic_extra__: A dictionary containing extra values, if [<code class="xref py py-obj docutils literal notranslate"><span class="pre">extra</span></code>][pydantic.config.ConfigDict.extra]</dt><dd><p>is set to <code class="xref py py-obj docutils literal notranslate"><span class="pre">'allow'</span></code>.</p>
+</dd>
+</dl>
+<p>__pydantic_fields_set__: The names of fields explicitly set during instantiation.
+__pydantic_private__: Values of private attributes set on the model instance.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TileSetList.tilesets">
+<span class="sig-name descname"><span class="pre">tilesets</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#tile_server.ogc.TileSetItem" title="tile_server.ogc.TileSetItem"><span class="pre">TileSetItem</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#tile_server.ogc.TileSetList.tilesets" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TileSetList.links">
+<span class="sig-name descname"><span class="pre">links</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="common_core/index.html#tile_server.ogc.common_core.Link" title="tile_server.ogc.common_core.Link"><span class="pre">tile_server.ogc.common_core.Link</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.TileSetList.links" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.ogc.TileSetMetadata">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.ogc.</span></span><span class="sig-name descname"><span class="pre">TileSetMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**data:</span> <span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tile_server.ogc.TileSetMetadata" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pydantic.BaseModel</span></code></p>
+<p>Usage docs: <a class="reference external" href="https://docs.pydantic.dev/2.9/concepts/models/">https://docs.pydantic.dev/2.9/concepts/models/</a></p>
+<p>A base class for creating Pydantic models.</p>
+<dl>
+<dt>Attributes:</dt><dd><p>__class_vars__: The names of the class variables defined on the model.
+__private_attributes__: Metadata about the private attributes of the model.
+__signature__: The synthesized <code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code> [<code class="xref py py-obj docutils literal notranslate"><span class="pre">Signature</span></code>][inspect.Signature] of the model.</p>
+<p>__pydantic_complete__: Whether model building is completed, or if there are still undefined fields.
+__pydantic_core_schema__: The core schema of the model.
+__pydantic_custom_init__: Whether the model has a custom <code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code> function.
+__pydantic_decorators__: Metadata containing the decorators defined on the model.</p>
+<blockquote>
+<div><p>This replaces <code class="xref py py-obj docutils literal notranslate"><span class="pre">Model.__validators__</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">Model.__root_validators__</span></code> from Pydantic V1.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>__pydantic_generic_metadata__: Metadata for generic models; contains data used for a similar purpose to</dt><dd><p>__args__, __origin__, __parameters__ in typing-module generics. May eventually be replaced by these.</p>
+</dd>
+</dl>
+<p>__pydantic_parent_namespace__: Parent namespace of the model, used for automatic rebuilding of models.
+__pydantic_post_init__: The name of the post-init method for the model, if defined.
+__pydantic_root_model__: Whether the model is a [<code class="xref py py-obj docutils literal notranslate"><span class="pre">RootModel</span></code>][pydantic.root_model.RootModel].
+__pydantic_serializer__: The <code class="xref py py-obj docutils literal notranslate"><span class="pre">pydantic-core</span></code> <code class="xref py py-obj docutils literal notranslate"><span class="pre">SchemaSerializer</span></code> used to dump instances of the model.
+__pydantic_validator__: The <code class="xref py py-obj docutils literal notranslate"><span class="pre">pydantic-core</span></code> <code class="xref py py-obj docutils literal notranslate"><span class="pre">SchemaValidator</span></code> used to validate instances of the model.</p>
+<dl class="simple">
+<dt>__pydantic_extra__: A dictionary containing extra values, if [<code class="xref py py-obj docutils literal notranslate"><span class="pre">extra</span></code>][pydantic.config.ConfigDict.extra]</dt><dd><p>is set to <code class="xref py py-obj docutils literal notranslate"><span class="pre">'allow'</span></code>.</p>
+</dd>
+</dl>
+<p>__pydantic_fields_set__: The names of fields explicitly set during instantiation.
+__pydantic_private__: Values of private attributes set on the model instance.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TileSetMetadata.title">
+<span class="sig-name descname"><span class="pre">title</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.TileSetMetadata.title" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TileSetMetadata.description">
+<span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.TileSetMetadata.description" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TileSetMetadata.data_type">
+<span class="sig-name descname"><span class="pre">data_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="common_geodata/index.html#tile_server.ogc.common_geodata.DataType" title="tile_server.ogc.common_geodata.DataType"><span class="pre">tile_server.ogc.common_geodata.DataType</span></a></em><a class="headerlink" href="#tile_server.ogc.TileSetMetadata.data_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TileSetMetadata.crs">
+<span class="sig-name descname"><span class="pre">crs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#tile_server.ogc.TileSetMetadata.crs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TileSetMetadata.tile_matrix_set_uri">
+<span class="sig-name descname"><span class="pre">tile_matrix_set_uri</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.TileSetMetadata.tile_matrix_set_uri" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TileSetMetadata.links">
+<span class="sig-name descname"><span class="pre">links</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="common_core/index.html#tile_server.ogc.common_core.Link" title="tile_server.ogc.common_core.Link"><span class="pre">tile_server.ogc.common_core.Link</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#tile_server.ogc.TileSetMetadata.links" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TileSetMetadata.tile_matrix_set_limits">
+<span class="sig-name descname"><span class="pre">tile_matrix_set_limits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#tile_server.ogc.TileMatrixLimits" title="tile_server.ogc.TileMatrixLimits"><span class="pre">TileMatrixLimits</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.TileSetMetadata.tile_matrix_set_limits" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TileSetMetadata.epoch">
+<span class="sig-name descname"><span class="pre">epoch</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.TileSetMetadata.epoch" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TileSetMetadata.bounding_box">
+<span class="sig-name descname"><span class="pre">bounding_box</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#tile_server.ogc.BoundingBox2D" title="tile_server.ogc.BoundingBox2D"><span class="pre">BoundingBox2D</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.TileSetMetadata.bounding_box" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.ogc.TileSetMetadata.center_point">
+<span class="sig-name descname"><span class="pre">center_point</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#tile_server.ogc.TilePoint" title="tile_server.ogc.TilePoint"><span class="pre">TilePoint</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.ogc.TileSetMetadata.center_point" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="tile_server" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="common_core/index.html" class="btn btn-neutral float-right" title="tile_server.ogc.common_core" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

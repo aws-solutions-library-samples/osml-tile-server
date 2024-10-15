@@ -1,0 +1,287 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.tile_server.services.aws_services &mdash; OversightML Tile Server  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            OversightML Tile Server
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">OversightML Tile Server</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.tile_server.services.aws_services</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.tile_server.services.aws_services</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span>
+
+<span class="kn">from</span> <span class="nn">boto3</span> <span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span> <span class="nn">boto3.resources.base</span> <span class="kn">import</span> <span class="n">ServiceResource</span>
+<span class="kn">from</span> <span class="nn">botocore.credentials</span> <span class="kn">import</span> <span class="n">RefreshableCredentials</span>
+<span class="kn">from</span> <span class="nn">botocore.exceptions</span> <span class="kn">import</span> <span class="n">ClientError</span>
+<span class="kn">from</span> <span class="nn">botocore.session</span> <span class="kn">import</span> <span class="n">get_session</span>
+
+<span class="kn">from</span> <span class="nn">aws.osml.tile_server.app_config</span> <span class="kn">import</span> <span class="n">BotoConfig</span><span class="p">,</span> <span class="n">ServerConfig</span>
+
+<span class="kn">from</span> <span class="nn">.database</span> <span class="kn">import</span> <span class="n">ViewpointStatusTable</span>
+<span class="kn">from</span> <span class="nn">.queue</span> <span class="kn">import</span> <span class="n">ViewpointRequestQueue</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;uvicorn&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="RefreshableBotoSession">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.tile_server.services.aws_services.html#aws.osml.tile_server.services.aws_services.RefreshableBotoSession">[docs]</a>
+<span class="k">class</span> <span class="nc">RefreshableBotoSession</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    RefreshableBotoSession is a Boto3 helper class that allows for the creation of a refreshable session such that none</span>
+<span class="sd">    of the client/resources we want to call against will expire.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sts_arn</span> <span class="o">=</span> <span class="n">ServerConfig</span><span class="o">.</span><span class="n">sts_arn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session_name</span> <span class="o">=</span> <span class="s2">&quot;TileServerSession&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session_duration</span> <span class="o">=</span> <span class="mi">3600</span>  <span class="c1"># 60 minutes</span>
+
+    <span class="k">def</span> <span class="nf">_refresh</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Refresh the AWS credentials for the current session.</span>
+
+<span class="sd">        :return: Session credentials that were refreshed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">session</span> <span class="o">=</span> <span class="n">Session</span><span class="p">(</span><span class="n">region_name</span><span class="o">=</span><span class="n">ServerConfig</span><span class="o">.</span><span class="n">aws_region</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sts_arn</span><span class="p">:</span>
+            <span class="n">sts_client</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">client</span><span class="p">(</span><span class="n">service_name</span><span class="o">=</span><span class="s2">&quot;sts&quot;</span><span class="p">,</span> <span class="n">region_name</span><span class="o">=</span><span class="n">ServerConfig</span><span class="o">.</span><span class="n">aws_region</span><span class="p">)</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">sts_client</span><span class="o">.</span><span class="n">assume_role</span><span class="p">(</span>
+                <span class="n">RoleArn</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sts_arn</span><span class="p">,</span>
+                <span class="n">RoleSessionName</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">session_name</span><span class="p">,</span>
+                <span class="n">DurationSeconds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">session_duration</span><span class="p">,</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Credentials&quot;</span><span class="p">)</span>
+
+            <span class="n">credentials</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;access_key&quot;</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;AccessKeyId&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;secret_key&quot;</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;SecretAccessKey&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;token&quot;</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;SessionToken&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;expiry_time&quot;</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Expiration&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">session_credentials</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get_credentials</span><span class="p">()</span><span class="o">.</span><span class="vm">__dict__</span>
+                <span class="n">credentials</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;access_key&quot;</span><span class="p">:</span> <span class="n">session_credentials</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;access_key&quot;</span><span class="p">),</span>
+                    <span class="s2">&quot;secret_key&quot;</span><span class="p">:</span> <span class="n">session_credentials</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;secret_key&quot;</span><span class="p">),</span>
+                    <span class="s2">&quot;token&quot;</span><span class="p">:</span> <span class="n">session_credentials</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;token&quot;</span><span class="p">),</span>
+                    <span class="s2">&quot;expiry_time&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">time</span><span class="p">()</span> <span class="o">+</span> <span class="mi">3600</span><span class="p">,</span> <span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+                <span class="p">}</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="n">credentials</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;access_key&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">&quot;secret_key&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">&quot;token&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">&quot;expiry_time&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">time</span><span class="p">()</span> <span class="o">+</span> <span class="mi">3600</span><span class="p">,</span> <span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+                <span class="p">}</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error has occurred when setting up STS session - </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">credentials</span>
+
+<div class="viewcode-block" id="RefreshableBotoSession.refreshable_session">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.tile_server.services.aws_services.html#aws.osml.tile_server.services.aws_services.RefreshableBotoSession.refreshable_session">[docs]</a>
+    <span class="k">def</span> <span class="nf">refreshable_session</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Session</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a refreshable session which will automatically renew credentials when the credential expired.</span>
+
+<span class="sd">        :return: Refreshable credentials session to use for the task user.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">session_credentials</span> <span class="o">=</span> <span class="n">RefreshableCredentials</span><span class="o">.</span><span class="n">create_from_metadata</span><span class="p">(</span>
+            <span class="n">metadata</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_refresh</span><span class="p">(),</span>
+            <span class="n">refresh_using</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_refresh</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;sts-assume-role&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">session</span> <span class="o">=</span> <span class="n">get_session</span><span class="p">()</span>
+
+        <span class="n">session</span><span class="o">.</span><span class="n">_credentials</span> <span class="o">=</span> <span class="n">session_credentials</span>
+        <span class="n">session</span><span class="o">.</span><span class="n">set_config_variable</span><span class="p">(</span><span class="s2">&quot;region&quot;</span><span class="p">,</span> <span class="n">ServerConfig</span><span class="o">.</span><span class="n">aws_region</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Session</span><span class="p">(</span><span class="n">botocore_session</span><span class="o">=</span><span class="n">session</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="AwsServices">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.tile_server.services.aws_services.html#aws.osml.tile_server.services.aws_services.AwsServices">[docs]</a>
+<span class="k">class</span> <span class="nc">AwsServices</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ddb</span><span class="p">:</span> <span class="n">ServiceResource</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">s3</span><span class="p">:</span> <span class="n">ServiceResource</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sqs</span><span class="p">:</span> <span class="n">ServiceResource</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize AWS services required by the application.</span>
+
+<span class="sd">        This function initializes DynamoDB, S3, and SQS services,</span>
+<span class="sd">        handling any exceptions that occur during the process.</span>
+
+<span class="sd">        :param: ddb: An optional DynamoDB service resource to use.  If none is provided a new one will be initialized.</span>
+<span class="sd">        :param: s3: An optional S3 service resource to use.  If none is provided a new one will be initialized.</span>
+<span class="sd">        :param: sqs: An optional SQS service resource to use.  If none is provided a new one will be initialized.</span>
+<span class="sd">        :return: None.</span>
+
+<span class="sd">        :raises: SystemExit if any service fails to initialize.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">session</span> <span class="o">=</span> <span class="n">RefreshableBotoSession</span><span class="p">()</span><span class="o">.</span><span class="n">refreshable_session</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ddb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialize_ddb</span><span class="p">(</span><span class="n">session</span><span class="p">)</span> <span class="k">if</span> <span class="n">ddb</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">ddb</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">s3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialize_s3</span><span class="p">(</span><span class="n">session</span><span class="p">)</span> <span class="k">if</span> <span class="n">s3</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">s3</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sqs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialize_sqs</span><span class="p">(</span><span class="n">session</span><span class="p">)</span> <span class="k">if</span> <span class="n">sqs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">sqs</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ddb</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">viewpoint_database</span> <span class="o">=</span> <span class="n">ViewpointStatusTable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ddb</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sqs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">viewpoint_queue</span> <span class="o">=</span> <span class="n">ViewpointRequestQueue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sqs</span><span class="p">,</span> <span class="n">ServerConfig</span><span class="o">.</span><span class="n">viewpoint_request_queue</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">ClientError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fatal error occurred while initializing AWS services. Exiting. </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AwsServices.initialize_ddb">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.tile_server.services.aws_services.html#aws.osml.tile_server.services.aws_services.AwsServices.initialize_ddb">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">initialize_ddb</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ServiceResource</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize DynamoDB service and return a service resource.</span>
+
+<span class="sd">        :param: session: The credential session to use for the ServiceResource.</span>
+<span class="sd">        :return: DynamoDB service resource for consumption.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">session</span><span class="o">.</span><span class="n">resource</span><span class="p">(</span><span class="s2">&quot;dynamodb&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">BotoConfig</span><span class="o">.</span><span class="n">default</span><span class="p">,</span> <span class="n">region_name</span><span class="o">=</span><span class="n">ServerConfig</span><span class="o">.</span><span class="n">aws_region</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AwsServices.initialize_s3">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.tile_server.services.aws_services.html#aws.osml.tile_server.services.aws_services.AwsServices.initialize_s3">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">initialize_s3</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ServiceResource</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize S3 service and return a service resource.</span>
+
+<span class="sd">        :param: session: The credential session to use for the ServiceResource.</span>
+<span class="sd">        :return: S3 service resource for consumption.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">session</span><span class="o">.</span><span class="n">resource</span><span class="p">(</span><span class="s2">&quot;s3&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">BotoConfig</span><span class="o">.</span><span class="n">default</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AwsServices.initialize_sqs">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.tile_server.services.aws_services.html#aws.osml.tile_server.services.aws_services.AwsServices.initialize_sqs">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">initialize_sqs</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ServiceResource</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize SQS service and return a service resource.</span>
+
+<span class="sd">        :param: session: The credential session to use for the ServiceResource.</span>
+<span class="sd">        :return: SQS service resource for consumption.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">session</span><span class="o">.</span><span class="n">resource</span><span class="p">(</span><span class="s2">&quot;sqs&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">BotoConfig</span><span class="o">.</span><span class="n">default</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="get_aws_services">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.tile_server.services.aws_services.html#aws.osml.tile_server.services.aws_services.get_aws_services">[docs]</a>
+<span class="k">def</span> <span class="nf">get_aws_services</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">AwsServices</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">AwsServices</span><span class="p">()</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

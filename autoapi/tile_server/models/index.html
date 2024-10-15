@@ -1,0 +1,478 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tile_server.models &mdash; OversightML Tile Server  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="prev" title="tile_server.main" href="../main/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            OversightML Tile Server
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">tile_server</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../index.html#subpackages">Subpackages</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../index.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../app_config/index.html">tile_server.app_config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../main/index.html">tile_server.main</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">tile_server.models</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">OversightML Tile Server</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">tile_server</a></li>
+      <li class="breadcrumb-item active">tile_server.models</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/autoapi/tile_server/models/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-tile_server.models">
+<span id="tile-server-models"></span><h1>tile_server.models<a class="headerlink" href="#module-tile_server.models" title="Link to this heading"></a></h1>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tile_server.models.ViewpointApiNames" title="tile_server.models.ViewpointApiNames"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ViewpointApiNames</span></code></a></p></td>
+<td><p>Provides enumeration of API names associated with a viewpoint.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tile_server.models.ViewpointStatus" title="tile_server.models.ViewpointStatus"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ViewpointStatus</span></code></a></p></td>
+<td><p>Provides status options for a viewpoint that represents the state of processing or readiness for a viewpoint.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tile_server.models.ViewpointRequest" title="tile_server.models.ViewpointRequest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ViewpointRequest</span></code></a></p></td>
+<td><p>Represents a request to create or update a viewpoint. All fields are required.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tile_server.models.ViewpointModel" title="tile_server.models.ViewpointModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ViewpointModel</span></code></a></p></td>
+<td><p>Represents the model data for a viewpoint.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tile_server.models.ViewpointListResponse" title="tile_server.models.ViewpointListResponse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ViewpointListResponse</span></code></a></p></td>
+<td><p>Represents the return structure of a request for viewpoints.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tile_server.models.ViewpointUpdate" title="tile_server.models.ViewpointUpdate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ViewpointUpdate</span></code></a></p></td>
+<td><p>Represents the model for a viewpoint update operation.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tile_server.models.validate_viewpoint_status" title="tile_server.models.validate_viewpoint_status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_viewpoint_status</span></code></a>(→ None)</p></td>
+<td><p>This is a helper function that is to validate if we can execute an operation based on the</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointApiNames">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.models.</span></span><span class="sig-name descname"><span class="pre">ViewpointApiNames</span></span><a class="headerlink" href="#tile_server.models.ViewpointApiNames" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference internal" href="../../../_apidoc/aws.osml.tile_server.utils.string_enums.html#aws.osml.tile_server.utils.string_enums.AutoLowerStringEnum" title="aws.osml.tile_server.utils.string_enums.AutoLowerStringEnum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">aws.osml.tile_server.utils.string_enums.AutoLowerStringEnum</span></code></a></p>
+<p>Provides enumeration of API names associated with a viewpoint.</p>
+<p>These API names are used to map to specific operations on the viewpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>UPDATE</strong> – Update viewpoint.</p></li>
+<li><p><strong>DESCRIBE</strong> – Describe viewpoint.</p></li>
+<li><p><strong>METADATA</strong> – Viewpoint metadata.</p></li>
+<li><p><strong>BOUNDS</strong> – Viewpoint bounds.</p></li>
+<li><p><strong>INFO</strong> – Viewpoint information.</p></li>
+<li><p><strong>TILE</strong> – Viewpoint tile.</p></li>
+<li><p><strong>PREVIEW</strong> – Viewpoint preview.</p></li>
+<li><p><strong>CROP</strong> – Crop viewpoint.</p></li>
+<li><p><strong>STATISTICS</strong> – Viewpoint statistics.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointApiNames.UPDATE">
+<span class="sig-name descname"><span class="pre">UPDATE</span></span><a class="headerlink" href="#tile_server.models.ViewpointApiNames.UPDATE" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointApiNames.DESCRIBE">
+<span class="sig-name descname"><span class="pre">DESCRIBE</span></span><a class="headerlink" href="#tile_server.models.ViewpointApiNames.DESCRIBE" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointApiNames.METADATA">
+<span class="sig-name descname"><span class="pre">METADATA</span></span><a class="headerlink" href="#tile_server.models.ViewpointApiNames.METADATA" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointApiNames.BOUNDS">
+<span class="sig-name descname"><span class="pre">BOUNDS</span></span><a class="headerlink" href="#tile_server.models.ViewpointApiNames.BOUNDS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointApiNames.INFO">
+<span class="sig-name descname"><span class="pre">INFO</span></span><a class="headerlink" href="#tile_server.models.ViewpointApiNames.INFO" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointApiNames.TILE">
+<span class="sig-name descname"><span class="pre">TILE</span></span><a class="headerlink" href="#tile_server.models.ViewpointApiNames.TILE" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointApiNames.PREVIEW">
+<span class="sig-name descname"><span class="pre">PREVIEW</span></span><a class="headerlink" href="#tile_server.models.ViewpointApiNames.PREVIEW" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointApiNames.CROP">
+<span class="sig-name descname"><span class="pre">CROP</span></span><a class="headerlink" href="#tile_server.models.ViewpointApiNames.CROP" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointApiNames.STATISTICS">
+<span class="sig-name descname"><span class="pre">STATISTICS</span></span><a class="headerlink" href="#tile_server.models.ViewpointApiNames.STATISTICS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointStatus">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.models.</span></span><span class="sig-name descname"><span class="pre">ViewpointStatus</span></span><a class="headerlink" href="#tile_server.models.ViewpointStatus" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference internal" href="../../../_apidoc/aws.osml.tile_server.utils.string_enums.html#aws.osml.tile_server.utils.string_enums.AutoUnderscoreStringEnum" title="aws.osml.tile_server.utils.string_enums.AutoUnderscoreStringEnum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">aws.osml.tile_server.utils.string_enums.AutoUnderscoreStringEnum</span></code></a></p>
+<p>Provides status options for a viewpoint that represents the state of processing or readiness for a viewpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>NOT_FOUND</strong> – Viewpoint isn’t found.</p></li>
+<li><p><strong>REQUESTED</strong> – Viewpoint requested.</p></li>
+<li><p><strong>UPDATING</strong> – Viewpoint updating.</p></li>
+<li><p><strong>READY</strong> – Viewpoint ready.</p></li>
+<li><p><strong>DELETED</strong> – Viewpoint deleted.</p></li>
+<li><p><strong>FAILED</strong> – Viewpoint failed.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointStatus.NOT_FOUND">
+<span class="sig-name descname"><span class="pre">NOT_FOUND</span></span><a class="headerlink" href="#tile_server.models.ViewpointStatus.NOT_FOUND" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointStatus.REQUESTED">
+<span class="sig-name descname"><span class="pre">REQUESTED</span></span><a class="headerlink" href="#tile_server.models.ViewpointStatus.REQUESTED" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointStatus.UPDATING">
+<span class="sig-name descname"><span class="pre">UPDATING</span></span><a class="headerlink" href="#tile_server.models.ViewpointStatus.UPDATING" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointStatus.READY">
+<span class="sig-name descname"><span class="pre">READY</span></span><a class="headerlink" href="#tile_server.models.ViewpointStatus.READY" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointStatus.DELETED">
+<span class="sig-name descname"><span class="pre">DELETED</span></span><a class="headerlink" href="#tile_server.models.ViewpointStatus.DELETED" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointStatus.FAILED">
+<span class="sig-name descname"><span class="pre">FAILED</span></span><a class="headerlink" href="#tile_server.models.ViewpointStatus.FAILED" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointRequest">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.models.</span></span><span class="sig-name descname"><span class="pre">ViewpointRequest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**data:</span> <span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tile_server.models.ViewpointRequest" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pydantic.BaseModel</span></code></p>
+<p>Represents a request to create or update a viewpoint. All fields are required.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bucket_name</strong> – The name of the bucket, the Minimum length is 1.</p></li>
+<li><p><strong>object_key</strong> – The key of the object, the Minimum length is 1.</p></li>
+<li><p><strong>viewpoint_name</strong> – The name of the viewpoint, the Minimum length is 1.</p></li>
+<li><p><strong>tile_size</strong> – The tile size, it Should be greater than 0.</p></li>
+<li><p><strong>range_adjustment</strong> – The range adjustment type, the Minimum string length is 1.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointRequest.viewpoint_id">
+<span class="sig-name descname"><span class="pre">viewpoint_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#tile_server.models.ViewpointRequest.viewpoint_id" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointRequest.viewpoint_name">
+<span class="sig-name descname"><span class="pre">viewpoint_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#tile_server.models.ViewpointRequest.viewpoint_name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointRequest.bucket_name">
+<span class="sig-name descname"><span class="pre">bucket_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#tile_server.models.ViewpointRequest.bucket_name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointRequest.object_key">
+<span class="sig-name descname"><span class="pre">object_key</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#tile_server.models.ViewpointRequest.object_key" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointRequest.tile_size">
+<span class="sig-name descname"><span class="pre">tile_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></em><a class="headerlink" href="#tile_server.models.ViewpointRequest.tile_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointRequest.range_adjustment">
+<span class="sig-name descname"><span class="pre">range_adjustment</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">aws.osml.gdal.RangeAdjustmentType</span></em><a class="headerlink" href="#tile_server.models.ViewpointRequest.range_adjustment" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.models.</span></span><span class="sig-name descname"><span class="pre">ViewpointModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**data:</span> <span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tile_server.models.ViewpointModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pydantic.BaseModel</span></code></p>
+<p>Represents the model data for a viewpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>viewpoint_id</strong> – The ID to associate with the viewpoint.</p></li>
+<li><p><strong>viewpoint_name</strong> – The name of the viewpoint.</p></li>
+<li><p><strong>viewpoint_status</strong> – The status of the viewpoint.</p></li>
+<li><p><strong>bucket_name</strong> – The name of the bucket the images are located in.</p></li>
+<li><p><strong>object_key</strong> – The object is key to associate with the viewpoint.</p></li>
+<li><p><strong>tile_size</strong> – The tile size to use for the viewpoint model.</p></li>
+<li><p><strong>range_adjustment</strong> – The type of range adjustment.</p></li>
+<li><p><strong>local_object_path</strong> – Optional local path of the object.</p></li>
+<li><p><strong>error_message</strong> – Optional error messages to include.</p></li>
+<li><p><strong>expire_time</strong> – Optional expiration time for the message.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointModel.viewpoint_id">
+<span class="sig-name descname"><span class="pre">viewpoint_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#tile_server.models.ViewpointModel.viewpoint_id" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointModel.viewpoint_name">
+<span class="sig-name descname"><span class="pre">viewpoint_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#tile_server.models.ViewpointModel.viewpoint_name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointModel.viewpoint_status">
+<span class="sig-name descname"><span class="pre">viewpoint_status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#tile_server.models.ViewpointStatus" title="tile_server.models.ViewpointStatus"><span class="pre">ViewpointStatus</span></a></em><a class="headerlink" href="#tile_server.models.ViewpointModel.viewpoint_status" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointModel.bucket_name">
+<span class="sig-name descname"><span class="pre">bucket_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#tile_server.models.ViewpointModel.bucket_name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointModel.object_key">
+<span class="sig-name descname"><span class="pre">object_key</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#tile_server.models.ViewpointModel.object_key" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointModel.tile_size">
+<span class="sig-name descname"><span class="pre">tile_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></em><a class="headerlink" href="#tile_server.models.ViewpointModel.tile_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointModel.range_adjustment">
+<span class="sig-name descname"><span class="pre">range_adjustment</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">aws.osml.gdal.RangeAdjustmentType</span></em><a class="headerlink" href="#tile_server.models.ViewpointModel.range_adjustment" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointModel.local_object_path">
+<span class="sig-name descname"><span class="pre">local_object_path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.models.ViewpointModel.local_object_path" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointModel.error_message">
+<span class="sig-name descname"><span class="pre">error_message</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.models.ViewpointModel.error_message" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointModel.expire_time">
+<span class="sig-name descname"><span class="pre">expire_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#tile_server.models.ViewpointModel.expire_time" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointListResponse">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.models.</span></span><span class="sig-name descname"><span class="pre">ViewpointListResponse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**data:</span> <span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tile_server.models.ViewpointListResponse" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pydantic.BaseModel</span></code></p>
+<p>Represents the return structure of a request for viewpoints.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointListResponse.items">
+<span class="sig-name descname"><span class="pre">items</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#tile_server.models.ViewpointModel" title="tile_server.models.ViewpointModel"><span class="pre">ViewpointModel</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#tile_server.models.ViewpointListResponse.items" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointListResponse.next_token">
+<span class="sig-name descname"><span class="pre">next_token</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#tile_server.models.ViewpointListResponse.next_token" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointUpdate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.models.</span></span><span class="sig-name descname"><span class="pre">ViewpointUpdate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**data:</span> <span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tile_server.models.ViewpointUpdate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pydantic.BaseModel</span></code></p>
+<p>Represents the model for a viewpoint update operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>viewpoint_id</strong> – The ID of the viewpoint.</p></li>
+<li><p><strong>viewpoint_name</strong> – The name of the viewpoint.</p></li>
+<li><p><strong>tile_size</strong> – The tile size.</p></li>
+<li><p><strong>range_adjustment</strong> – The type of range adjustment.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointUpdate.viewpoint_id">
+<span class="sig-name descname"><span class="pre">viewpoint_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#tile_server.models.ViewpointUpdate.viewpoint_id" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointUpdate.viewpoint_name">
+<span class="sig-name descname"><span class="pre">viewpoint_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#tile_server.models.ViewpointUpdate.viewpoint_name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointUpdate.tile_size">
+<span class="sig-name descname"><span class="pre">tile_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></em><a class="headerlink" href="#tile_server.models.ViewpointUpdate.tile_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.models.ViewpointUpdate.range_adjustment">
+<span class="sig-name descname"><span class="pre">range_adjustment</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">aws.osml.gdal.RangeAdjustmentType</span></em><a class="headerlink" href="#tile_server.models.ViewpointUpdate.range_adjustment" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tile_server.models.validate_viewpoint_status">
+<span class="sig-prename descclassname"><span class="pre">tile_server.models.</span></span><span class="sig-name descname"><span class="pre">validate_viewpoint_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#tile_server.models.ViewpointStatus" title="tile_server.models.ViewpointStatus"><span class="pre">ViewpointStatus</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_operation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#tile_server.models.ViewpointApiNames" title="tile_server.models.ViewpointApiNames"><span class="pre">ViewpointApiNames</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#tile_server.models.validate_viewpoint_status" title="Link to this definition"></a></dt>
+<dd><p>This is a helper function that is to validate if we can execute an operation based on the
+given status</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>current_status</strong> – Current status of a viewpoint in the table.</p></li>
+<li><p><strong>api_operation</strong> – The associated API operation being used on the viewpoint.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ValueError if the viewpoint is DELETED or REQUESTED.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../main/index.html" class="btn btn-neutral float-left" title="tile_server.main" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

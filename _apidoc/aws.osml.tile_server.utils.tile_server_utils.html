@@ -1,0 +1,224 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.tile_server.utils.tile_server_utils module &mdash; OversightML Tile Server  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            OversightML Tile Server
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OversightML Tile Server</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">aws.osml.tile_server.utils.tile_server_utils module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_apidoc/aws.osml.tile_server.utils.tile_server_utils.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-aws.osml.tile_server.utils.tile_server_utils">
+<span id="aws-osml-tile-server-utils-tile-server-utils-module"></span><h1>aws.osml.tile_server.utils.tile_server_utils module<a class="headerlink" href="#module-aws.osml.tile_server.utils.tile_server_utils" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="aws.osml.tile_server.utils.tile_server_utils.get_media_type">
+<span class="sig-prename descclassname"><span class="pre">aws.osml.tile_server.utils.tile_server_utils.</span></span><span class="sig-name descname"><span class="pre">get_media_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tile_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">GDALImageFormats</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></span><a class="reference internal" href="../_modules/aws/osml/tile_server/utils/tile_server_utils.html#get_media_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.tile_server.utils.tile_server_utils.get_media_type" title="Link to this definition"></a></dt>
+<dd><p>Obtain the meta-type based on the given tile format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tile_format</strong> – GDAL Image format associated with the tile.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The associated image format in plain text.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="aws.osml.tile_server.utils.tile_server_utils.get_standard_overviews">
+<span class="sig-prename descclassname"><span class="pre">aws.osml.tile_server.utils.tile_server_utils.</span></span><span class="sig-name descname"><span class="pre">get_standard_overviews</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">preview_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/aws/osml/tile_server/utils/tile_server_utils.html#get_standard_overviews"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.tile_server.utils.tile_server_utils.get_standard_overviews" title="Link to this definition"></a></dt>
+<dd><p>This utility computes a list of reduced resolution scales that define a standard image pyramid for a given
+image and desired final preview size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>width</strong> – Width of the full image at the highest resolution.</p></li>
+<li><p><strong>height</strong> – Height of the full image at the highest resolution.</p></li>
+<li><p><strong>preview_size</strong> – The desired size of the lowest resolution / thumbnail image.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The list of scale factors needed for each level in the tile pyramid, e.g. [2, 4, 8, 16 …]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="aws.osml.tile_server.utils.tile_server_utils.TileFactoryPool">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aws.osml.tile_server.utils.tile_server_utils.</span></span><span class="sig-name descname"><span class="pre">TileFactoryPool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tile_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">GDALImageFormats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tile_compression</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">GDALCompressionOptions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_object_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_adjustment</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">RangeAdjustmentType</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">RangeAdjustmentType.NONE</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/aws/osml/tile_server/utils/tile_server_utils.html#TileFactoryPool"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.tile_server.utils.tile_server_utils.TileFactoryPool" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class representing a pool of GDALTileFactory objects.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.tile_server.utils.tile_server_utils.TileFactoryPool.checkout">
+<span class="sig-name descname"><span class="pre">checkout</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">GDALTileFactory</span></span></span><a class="reference internal" href="../_modules/aws/osml/tile_server/utils/tile_server_utils.html#TileFactoryPool.checkout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.tile_server.utils.tile_server_utils.TileFactoryPool.checkout" title="Link to this definition"></a></dt>
+<dd><p>Handles the checkout process. If the current inventory is not empty,
+it pops out the first GDALTileFactory object. If the inventory is empty,
+a new GDALTileFactory object is created, added to the inventory, and returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Instance of the GDALTileFactory class.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.tile_server.utils.tile_server_utils.TileFactoryPool.checkin">
+<span class="sig-name descname"><span class="pre">checkin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">GDALTileFactory</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../_modules/aws/osml/tile_server/utils/tile_server_utils.html#TileFactoryPool.checkin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.tile_server.utils.tile_server_utils.TileFactoryPool.checkin" title="Link to this definition"></a></dt>
+<dd><p>Adds a GDALTileFactory object to the current inventory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tf</strong> – GDALTileFactory object to be checked in to the index.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.tile_server.utils.tile_server_utils.TileFactoryPool.checkout_in_context">
+<span class="sig-name descname"><span class="pre">checkout_in_context</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../_modules/aws/osml/tile_server/utils/tile_server_utils.html#TileFactoryPool.checkout_in_context"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.tile_server.utils.tile_server_utils.TileFactoryPool.checkout_in_context" title="Link to this definition"></a></dt>
+<dd><p>A context manager for using the <a class="reference internal" href="#aws.osml.tile_server.utils.tile_server_utils.TileFactoryPool.checkout" title="aws.osml.tile_server.utils.tile_server_utils.TileFactoryPool.checkout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">checkout</span></code></a> method in a <code class="xref py py-obj docutils literal notranslate"><span class="pre">with</span></code> statement. Exception safe - resources are
+guaranteed to be <code class="xref py py-obj docutils literal notranslate"><span class="pre">checkin`ed.</span> <span class="pre">It</span> <span class="pre">yields</span> <span class="pre">the</span> <span class="pre">resource</span> <span class="pre">obtained</span> <span class="pre">from</span> <span class="pre">`checkout</span></code> for use inside the <code class="xref py py-obj docutils literal notranslate"><span class="pre">with</span></code>
+statement.
+:return: None
+:raise Exception: Any exceptions raised within the <code class="xref py py-obj docutils literal notranslate"><span class="pre">with</span></code> block or by <a class="reference internal" href="#aws.osml.tile_server.utils.tile_server_utils.TileFactoryPool.checkout" title="aws.osml.tile_server.utils.tile_server_utils.TileFactoryPool.checkout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">checkout</span></code></a> and <a class="reference internal" href="#aws.osml.tile_server.utils.tile_server_utils.TileFactoryPool.checkin" title="aws.osml.tile_server.utils.tile_server_utils.TileFactoryPool.checkin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">checkin</span></code></a> methods</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="aws.osml.tile_server.utils.tile_server_utils.get_tile_factory_pool">
+<span class="sig-prename descclassname"><span class="pre">aws.osml.tile_server.utils.tile_server_utils.</span></span><span class="sig-name descname"><span class="pre">get_tile_factory_pool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tile_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">GDALImageFormats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tile_compression</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">GDALCompressionOptions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_object_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_adjustment</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">RangeAdjustmentType</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">RangeAdjustmentType.NONE</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#aws.osml.tile_server.utils.tile_server_utils.TileFactoryPool" title="aws.osml.tile_server.utils.tile_server_utils.TileFactoryPool"><span class="pre">TileFactoryPool</span></a></span></span><a class="reference internal" href="../_modules/aws/osml/tile_server/utils/tile_server_utils.html#get_tile_factory_pool"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.tile_server.utils.tile_server_utils.get_tile_factory_pool" title="Link to this definition"></a></dt>
+<dd><p>Create and return a pool of tile factories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tile_format</strong> – The format of the tiles to be created.</p></li>
+<li><p><strong>tile_compression</strong> – The compression options for the tiles.</p></li>
+<li><p><strong>local_object_path</strong> – The path to the local object storage.</p></li>
+<li><p><strong>output_type</strong> – The optional output type for the tiles.</p></li>
+<li><p><strong>range_adjustment</strong> – The range adjustment type for the tiles.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The tile factory pool.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="aws.osml.tile_server.utils.tile_server_utils.perform_gdal_translation">
+<span class="sig-prename descclassname"><span class="pre">aws.osml.tile_server.utils.tile_server_utils.</span></span><span class="sig-name descname"><span class="pre">perform_gdal_translation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gdal_options</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytearray" title="(in Python v3.13)"><span class="pre">bytearray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../_modules/aws/osml/tile_server/utils/tile_server_utils.html#perform_gdal_translation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.tile_server.utils.tile_server_utils.perform_gdal_translation" title="Link to this definition"></a></dt>
+<dd><p>Perform GDAL translation on a dataset with given GDAL options.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> – The input GDAL dataset to be translated.</p></li>
+<li><p><strong>gdal_options</strong> – Options for the GDAL translation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A bytearray containing the translated data, or None if translation fails.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

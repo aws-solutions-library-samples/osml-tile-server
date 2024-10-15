@@ -1,0 +1,36 @@
+tile_server.viewpoint.viewpoint_id.image.info
+=============================================
+
+.. py:module:: tile_server.viewpoint.viewpoint_id.image.info
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   tile_server.viewpoint.viewpoint_id.image.info.info_router
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   tile_server.viewpoint.viewpoint_id.image.info.get_image_info
+
+
+Module Contents
+---------------
+
+.. py:data:: info_router
+
+.. py:function:: get_image_info(viewpoint_id: str, aws: Annotated[aws.osml.tile_server.services.get_aws_services, Depends()]) -> starlette.responses.FileResponse
+
+   Get a sample GeoJSON feature that represents the extent / boundary of this image in the world.
+
+   :param aws: Injected AWS services.
+   :param viewpoint_id: Unique viewpoint id to get from the table.
+   :return: FileResponse containing info associated with the given viewpoint.
+
+

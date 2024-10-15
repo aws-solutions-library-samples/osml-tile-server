@@ -1,0 +1,56 @@
+tile_server.services.token
+==========================
+
+.. py:module:: tile_server.services.token
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   tile_server.services.token.TS_TOKEN_FILE_NAME
+   tile_server.services.token.logger
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   tile_server.services.token.initialize_token_key
+   tile_server.services.token.read_token_key
+   tile_server.services.token.get_encryptor
+
+
+Module Contents
+---------------
+
+.. py:data:: TS_TOKEN_FILE_NAME
+   :value: 'ts-token'
+
+
+.. py:data:: logger
+
+.. py:function:: initialize_token_key() -> None
+
+   Initializes and stores a new encryption token key in a JSON file if one does not already exist.
+
+   :return: None
+
+
+.. py:function:: read_token_key() -> Optional[bytes]
+
+   Reads and returns the encryption token key from a JSON file.
+
+   :return: The encryption token key as a dictionary if the file exists and contains valid JSON, None otherwise.
+
+
+.. py:function:: get_encryptor() -> cryptography.fernet.Fernet
+
+   This initializes a token and returns the associated Fernet object.
+   If a token is already present a new one is not created.
+
+   :return:
+
+

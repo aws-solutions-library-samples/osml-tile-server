@@ -1,0 +1,268 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tile_server.services.aws_services &mdash; OversightML Tile Server  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="tile_server.services.database" href="../database/index.html" />
+    <link rel="prev" title="tile_server.services" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OversightML Tile Server
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html">tile_server</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../index.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../../ogc/index.html">tile_server.ogc</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="../index.html">tile_server.services</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../utils/index.html">tile_server.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../viewpoint/index.html">tile_server.viewpoint</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../index.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OversightML Tile Server</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">tile_server</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">tile_server.services</a></li>
+      <li class="breadcrumb-item active">tile_server.services.aws_services</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/autoapi/tile_server/services/aws_services/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-tile_server.services.aws_services">
+<span id="tile-server-services-aws-services"></span><h1>tile_server.services.aws_services<a class="headerlink" href="#module-tile_server.services.aws_services" title="Link to this heading"></a></h1>
+<section id="attributes">
+<h2>Attributes<a class="headerlink" href="#attributes" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tile_server.services.aws_services.logger" title="tile_server.services.aws_services.logger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logger</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tile_server.services.aws_services.RefreshableBotoSession" title="tile_server.services.aws_services.RefreshableBotoSession"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RefreshableBotoSession</span></code></a></p></td>
+<td><p>RefreshableBotoSession is a Boto3 helper class that allows for the creation of a refreshable session such that none</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tile_server.services.aws_services.AwsServices" title="tile_server.services.aws_services.AwsServices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AwsServices</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tile_server.services.aws_services.get_aws_services" title="tile_server.services.aws_services.get_aws_services"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_aws_services</span></code></a>(→ AwsServices)</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<dl class="py data">
+<dt class="sig sig-object py" id="tile_server.services.aws_services.logger">
+<span class="sig-prename descclassname"><span class="pre">tile_server.services.aws_services.</span></span><span class="sig-name descname"><span class="pre">logger</span></span><a class="headerlink" href="#tile_server.services.aws_services.logger" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.services.aws_services.RefreshableBotoSession">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.services.aws_services.</span></span><span class="sig-name descname"><span class="pre">RefreshableBotoSession</span></span><a class="headerlink" href="#tile_server.services.aws_services.RefreshableBotoSession" title="Link to this definition"></a></dt>
+<dd><p>RefreshableBotoSession is a Boto3 helper class that allows for the creation of a refreshable session such that none
+of the client/resources we want to call against will expire.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.services.aws_services.RefreshableBotoSession.sts_arn">
+<span class="sig-name descname"><span class="pre">sts_arn</span></span><a class="headerlink" href="#tile_server.services.aws_services.RefreshableBotoSession.sts_arn" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.services.aws_services.RefreshableBotoSession.session_name">
+<span class="sig-name descname"><span class="pre">session_name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TileServerSession'</span></em><a class="headerlink" href="#tile_server.services.aws_services.RefreshableBotoSession.session_name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.services.aws_services.RefreshableBotoSession.session_duration">
+<span class="sig-name descname"><span class="pre">session_duration</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3600</span></em><a class="headerlink" href="#tile_server.services.aws_services.RefreshableBotoSession.session_duration" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.services.aws_services.RefreshableBotoSession._refresh">
+<span class="sig-name descname"><span class="pre">_refresh</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tile_server.services.aws_services.RefreshableBotoSession._refresh" title="Link to this definition"></a></dt>
+<dd><p>Refresh the AWS credentials for the current session.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Session credentials that were refreshed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.services.aws_services.RefreshableBotoSession.refreshable_session">
+<span class="sig-name descname"><span class="pre">refreshable_session</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">boto3.Session</span></span></span><a class="headerlink" href="#tile_server.services.aws_services.RefreshableBotoSession.refreshable_session" title="Link to this definition"></a></dt>
+<dd><p>Create a refreshable session which will automatically renew credentials when the credential expired.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Refreshable credentials session to use for the task user.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.services.aws_services.AwsServices">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.services.aws_services.</span></span><span class="sig-name descname"><span class="pre">AwsServices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ddb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">boto3.resources.base.ServiceResource</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s3</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">boto3.resources.base.ServiceResource</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sqs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">boto3.resources.base.ServiceResource</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tile_server.services.aws_services.AwsServices" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="tile_server.services.aws_services.AwsServices.initialize_ddb">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">initialize_ddb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">boto3.Session</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">boto3.resources.base.ServiceResource</span></span></span><a class="headerlink" href="#tile_server.services.aws_services.AwsServices.initialize_ddb" title="Link to this definition"></a></dt>
+<dd><p>Initialize DynamoDB service and return a service resource.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>session: The credential session to use for the ServiceResource.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>DynamoDB service resource for consumption.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.services.aws_services.AwsServices.initialize_s3">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">initialize_s3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">boto3.Session</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">boto3.resources.base.ServiceResource</span></span></span><a class="headerlink" href="#tile_server.services.aws_services.AwsServices.initialize_s3" title="Link to this definition"></a></dt>
+<dd><p>Initialize S3 service and return a service resource.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>session: The credential session to use for the ServiceResource.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>S3 service resource for consumption.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.services.aws_services.AwsServices.initialize_sqs">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">initialize_sqs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">boto3.Session</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">boto3.resources.base.ServiceResource</span></span></span><a class="headerlink" href="#tile_server.services.aws_services.AwsServices.initialize_sqs" title="Link to this definition"></a></dt>
+<dd><p>Initialize SQS service and return a service resource.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>session: The credential session to use for the ServiceResource.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>SQS service resource for consumption.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tile_server.services.aws_services.get_aws_services">
+<span class="sig-prename descclassname"><span class="pre">tile_server.services.aws_services.</span></span><span class="sig-name descname"><span class="pre">get_aws_services</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#tile_server.services.aws_services.AwsServices" title="tile_server.services.aws_services.AwsServices"><span class="pre">AwsServices</span></a></span></span><a class="headerlink" href="#tile_server.services.aws_services.get_aws_services" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="tile_server.services" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../database/index.html" class="btn btn-neutral float-right" title="tile_server.services.database" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

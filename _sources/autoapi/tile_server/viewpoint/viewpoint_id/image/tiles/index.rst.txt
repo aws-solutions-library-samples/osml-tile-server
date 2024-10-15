@@ -1,0 +1,41 @@
+tile_server.viewpoint.viewpoint_id.image.tiles
+==============================================
+
+.. py:module:: tile_server.viewpoint.viewpoint_id.image.tiles
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   tile_server.viewpoint.viewpoint_id.image.tiles.tiles_router
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   tile_server.viewpoint.viewpoint_id.image.tiles.get_image_tile
+
+
+Module Contents
+---------------
+
+.. py:data:: tiles_router
+
+.. py:function:: get_image_tile(viewpoint_id: str, z: int, x: int, y: int, aws: Annotated[aws.osml.tile_server.services.get_aws_services, Depends()], tile_format: aws.osml.gdal.GDALImageFormats = Path(description='Output image type.'), compression: aws.osml.gdal.GDALCompressionOptions = Query(GDALCompressionOptions.NONE, description='Compression Algorithm for image.')) -> fastapi.Response
+
+   Create a tile of this image using the options set when creating the viewpoint.
+
+   :param aws: Injected AWS services.
+   :param viewpoint_id: Unique viewpoint id to get from the table.
+   :param z: Resolution-level in the image pyramid 0 = full resolution, 1 = full/2, 2 = full/4, ...
+   :param x: Tile row location in pixels for the given tile.
+   :param y: Tile column location in pixels for the given tile.
+   :param tile_format: Desired format for tile output, valid options are defined by GDALImageFormats.
+   :param compression: GDAL tile compression format.
+   :return: Response of tile image binary payload.
+
+

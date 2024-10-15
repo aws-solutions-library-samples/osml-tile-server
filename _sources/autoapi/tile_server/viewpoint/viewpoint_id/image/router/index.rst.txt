@@ -1,0 +1,19 @@
+tile_server.viewpoint.viewpoint_id.image.router
+===============================================
+
+.. py:module:: tile_server.viewpoint.viewpoint_id.image.router
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   tile_server.viewpoint.viewpoint_id.image.router.image_router
+
+
+Module Contents
+---------------
+
+.. py:data:: image_router
+

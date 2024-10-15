@@ -1,0 +1,47 @@
+tile_server.viewpoint.viewpoint_id.map.tileset.tile
+===================================================
+
+.. py:module:: tile_server.viewpoint.viewpoint_id.map.tileset.tile
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   tile_server.viewpoint.viewpoint_id.map.tileset.tile.tile_matrix_router
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   tile_server.viewpoint.viewpoint_id.map.tileset.tile._invert_tile_row_index
+   tile_server.viewpoint.viewpoint_id.map.tileset.tile.get_map_tile
+
+
+Module Contents
+---------------
+
+.. py:function:: _invert_tile_row_index(tile_row: int, tile_matrix: int) -> int
+
+.. py:data:: tile_matrix_router
+
+.. py:function:: get_map_tile(aws: Annotated[aws.osml.tile_server.services.get_aws_services, Depends()], viewpoint_id: str, tile_matrix_set_id: str, tile_matrix: int, tile_row: int, tile_col: int, tile_format: aws.osml.gdal.GDALImageFormats = Path(description='Output image type.'), compression: aws.osml.gdal.GDALCompressionOptions = Query(GDALCompressionOptions.NONE, description='Compression Algorithm for image.'), invert_y: bool = Query(False, description='Invert the TMS tile y-index.')) -> fastapi.Response
+
+   Create a tile by warping the image into an orthophoto and clipping it at the appropriate resolution/bounds
+   for the requested tile. This endpoint conforms to the OGC API - Tiles specification.
+
+   :param aws: Injected AWS services.
+   :param viewpoint_id: The viewpoint id.
+   :param tile_matrix_set_id: The name of the tile matrix set (e.g. WebMercatorQuad).
+   :param tile_matrix: The zoom level or tile matrix it.
+   :param tile_row: The tile row in the tile matrix.
+   :param tile_col: The tile column in the tile matrix.
+   :param tile_format: The desired output format.
+   :param compression: The desired compression.
+   :param invert_y: Whether to invert the tile y index.
+   :return: A Response binary image containing the map tile created from this viewpoint.
+
+

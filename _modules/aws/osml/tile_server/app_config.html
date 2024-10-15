@@ -1,0 +1,166 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.tile_server.app_config &mdash; OversightML Tile Server  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OversightML Tile Server
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OversightML Tile Server</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.tile_server.app_config</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.tile_server.app_config</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+
+<span class="kn">from</span> <span class="nn">botocore.config</span> <span class="kn">import</span> <span class="n">Config</span>
+
+
+<div class="viewcode-block" id="ServerConfig">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.tile_server.app_config.html#aws.osml.tile_server.app_config.ServerConfig">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">ServerConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    ServerConfig class to house the high-level configuration settings.</span>
+
+<span class="sd">    The ServerConfig is a dataclass meant to house the high-level configuration settings</span>
+<span class="sd">    required for OSML Tile Server to operate that are provided through ENV variables. Note</span>
+<span class="sd">    that required env parameters are enforced by the implied schema validation as os.environ[]</span>
+<span class="sd">    is used to fetch the values. Optional parameters are fetched using os.getenv(),</span>
+<span class="sd">    which returns None.</span>
+
+<span class="sd">    :param aws_region: The AWS region, defaults to &#39;us-west-2&#39;</span>
+<span class="sd">    :param viewpoint_status_table: The name of the viewpoint status DDB table, defaults to &#39;TSJobTable&#39;</span>
+<span class="sd">    :param viewpoint_request_queue: The name of the viewpoint request queue, defaults to &#39;TSJobQueue&#39;</span>
+<span class="sd">    :param efs_mount_name: The name of the EFS mount, defaults to &#39;ts-efs-volume&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">aws_region</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;AWS_DEFAULT_REGION&quot;</span><span class="p">,</span> <span class="s2">&quot;us-west-2&quot;</span><span class="p">)</span>
+    <span class="n">viewpoint_status_table</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;JOB_TABLE&quot;</span><span class="p">,</span> <span class="s2">&quot;TSJobTable&quot;</span><span class="p">)</span>
+    <span class="n">viewpoint_request_queue</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;JOB_QUEUE&quot;</span><span class="p">,</span> <span class="s2">&quot;TSJobQueue&quot;</span><span class="p">)</span>
+    <span class="n">efs_mount_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;EFS_MOUNT_NAME&quot;</span><span class="p">,</span> <span class="s2">&quot;ts-efs-volume&quot;</span><span class="p">)</span>
+    <span class="n">sts_arn</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;STS_ARN&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">ddb_ttl_days</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;DDB_TTL_DAYS&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">tile_server_log_level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span>
+
+    <span class="n">OVERVIEW_FILE_EXTENSION</span> <span class="o">=</span> <span class="s2">&quot;.ovr&quot;</span>
+    <span class="n">AUXXML_FILE_EXTENSION</span> <span class="o">=</span> <span class="s2">&quot;.aux.xml&quot;</span>
+    <span class="n">METADATA_FILE_EXTENSION</span> <span class="o">=</span> <span class="s2">&quot;.metadata&quot;</span>
+    <span class="n">BOUNDS_FILE_EXTENSION</span> <span class="o">=</span> <span class="s2">&quot;.bounds&quot;</span>
+    <span class="n">INFO_FILE_EXTENSION</span> <span class="o">=</span> <span class="s2">&quot;.geojson&quot;</span>
+    <span class="n">STATISTICS_FILE_EXTENSION</span> <span class="o">=</span> <span class="s2">&quot;.stats&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="BotoConfig">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.tile_server.app_config.html#aws.osml.tile_server.app_config.BotoConfig">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">BotoConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    BotoConfig is a dataclass meant to vend our application the set of boto client configurations required for OSML</span>
+
+<span class="sd">    The data schema is defined as follows:</span>
+<span class="sd">    :param default:  Standard boto client configuration</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Required env configuration</span>
+    <span class="n">default</span><span class="p">:</span> <span class="n">Config</span> <span class="o">=</span> <span class="n">Config</span><span class="p">(</span><span class="n">region_name</span><span class="o">=</span><span class="n">ServerConfig</span><span class="o">.</span><span class="n">aws_region</span><span class="p">,</span> <span class="n">retries</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;max_attempts&quot;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span> <span class="s2">&quot;mode&quot;</span><span class="p">:</span> <span class="s2">&quot;standard&quot;</span><span class="p">})</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

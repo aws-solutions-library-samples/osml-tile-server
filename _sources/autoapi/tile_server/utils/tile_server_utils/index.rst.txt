@@ -1,0 +1,142 @@
+tile_server.utils.tile_server_utils
+===================================
+
+.. py:module:: tile_server.utils.tile_server_utils
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   tile_server.utils.tile_server_utils.logger
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   tile_server.utils.tile_server_utils.TileFactoryPool
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   tile_server.utils.tile_server_utils.get_media_type
+   tile_server.utils.tile_server_utils.get_standard_overviews
+   tile_server.utils.tile_server_utils.get_tile_factory_pool
+   tile_server.utils.tile_server_utils.perform_gdal_translation
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:function:: get_media_type(tile_format: aws.osml.gdal.GDALImageFormats) -> str
+
+   Obtain the meta-type based on the given tile format.
+
+   :param tile_format: GDAL Image format associated with the tile.
+
+   :return: The associated image format in plain text.
+
+
+.. py:function:: get_standard_overviews(width: int, height: int, preview_size: int) -> List[int]
+
+   This utility computes a list of reduced resolution scales that define a standard image pyramid for a given
+   image and desired final preview size.
+
+   :param width: Width of the full image at the highest resolution.
+   :param height: Height of the full image at the highest resolution.
+   :param preview_size: The desired size of the lowest resolution / thumbnail image.
+   :return: The list of scale factors needed for each level in the tile pyramid, e.g. [2, 4, 8, 16 ...]
+
+
+.. py:class:: TileFactoryPool(tile_format: aws.osml.gdal.GDALImageFormats, tile_compression: aws.osml.gdal.GDALCompressionOptions, local_object_path: str, output_type: Optional[int] = None, range_adjustment: aws.osml.gdal.RangeAdjustmentType = RangeAdjustmentType.NONE)
+
+   Class representing a pool of GDALTileFactory objects.
+
+
+   .. py:attribute:: lock
+
+
+   .. py:attribute:: current_inventory
+      :value: []
+
+
+
+   .. py:attribute:: total_inventory
+      :value: 0
+
+
+
+   .. py:attribute:: tile_format
+
+
+   .. py:attribute:: tile_compression
+
+
+   .. py:attribute:: local_object_path
+
+
+   .. py:attribute:: output_type
+
+
+   .. py:attribute:: range_adjustment
+
+
+   .. py:method:: checkout() -> aws.osml.image_processing.GDALTileFactory
+
+      Handles the checkout process. If the current inventory is not empty,
+      it pops out the first GDALTileFactory object. If the inventory is empty,
+      a new GDALTileFactory object is created, added to the inventory, and returned.
+
+      :return: Instance of the GDALTileFactory class.
+
+
+
+   .. py:method:: checkin(tf: aws.osml.image_processing.GDALTileFactory) -> None
+
+      Adds a GDALTileFactory object to the current inventory.
+
+      :param tf: GDALTileFactory object to be checked in to the index.
+      :return: None
+
+
+
+   .. py:method:: checkout_in_context() -> None
+
+      A context manager for using the `checkout` method in a `with` statement. Exception safe - resources are
+      guaranteed to be `checkin`ed. It yields the resource obtained from `checkout` for use inside the `with`
+      statement.
+      :return: None
+      :raise Exception: Any exceptions raised within the `with` block or by `checkout` and `checkin` methods
+
+
+
+.. py:function:: get_tile_factory_pool(tile_format: aws.osml.gdal.GDALImageFormats, tile_compression: aws.osml.gdal.GDALCompressionOptions, local_object_path: str, output_type: Optional[int] = None, range_adjustment: aws.osml.gdal.RangeAdjustmentType = RangeAdjustmentType.NONE) -> TileFactoryPool
+
+   Create and return a pool of tile factories.
+
+   :param tile_format: The format of the tiles to be created.
+   :param tile_compression: The compression options for the tiles.
+   :param local_object_path: The path to the local object storage.
+   :param output_type: The optional output type for the tiles.
+   :param range_adjustment: The range adjustment type for the tiles.
+   :return: The tile factory pool.
+
+
+
+.. py:function:: perform_gdal_translation(dataset: osgeo.gdal.Dataset, gdal_options: Dict) -> Optional[bytearray]
+
+   Perform GDAL translation on a dataset with given GDAL options.
+
+   :param dataset: The input GDAL dataset to be translated.
+   :param gdal_options: Options for the GDAL translation.
+   :return: A bytearray containing the translated data, or None if translation fails.
+
+

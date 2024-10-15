@@ -1,0 +1,512 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tile_server.utils &mdash; OversightML Tile Server  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="tile_server.utils.health_check" href="health_check/index.html" />
+    <link rel="prev" title="tile_server.services.token" href="../services/token/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            OversightML Tile Server
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">tile_server</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../index.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../ogc/index.html">tile_server.ogc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../services/index.html">tile_server.services</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">tile_server.utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../viewpoint/index.html">tile_server.viewpoint</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../index.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">OversightML Tile Server</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">tile_server</a></li>
+      <li class="breadcrumb-item active">tile_server.utils</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/autoapi/tile_server/utils/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-tile_server.utils">
+<span id="tile-server-utils"></span><h1>tile_server.utils<a class="headerlink" href="#module-tile_server.utils" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="health_check/index.html">tile_server.utils.health_check</a></li>
+<li class="toctree-l1"><a class="reference internal" href="log_tools/index.html">tile_server.utils.log_tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="string_enums/index.html">tile_server.utils.string_enums</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tile_server_utils/index.html">tile_server.utils.tile_server_utils</a></li>
+</ul>
+</div>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tile_server.utils.HealthCheck" title="tile_server.utils.HealthCheck"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HealthCheck</span></code></a></p></td>
+<td><p>A Pydantic model for a health check response.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tile_server.utils.ThreadingLocalContextFilter" title="tile_server.utils.ThreadingLocalContextFilter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ThreadingLocalContextFilter</span></code></a></p></td>
+<td><p>This is a filter that injects contextual information into the log message. The contextual information is</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tile_server.utils.AutoLowerStringEnum" title="tile_server.utils.AutoLowerStringEnum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AutoLowerStringEnum</span></code></a></p></td>
+<td><p>A class to represent an Enum where the value of the Enum member is the lowercase version of the name associated with</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tile_server.utils.AutoStringEnum" title="tile_server.utils.AutoStringEnum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AutoStringEnum</span></code></a></p></td>
+<td><p>A class used to represent an Enum where the value of the Enum member is the same as the name of the Enum member.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tile_server.utils.AutoUnderscoreStringEnum" title="tile_server.utils.AutoUnderscoreStringEnum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AutoUnderscoreStringEnum</span></code></a></p></td>
+<td><p>A class used to represent an Enum where the value of the Enum member is the name of the Enum member with</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tile_server.utils.TileFactoryPool" title="tile_server.utils.TileFactoryPool"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TileFactoryPool</span></code></a></p></td>
+<td><p>Class representing a pool of GDALTileFactory objects.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tile_server.utils.configure_logger" title="tile_server.utils.configure_logger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_logger</span></code></a>(→ None)</p></td>
+<td><p>Configure a given logger with the provided parameters.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tile_server.utils.get_media_type" title="tile_server.utils.get_media_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_media_type</span></code></a>(→ str)</p></td>
+<td><p>Obtain the meta-type based on the given tile format.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tile_server.utils.get_standard_overviews" title="tile_server.utils.get_standard_overviews"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_standard_overviews</span></code></a>(→ List[int])</p></td>
+<td><p>This utility computes a list of reduced resolution scales that define a standard image pyramid for a given</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tile_server.utils.get_tile_factory_pool" title="tile_server.utils.get_tile_factory_pool"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_tile_factory_pool</span></code></a>(→ TileFactoryPool)</p></td>
+<td><p>Create and return a pool of tile factories.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tile_server.utils.perform_gdal_translation" title="tile_server.utils.perform_gdal_translation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">perform_gdal_translation</span></code></a>(→ Optional[bytearray])</p></td>
+<td><p>Perform GDAL translation on a dataset with given GDAL options.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="package-contents">
+<h2>Package Contents<a class="headerlink" href="#package-contents" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.utils.HealthCheck">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.utils.</span></span><span class="sig-name descname"><span class="pre">HealthCheck</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**data:</span> <span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tile_server.utils.HealthCheck" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pydantic.BaseModel</span></code></p>
+<p>A Pydantic model for a health check response.</p>
+<dl class="simple">
+<dt>Attributes:</dt><dd><p>status (str): Status of the health check. Defaults is “OK”.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.utils.HealthCheck.status">
+<span class="sig-name descname"><span class="pre">status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'OK'</span></em><a class="headerlink" href="#tile_server.utils.HealthCheck.status" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.utils.ThreadingLocalContextFilter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.utils.</span></span><span class="sig-name descname"><span class="pre">ThreadingLocalContextFilter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attribute_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tile_server.utils.ThreadingLocalContextFilter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.Filter" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logging.Filter</span></code></a></p>
+<p>This is a filter that injects contextual information into the log message. The contextual information is
+set using the static methods of this class.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.utils.ThreadingLocalContextFilter.attribute_names">
+<span class="sig-name descname"><span class="pre">attribute_names</span></span><a class="headerlink" href="#tile_server.utils.ThreadingLocalContextFilter.attribute_names" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.utils.ThreadingLocalContextFilter.filter">
+<span class="sig-name descname"><span class="pre">filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.LogRecord" title="(in Python v3.13)"><span class="pre">logging.LogRecord</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span></span><a class="headerlink" href="#tile_server.utils.ThreadingLocalContextFilter.filter" title="Link to this definition"></a></dt>
+<dd><p>This method is called for each log record. It injects the contextual information into the log record.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>record</strong> – the log record to filter</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True, this filter does not exclude information from the log</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.utils.ThreadingLocalContextFilter.set_context">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_context</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#tile_server.utils.ThreadingLocalContextFilter.set_context" title="Link to this definition"></a></dt>
+<dd><p>Set the context for the current thread. If None all context information is cleared.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>context</strong> – dict = the context to set</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tile_server.utils.configure_logger">
+<span class="sig-prename descclassname"><span class="pre">tile_server.utils.</span></span><span class="sig-name descname"><span class="pre">configure_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.Logger" title="(in Python v3.13)"><span class="pre">logging.Logger</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_formatter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.Formatter" title="(in Python v3.13)"><span class="pre">logging.Formatter</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_filter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.Filter" title="(in Python v3.13)"><span class="pre">logging.Filter</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#tile_server.utils.configure_logger" title="Link to this definition"></a></dt>
+<dd><p>Configure a given logger with the provided parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>logger</strong> – An instance of the Logger to configure</p></li>
+<li><p><strong>log_level</strong> – The log level to set</p></li>
+<li><p><strong>log_formatter</strong> – The log formatter to set on all handlers</p></li>
+<li><p><strong>log_filter</strong> – Log filter to apply to the logger</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.utils.AutoLowerStringEnum">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.utils.</span></span><span class="sig-name descname"><span class="pre">AutoLowerStringEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tile_server.utils.AutoLowerStringEnum" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>A class to represent an Enum where the value of the Enum member is the lowercase version of the name associated with
+the Enum member.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.utils.AutoLowerStringEnum._generate_next_value_">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_generate_next_value_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_values</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></span><a class="headerlink" href="#tile_server.utils.AutoLowerStringEnum._generate_next_value_" title="Link to this definition"></a></dt>
+<dd><p>Function to iterate through the Enum members.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>name: The name of the Enum member.</p>
+</dd>
+<dt class="field-even">Param<span class="colon">:</span></dt>
+<dd class="field-even"><p>start: The initial integer.</p>
+</dd>
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>count: The number of existing members.</p>
+</dd>
+<dt class="field-even">Param<span class="colon">:</span></dt>
+<dd class="field-even"><p>last_values: The list of values associated with existing members.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The next value of the enumeration which is the lowercase version of the name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.utils.AutoStringEnum">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.utils.</span></span><span class="sig-name descname"><span class="pre">AutoStringEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tile_server.utils.AutoStringEnum" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>A class used to represent an Enum where the value of the Enum member is the same as the name of the Enum member.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.utils.AutoStringEnum._generate_next_value_">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_generate_next_value_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_values</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></span><a class="headerlink" href="#tile_server.utils.AutoStringEnum._generate_next_value_" title="Link to this definition"></a></dt>
+<dd><p>Function to iterate through the Enum members.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>name: Name of the Enum member.</p>
+</dd>
+<dt class="field-even">Param<span class="colon">:</span></dt>
+<dd class="field-even"><p>start: Initial integer to start with.</p>
+</dd>
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>count: Number of existing members.</p>
+</dd>
+<dt class="field-even">Param<span class="colon">:</span></dt>
+<dd class="field-even"><p>last_values: List of values for existing members.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The next value of the enumeration which is the same as the name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.utils.AutoUnderscoreStringEnum">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.utils.</span></span><span class="sig-name descname"><span class="pre">AutoUnderscoreStringEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tile_server.utils.AutoUnderscoreStringEnum" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>A class used to represent an Enum where the value of the Enum member is the name of the Enum member with
+underscores replaced with spaces.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.utils.AutoUnderscoreStringEnum._generate_next_value_">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_generate_next_value_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_values</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></span><a class="headerlink" href="#tile_server.utils.AutoUnderscoreStringEnum._generate_next_value_" title="Link to this definition"></a></dt>
+<dd><p>Function to iterate through the Enum members.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>name: Name of the Enum member.</p>
+</dd>
+<dt class="field-even">Param<span class="colon">:</span></dt>
+<dd class="field-even"><p>start: Initial integer to start with.</p>
+</dd>
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>count: Number of existing members.</p>
+</dd>
+<dt class="field-even">Param<span class="colon">:</span></dt>
+<dd class="field-even"><p>last_values: List of values of existing members.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Next value of enumeration which is the name of the Enum member with underscores replaced by spaces.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.utils.TileFactoryPool">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.utils.</span></span><span class="sig-name descname"><span class="pre">TileFactoryPool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tile_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.gdal.GDALImageFormats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tile_compression</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.gdal.GDALCompressionOptions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_object_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_adjustment</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.gdal.RangeAdjustmentType</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">RangeAdjustmentType.NONE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tile_server.utils.TileFactoryPool" title="Link to this definition"></a></dt>
+<dd><p>Class representing a pool of GDALTileFactory objects.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.utils.TileFactoryPool.lock">
+<span class="sig-name descname"><span class="pre">lock</span></span><a class="headerlink" href="#tile_server.utils.TileFactoryPool.lock" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.utils.TileFactoryPool.current_inventory">
+<span class="sig-name descname"><span class="pre">current_inventory</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#tile_server.utils.TileFactoryPool.current_inventory" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.utils.TileFactoryPool.total_inventory">
+<span class="sig-name descname"><span class="pre">total_inventory</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#tile_server.utils.TileFactoryPool.total_inventory" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.utils.TileFactoryPool.tile_format">
+<span class="sig-name descname"><span class="pre">tile_format</span></span><a class="headerlink" href="#tile_server.utils.TileFactoryPool.tile_format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.utils.TileFactoryPool.tile_compression">
+<span class="sig-name descname"><span class="pre">tile_compression</span></span><a class="headerlink" href="#tile_server.utils.TileFactoryPool.tile_compression" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.utils.TileFactoryPool.local_object_path">
+<span class="sig-name descname"><span class="pre">local_object_path</span></span><a class="headerlink" href="#tile_server.utils.TileFactoryPool.local_object_path" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.utils.TileFactoryPool.output_type">
+<span class="sig-name descname"><span class="pre">output_type</span></span><a class="headerlink" href="#tile_server.utils.TileFactoryPool.output_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.utils.TileFactoryPool.range_adjustment">
+<span class="sig-name descname"><span class="pre">range_adjustment</span></span><a class="headerlink" href="#tile_server.utils.TileFactoryPool.range_adjustment" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.utils.TileFactoryPool.checkout">
+<span class="sig-name descname"><span class="pre">checkout</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">aws.osml.image_processing.GDALTileFactory</span></span></span><a class="headerlink" href="#tile_server.utils.TileFactoryPool.checkout" title="Link to this definition"></a></dt>
+<dd><p>Handles the checkout process. If the current inventory is not empty,
+it pops out the first GDALTileFactory object. If the inventory is empty,
+a new GDALTileFactory object is created, added to the inventory, and returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Instance of the GDALTileFactory class.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.utils.TileFactoryPool.checkin">
+<span class="sig-name descname"><span class="pre">checkin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.image_processing.GDALTileFactory</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#tile_server.utils.TileFactoryPool.checkin" title="Link to this definition"></a></dt>
+<dd><p>Adds a GDALTileFactory object to the current inventory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tf</strong> – GDALTileFactory object to be checked in to the index.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.utils.TileFactoryPool.checkout_in_context">
+<span class="sig-name descname"><span class="pre">checkout_in_context</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#tile_server.utils.TileFactoryPool.checkout_in_context" title="Link to this definition"></a></dt>
+<dd><p>A context manager for using the <a class="reference internal" href="#tile_server.utils.TileFactoryPool.checkout" title="tile_server.utils.TileFactoryPool.checkout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">checkout</span></code></a> method in a <code class="xref py py-obj docutils literal notranslate"><span class="pre">with</span></code> statement. Exception safe - resources are
+guaranteed to be <code class="xref py py-obj docutils literal notranslate"><span class="pre">checkin`ed.</span> <span class="pre">It</span> <span class="pre">yields</span> <span class="pre">the</span> <span class="pre">resource</span> <span class="pre">obtained</span> <span class="pre">from</span> <span class="pre">`checkout</span></code> for use inside the <code class="xref py py-obj docutils literal notranslate"><span class="pre">with</span></code>
+statement.
+:return: None
+:raise Exception: Any exceptions raised within the <code class="xref py py-obj docutils literal notranslate"><span class="pre">with</span></code> block or by <a class="reference internal" href="#tile_server.utils.TileFactoryPool.checkout" title="tile_server.utils.TileFactoryPool.checkout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">checkout</span></code></a> and <a class="reference internal" href="#tile_server.utils.TileFactoryPool.checkin" title="tile_server.utils.TileFactoryPool.checkin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">checkin</span></code></a> methods</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tile_server.utils.get_media_type">
+<span class="sig-prename descclassname"><span class="pre">tile_server.utils.</span></span><span class="sig-name descname"><span class="pre">get_media_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tile_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.gdal.GDALImageFormats</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></span><a class="headerlink" href="#tile_server.utils.get_media_type" title="Link to this definition"></a></dt>
+<dd><p>Obtain the meta-type based on the given tile format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tile_format</strong> – GDAL Image format associated with the tile.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The associated image format in plain text.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tile_server.utils.get_standard_overviews">
+<span class="sig-prename descclassname"><span class="pre">tile_server.utils.</span></span><span class="sig-name descname"><span class="pre">get_standard_overviews</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">preview_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tile_server.utils.get_standard_overviews" title="Link to this definition"></a></dt>
+<dd><p>This utility computes a list of reduced resolution scales that define a standard image pyramid for a given
+image and desired final preview size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>width</strong> – Width of the full image at the highest resolution.</p></li>
+<li><p><strong>height</strong> – Height of the full image at the highest resolution.</p></li>
+<li><p><strong>preview_size</strong> – The desired size of the lowest resolution / thumbnail image.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The list of scale factors needed for each level in the tile pyramid, e.g. [2, 4, 8, 16 …]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tile_server.utils.get_tile_factory_pool">
+<span class="sig-prename descclassname"><span class="pre">tile_server.utils.</span></span><span class="sig-name descname"><span class="pre">get_tile_factory_pool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tile_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.gdal.GDALImageFormats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tile_compression</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.gdal.GDALCompressionOptions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_object_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_adjustment</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.gdal.RangeAdjustmentType</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">RangeAdjustmentType.NONE</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#tile_server.utils.TileFactoryPool" title="tile_server.utils.TileFactoryPool"><span class="pre">TileFactoryPool</span></a></span></span><a class="headerlink" href="#tile_server.utils.get_tile_factory_pool" title="Link to this definition"></a></dt>
+<dd><p>Create and return a pool of tile factories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tile_format</strong> – The format of the tiles to be created.</p></li>
+<li><p><strong>tile_compression</strong> – The compression options for the tiles.</p></li>
+<li><p><strong>local_object_path</strong> – The path to the local object storage.</p></li>
+<li><p><strong>output_type</strong> – The optional output type for the tiles.</p></li>
+<li><p><strong>range_adjustment</strong> – The range adjustment type for the tiles.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The tile factory pool.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tile_server.utils.perform_gdal_translation">
+<span class="sig-prename descclassname"><span class="pre">tile_server.utils.</span></span><span class="sig-name descname"><span class="pre">perform_gdal_translation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">osgeo.gdal.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gdal_options</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytearray" title="(in Python v3.13)"><span class="pre">bytearray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#tile_server.utils.perform_gdal_translation" title="Link to this definition"></a></dt>
+<dd><p>Perform GDAL translation on a dataset with given GDAL options.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> – The input GDAL dataset to be translated.</p></li>
+<li><p><strong>gdal_options</strong> – Options for the GDAL translation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A bytearray containing the translated data, or None if translation fails.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../services/token/index.html" class="btn btn-neutral float-left" title="tile_server.services.token" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="health_check/index.html" class="btn btn-neutral float-right" title="tile_server.utils.health_check" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

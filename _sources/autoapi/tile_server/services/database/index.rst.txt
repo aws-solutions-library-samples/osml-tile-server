@@ -1,0 +1,136 @@
+tile_server.services.database
+=============================
+
+.. py:module:: tile_server.services.database
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   tile_server.services.database.DecimalEncoder
+   tile_server.services.database.ViewpointStatusTable
+
+
+Module Contents
+---------------
+
+.. py:class:: DecimalEncoder(*, skipkeys=False, ensure_ascii=True, check_circular=True, allow_nan=True, sort_keys=False, indent=None, separators=None, default=None)
+
+   Bases: :py:obj:`json.JSONEncoder`
+
+
+   This is a helper class that extends json.JSONEncoder.
+   It's used to convert all Decimal instances to int
+   when we fetch data from DynamoDB (which can return some items as Decimal).
+
+   :param json.JSONEncoder: Inherited JSON Encoder class from json module.
+
+
+   .. py:method:: default(obj)
+
+      Overriden default method from JSONEncoder class.
+      Converts all Decimal instances to int else returns default conversion.
+
+      :param obj: Object for JSON Encoding.
+      :return: Integer representation of Decimal else default JSON Conversion.
+
+
+
+.. py:class:: ViewpointStatusTable(aws_ddb: boto3.resources.base.ServiceResource, logger: logging.Logger = getLogger(__name__))
+
+   A class used to represent the ViewpointStatusTable.
+
+
+   .. py:attribute:: ddb
+
+
+   .. py:attribute:: table
+
+
+   .. py:attribute:: logger
+
+
+   .. py:method:: get_viewpoints(limit: int = None, next_token: str = None) -> aws.osml.tile_server.models.ViewpointListResponse
+
+      Get viewpoint items from the dynamodb table, if limit nor next_token are provided, it returns all records.
+
+      :param limit: Optional max number of viewpoints requested from dynamodb.
+      :param next_token: Optional token to begin a query from provided by the previous query response that
+              had more records available.
+      :return: The list of available viewpoints in the table.
+
+
+
+   .. py:method:: get_all_viewpoints(query_params: Dict) -> aws.osml.tile_server.models.ViewpointListResponse
+
+      Get all the viewpoint items from the dynamodb table.
+
+      :param: query_params: A query to get all the viewpoints from the table.
+      :return: A list of all the viewpoints found in the table.
+
+
+
+   .. py:method:: get_paged_viewpoints(query_params: Dict) -> aws.osml.tile_server.models.ViewpointListResponse
+
+      Get a page of viewpoint items from the dynamodb table.
+
+      :param: The query parameters to use for constructing the page of viewpoints.
+      :return: Page of viewpoints associated with the query parameters.
+
+
+
+   .. py:method:: get_viewpoint(viewpoint_id: str) -> aws.osml.tile_server.models.ViewpointModel
+
+      Get detail of a viewpoint based on a given viewpoint id from the table.
+
+      :param viewpoint_id: The viewpoint_id you want to get from the table.
+      :return: Viewpoint details associated with the requested viewpoint_id.
+      :raises: HTTPException if it cannot fetch a viewpoint item from the ViewpointStatusTable.
+
+
+
+   .. py:method:: create_viewpoint(viewpoint_request: aws.osml.tile_server.models.ViewpointModel) -> Dict
+
+      Create a viewpoint item and store them in a DynamoDB table.
+
+      :param viewpoint_request: The provided request to create a new viewpoint in the table.
+      :return: Details of the newly created viewpoint item.
+      :raises: HTTPException if it cannot create a viewpoint item from the ViewpointStatusTable.
+
+
+
+
+   .. py:method:: update_viewpoint(viewpoint_item: aws.osml.tile_server.models.ViewpointModel) -> aws.osml.tile_server.models.ViewpointModel
+
+      Update viewpoint item in a dynamodb table.
+
+      :param viewpoint_item: Viewpoint item to be updated in the table.
+      :return: Updated viewpoint item in the table.
+      :raises: HTTPException if it cannot update a viewpoint item from the ViewpointStatusTable.
+
+
+
+
+   .. py:method:: delete_viewpoint(viewpoint_id: str) -> str
+
+      Delete a viewpoint from the DynamoDB table.
+
+      :param viewpoint_id: The ID of the viewpoint to be deleted.
+      :return: the viewpoint_id of the deleted viewpoint.
+      :raises HTTPException: If an error occurs while deleting the viewpoint.
+
+
+
+   .. py:method:: get_update_params(body: Dict) -> Tuple[str, Dict[str, Any]]
+      :staticmethod:
+
+
+      Generate an update expression and a dict of values to update a dynamodb table.
+
+      :param body: Body of the request that contains the updated data.
+      :return: Generated update expression and attributes.
+
+
+

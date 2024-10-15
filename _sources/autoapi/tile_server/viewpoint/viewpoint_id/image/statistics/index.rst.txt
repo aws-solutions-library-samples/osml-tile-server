@@ -1,0 +1,36 @@
+tile_server.viewpoint.viewpoint_id.image.statistics
+===================================================
+
+.. py:module:: tile_server.viewpoint.viewpoint_id.image.statistics
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   tile_server.viewpoint.viewpoint_id.image.statistics.statistics_router
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   tile_server.viewpoint.viewpoint_id.image.statistics.get_image_statistics
+
+
+Module Contents
+---------------
+
+.. py:data:: statistics_router
+
+.. py:function:: get_image_statistics(viewpoint_id: str, aws: Annotated[aws.osml.tile_server.services.get_aws_services, Depends()]) -> starlette.responses.FileResponse
+
+   Get viewpoint statistics based on provided viewpoint id.
+
+   :param aws: Injected AWS services.
+   :param viewpoint_id: Unique viewpoint id to get from the table.
+   :return: FileResponse containing statistics associated with the viewpoint.
+
+

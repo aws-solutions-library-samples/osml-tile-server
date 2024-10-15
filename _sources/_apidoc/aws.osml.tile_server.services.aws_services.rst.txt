@@ -1,0 +1,7 @@
+aws.osml.tile\_server.services.aws\_services module
+===================================================
+
+.. automodule:: aws.osml.tile_server.services.aws_services
+   :members:
+   :undoc-members:
+   :show-inheritance:

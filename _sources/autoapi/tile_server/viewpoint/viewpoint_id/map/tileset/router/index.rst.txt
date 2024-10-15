@@ -1,0 +1,39 @@
+tile_server.viewpoint.viewpoint_id.map.tileset.router
+=====================================================
+
+.. py:module:: tile_server.viewpoint.viewpoint_id.map.tileset.router
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   tile_server.viewpoint.viewpoint_id.map.tileset.router.tile_tileset_metadata_router
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   tile_server.viewpoint.viewpoint_id.map.tileset.router.get_map_tileset_metadata
+
+
+Module Contents
+---------------
+
+.. py:data:: tile_tileset_metadata_router
+
+.. py:function:: get_map_tileset_metadata(viewpoint_id: str, tile_matrix_set_id: str, aws: Annotated[aws.osml.tile_server.services.get_aws_services, Depends()], request: fastapi.Request) -> aws.osml.tile_server.ogc.TileSetMetadata
+
+   Retrieves the metadata for a specific tileset. This endpoint conforms to the OGC API - Tiles: Tileset &
+   Tilsets List specification.
+
+   :param aws: Injected AWS services.
+   :param viewpoint_id: The viewpoint id.
+   :param tile_matrix_set_id: The name of the tile matrix set (e.g. WebMercatorQuad).
+   :param request: A handle to the FastAPI request object.
+   :return: A TileSetMetadata object containing the tileset metadata.
+
+

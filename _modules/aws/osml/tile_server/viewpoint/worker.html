@@ -1,0 +1,571 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.tile_server.viewpoint.worker &mdash; OversightML Tile Server  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            OversightML Tile Server
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">OversightML Tile Server</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.tile_server.viewpoint.worker</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.tile_server.viewpoint.worker</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">auto</span>
+<span class="kn">from</span> <span class="nn">logging</span> <span class="kn">import</span> <span class="n">Logger</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">degrees</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Event</span><span class="p">,</span> <span class="n">Thread</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span> <span class="nn">geojson</span>
+<span class="kn">from</span> <span class="nn">boto3.resources.base</span> <span class="kn">import</span> <span class="n">ServiceResource</span>
+<span class="kn">from</span> <span class="nn">botocore.exceptions</span> <span class="kn">import</span> <span class="n">ClientError</span>
+<span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">gdal</span><span class="p">,</span> <span class="n">gdalconst</span>
+
+<span class="kn">from</span> <span class="nn">aws.osml.gdal</span> <span class="kn">import</span> <span class="n">GDALCompressionOptions</span><span class="p">,</span> <span class="n">GDALImageFormats</span><span class="p">,</span> <span class="n">RangeAdjustmentType</span>
+<span class="kn">from</span> <span class="nn">aws.osml.image_processing</span> <span class="kn">import</span> <span class="n">GDALTileFactory</span>
+<span class="kn">from</span> <span class="nn">aws.osml.photogrammetry</span> <span class="kn">import</span> <span class="n">ImageCoordinate</span>
+<span class="kn">from</span> <span class="nn">aws.osml.tile_server.app_config</span> <span class="kn">import</span> <span class="n">ServerConfig</span>
+<span class="kn">from</span> <span class="nn">aws.osml.tile_server.models</span> <span class="kn">import</span> <span class="n">ViewpointModel</span><span class="p">,</span> <span class="n">ViewpointStatus</span>
+<span class="kn">from</span> <span class="nn">aws.osml.tile_server.services</span> <span class="kn">import</span> <span class="n">DecimalEncoder</span><span class="p">,</span> <span class="n">ViewpointRequestQueue</span><span class="p">,</span> <span class="n">ViewpointStatusTable</span>
+<span class="kn">from</span> <span class="nn">aws.osml.tile_server.utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AutoLowerStringEnum</span><span class="p">,</span>
+    <span class="n">ThreadingLocalContextFilter</span><span class="p">,</span>
+    <span class="n">TileFactoryPool</span><span class="p">,</span>
+    <span class="n">get_standard_overviews</span><span class="p">,</span>
+    <span class="n">get_tile_factory_pool</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="SupplementaryFileType">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.tile_server.viewpoint.worker.html#aws.osml.tile_server.viewpoint.worker.SupplementaryFileType">[docs]</a>
+<span class="k">class</span> <span class="nc">SupplementaryFileType</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">AutoLowerStringEnum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Provides supplementary file types to download from S3.</span>
+
+<span class="sd">    :cvar AUX: Aux file.</span>
+<span class="sd">    :cvar OVERVIEW: Overview file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">AUX</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">OVERVIEW</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="ViewpointWorker">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.tile_server.viewpoint.worker.html#aws.osml.tile_server.viewpoint.worker.ViewpointWorker">[docs]</a>
+<span class="k">class</span> <span class="nc">ViewpointWorker</span><span class="p">(</span><span class="n">Thread</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">aws_sqs</span><span class="p">:</span> <span class="n">ServiceResource</span><span class="p">,</span>
+        <span class="n">aws_s3</span><span class="p">:</span> <span class="n">ServiceResource</span><span class="p">,</span>
+        <span class="n">aws_ddb</span><span class="p">:</span> <span class="n">ServiceResource</span><span class="p">,</span>
+        <span class="n">logger</span><span class="p">:</span> <span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">),</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The `__init__` method of the `ViewpointWorker` class initializes a new instance of the `ViewpointWorker`.</span>
+
+<span class="sd">        :param aws_sqs: An instance of the ServiceResource class representing the AWS SQS service.</span>
+<span class="sd">        :param aws_s3: An instance of the ServiceResource class representing the AWS S3 service.</span>
+<span class="sd">        :param aws_ddb: An instance of the ServiceResource class representing the AWS DDB service.</span>
+<span class="sd">        :param logger: Logger class representing the logger.  Defaults to the default python logger.</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">viewpoint_request_queue</span> <span class="o">=</span> <span class="n">ViewpointRequestQueue</span><span class="p">(</span><span class="n">aws_sqs</span><span class="p">,</span> <span class="n">ServerConfig</span><span class="o">.</span><span class="n">viewpoint_request_queue</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s3</span> <span class="o">=</span> <span class="n">aws_s3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">viewpoint_database</span> <span class="o">=</span> <span class="n">ViewpointStatusTable</span><span class="p">(</span><span class="n">aws_ddb</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logger</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop_event</span> <span class="o">=</span> <span class="n">Event</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ViewpointWorker.join">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.tile_server.viewpoint.worker.html#aws.osml.tile_server.viewpoint.worker.ViewpointWorker.join">[docs]</a>
+    <span class="k">def</span> <span class="nf">join</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="o">...</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Join the ViewpointWorker threads together.</span>
+
+<span class="sd">        :param timeout: The maximum number of seconds to wait for the thread to finish execution. If `None`, the method</span>
+<span class="sd">            will block until the thread is finished. (Default is `None`)</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;ViewpointWorker Background Thread Stopping.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop_event</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+        <span class="n">Thread</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ViewpointWorker.run">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.tile_server.viewpoint.worker.html#aws.osml.tile_server.viewpoint.worker.ViewpointWorker.run">[docs]</a>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Monitors SQS queues for ViewpointRequest and be able to process it. First, it will</span>
+<span class="sd">        pick up a message from ViewpointRequest SQS. Then, it will download an image from S3</span>
+<span class="sd">        and save it to the local temp directory. Once that&#39;s completed, it will update the DynamoDB</span>
+<span class="sd">        to reflect that this Viewpoint is READY to review. This function will run in the background.</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;ViewpointWorker Background Thread Started.&quot;</span><span class="p">)</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop_event</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Scanning for SQS messages&quot;</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">attributes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;correlation_id&quot;</span><span class="p">]</span>
+                <span class="n">messages</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">viewpoint_request_queue</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">receive_messages</span><span class="p">(</span>
+                    <span class="n">MessageAttributeNames</span><span class="o">=</span><span class="n">attributes</span><span class="p">,</span> <span class="n">WaitTimeSeconds</span><span class="o">=</span><span class="mi">5</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">messages</span><span class="p">:</span>
+                    <span class="n">correlation_id</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">message_attributes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;correlation_id&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;StringValue&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">correlation_id</span><span class="p">:</span>
+                        <span class="n">ThreadingLocalContextFilter</span><span class="o">.</span><span class="n">set_context</span><span class="p">({</span><span class="s2">&quot;correlation_id&quot;</span><span class="p">:</span> <span class="n">correlation_id</span><span class="p">})</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">ThreadingLocalContextFilter</span><span class="o">.</span><span class="n">set_context</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_process_message</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+            <span class="k">except</span> <span class="n">ClientError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Worker Background Thread] </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Worker Background Thread] </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Worker Background Thread] </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ViewpointWorker.download_image">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.tile_server.viewpoint.worker.html#aws.osml.tile_server.viewpoint.worker.ViewpointWorker.download_image">[docs]</a>
+    <span class="k">def</span> <span class="nf">download_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">viewpoint_item</span><span class="p">:</span> <span class="n">ViewpointModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method downloads an image file from an S3 bucket using the bucket_name and object_key attributes of a</span>
+<span class="sd">        ViewpointModel instance. The downloaded image is saved under specific server configuration, and its path is</span>
+<span class="sd">        stored. The method also attempts to download optional files, logging their unavailability. Note: The method</span>
+<span class="sd">        assumes the existence of the following constants: OVERVIEW_FILE_EXTENSION and AUXXML_FILE_EXTENSION,</span>
+<span class="sd">        which represent the file extensions for the optional overview and aux files respectively.</span>
+
+<span class="sd">        :param viewpoint_item: Instance of ViewpointModel representing the viewpoint item to be downloaded.</span>
+<span class="sd">        :return: None</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">viewpoint_item</span><span class="o">.</span><span class="n">local_object_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_local_tmp_directory</span><span class="p">(</span><span class="n">viewpoint_item</span><span class="p">)</span>
+
+        <span class="n">failed</span><span class="p">,</span> <span class="n">error_message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_download_s3_file_to_local_tmp</span><span class="p">(</span><span class="n">viewpoint_item</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">failed</span><span class="p">,</span> <span class="n">ViewpointStatus</span><span class="p">):</span>
+            <span class="n">viewpoint_item</span><span class="o">.</span><span class="n">viewpoint_status</span> <span class="o">=</span> <span class="n">failed</span>
+            <span class="n">viewpoint_item</span><span class="o">.</span><span class="n">error_message</span> <span class="o">=</span> <span class="n">error_message</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_download_supplementary_file</span><span class="p">(</span><span class="n">viewpoint_item</span><span class="p">,</span> <span class="n">SupplementaryFileType</span><span class="o">.</span><span class="n">OVERVIEW</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_download_supplementary_file</span><span class="p">(</span><span class="n">viewpoint_item</span><span class="p">,</span> <span class="n">SupplementaryFileType</span><span class="o">.</span><span class="n">AUX</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ViewpointWorker.create_tile_pyramid">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.tile_server.viewpoint.worker.html#aws.osml.tile_server.viewpoint.worker.ViewpointWorker.create_tile_pyramid">[docs]</a>
+    <span class="k">def</span> <span class="nf">create_tile_pyramid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">viewpoint_item</span><span class="p">:</span> <span class="n">ViewpointModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Main tile pyramid creation function. It creates a tile pyramid for a specific viewpoint item</span>
+<span class="sd">        by considering its range adjustment and local object path.</span>
+
+<span class="sd">        :param: The viewpoint item object for which to create the tile pyramid.</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">tile_factory_pool</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_default_tile_factory_pool_for_viewpoint</span><span class="p">(</span><span class="n">viewpoint_item</span><span class="p">)</span>
+
+            <span class="n">aux_file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">viewpoint_item</span><span class="o">.</span><span class="n">local_object_path</span> <span class="o">+</span> <span class="n">ServerConfig</span><span class="o">.</span><span class="n">AUXXML_FILE_EXTENSION</span><span class="p">)</span>
+            <span class="n">overview_file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">viewpoint_item</span><span class="o">.</span><span class="n">local_object_path</span> <span class="o">+</span> <span class="n">ServerConfig</span><span class="o">.</span><span class="n">OVERVIEW_FILE_EXTENSION</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop_event</span><span class="o">.</span><span class="n">is_set</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">aux_file_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_image_statistics</span><span class="p">(</span><span class="n">viewpoint_item</span><span class="p">)</span>
+
+            <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+            <span class="k">with</span> <span class="n">tile_factory_pool</span><span class="o">.</span><span class="n">checkout_in_context</span><span class="p">()</span> <span class="k">as</span> <span class="n">tile_factory</span><span class="p">:</span>
+                <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;METRIC: TileFactory Create Time: </span><span class="si">{</span><span class="n">end_time</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start_time</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="n">viewpoint_item</span><span class="o">.</span><span class="n">local_object_path</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop_event</span><span class="o">.</span><span class="n">is_set</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">overview_file_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_create_image_pyramid</span><span class="p">(</span><span class="n">tile_factory</span><span class="p">,</span> <span class="n">viewpoint_item</span><span class="p">)</span>
+
+                <span class="n">image_bytes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_verify_tile_creation</span><span class="p">(</span><span class="n">tile_factory</span><span class="p">,</span> <span class="n">viewpoint_item</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">image_bytes</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Image is empty.&quot;</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="n">error_message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unable to create sample tile for viewpoint: </span><span class="si">{</span><span class="n">viewpoint_item</span><span class="o">.</span><span class="n">viewpoint_id</span><span class="si">}</span><span class="s2">! Error=</span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
+            <span class="n">viewpoint_item</span><span class="o">.</span><span class="n">viewpoint_status</span> <span class="o">=</span> <span class="n">ViewpointStatus</span><span class="o">.</span><span class="n">FAILED</span>
+            <span class="n">viewpoint_item</span><span class="o">.</span><span class="n">error_message</span> <span class="o">=</span> <span class="n">error_message</span></div>
+
+
+<div class="viewcode-block" id="ViewpointWorker.extract_metadata">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.tile_server.viewpoint.worker.html#aws.osml.tile_server.viewpoint.worker.ViewpointWorker.extract_metadata">[docs]</a>
+    <span class="k">def</span> <span class="nf">extract_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">viewpoint_item</span><span class="p">:</span> <span class="n">ViewpointModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extracts the metadata from an image and creates various JSON files for the metadata, bounds, info, etc. so</span>
+<span class="sd">        that they can be easily returned by the web API without need to reparse the information from the image itself.</span>
+<span class="sd">        This reduces the pressure on the tile factory resource pool making those resources more available for</span>
+<span class="sd">        operations that need to return pixels.</span>
+
+<span class="sd">        :param: the description of the viewpoint item</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">tile_factory_pool</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_default_tile_factory_pool_for_viewpoint</span><span class="p">(</span><span class="n">viewpoint_item</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">tile_factory_pool</span><span class="o">.</span><span class="n">checkout_in_context</span><span class="p">()</span> <span class="k">as</span> <span class="n">tile_factory</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_write_metadata</span><span class="p">(</span><span class="n">tile_factory</span><span class="p">,</span> <span class="n">viewpoint_item</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_write_bounds</span><span class="p">(</span><span class="n">tile_factory</span><span class="p">,</span> <span class="n">viewpoint_item</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_write_info</span><span class="p">(</span><span class="n">tile_factory</span><span class="p">,</span> <span class="n">viewpoint_item</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_write_statistics</span><span class="p">(</span><span class="n">viewpoint_item</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="n">error_message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unable to extract metadata for viewpoint: </span><span class="si">{</span><span class="n">viewpoint_item</span><span class="o">.</span><span class="n">viewpoint_id</span><span class="si">}</span><span class="s2">! Error=</span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
+            <span class="n">viewpoint_item</span><span class="o">.</span><span class="n">viewpoint_status</span> <span class="o">=</span> <span class="n">ViewpointStatus</span><span class="o">.</span><span class="n">FAILED</span>
+            <span class="n">viewpoint_item</span><span class="o">.</span><span class="n">error_message</span> <span class="o">=</span> <span class="n">error_message</span>
+
+            <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+            <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;METRIC: TileFactory Create Time: </span><span class="si">{</span><span class="n">end_time</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start_time</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="n">viewpoint_item</span><span class="o">.</span><span class="n">local_object_path</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_process_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;MESSAGE: </span><span class="si">{</span><span class="n">message</span><span class="o">.</span><span class="n">body</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">message_attributes</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+        <span class="n">viewpoint_item</span> <span class="o">=</span> <span class="n">ViewpointModel</span><span class="o">.</span><span class="n">model_validate_json</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">message_attributes</span><span class="p">,</span> <span class="bp">cls</span><span class="o">=</span><span class="n">DecimalEncoder</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">viewpoint_item</span><span class="o">.</span><span class="n">viewpoint_status</span> <span class="o">!=</span> <span class="n">ViewpointStatus</span><span class="o">.</span><span class="n">REQUESTED</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Cannot process </span><span class="si">{</span><span class="n">viewpoint_item</span><span class="o">.</span><span class="n">viewpoint_id</span><span class="si">}</span><span class="s2"> due to the incorrect &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Viewpoint Status </span><span class="si">{</span><span class="n">viewpoint_item</span><span class="o">.</span><span class="n">viewpoint_status</span><span class="si">}</span><span class="s2">!&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">download_image</span><span class="p">(</span><span class="n">viewpoint_item</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_tile_pyramid</span><span class="p">(</span><span class="n">viewpoint_item</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extract_metadata</span><span class="p">(</span><span class="n">viewpoint_item</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_status</span><span class="p">(</span><span class="n">viewpoint_item</span><span class="p">)</span>
+
+        <span class="c1"># Remove message from the queue since it has been processed</span>
+        <span class="n">message</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_update_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">viewpoint_item</span><span class="p">:</span> <span class="n">ViewpointModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update ddb table to reflect status change after processed by the worker.</span>
+
+<span class="sd">        :param viewpoint_item: Item being processed by the worker.</span>
+
+<span class="sd">        :return: None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">viewpoint_item</span><span class="o">.</span><span class="n">expire_time</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">viewpoint_item</span><span class="o">.</span><span class="n">viewpoint_status</span> <span class="o">=</span> <span class="n">ViewpointStatus</span><span class="o">.</span><span class="n">READY</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">viewpoint_database</span><span class="o">.</span><span class="n">update_viewpoint</span><span class="p">(</span><span class="n">viewpoint_item</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_create_local_tmp_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">viewpoint_item</span><span class="p">:</span> <span class="n">ViewpointModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a tmp directory locally to store the downloaded files</span>
+
+<span class="sd">        :param viewpoint_item: Item being processed by the worker.</span>
+
+<span class="sd">        :return: The path to the temp directory.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">message_viewpoint_id</span> <span class="o">=</span> <span class="n">viewpoint_item</span><span class="o">.</span><span class="n">viewpoint_id</span>
+        <span class="n">message_object_key</span> <span class="o">=</span> <span class="n">viewpoint_item</span><span class="o">.</span><span class="n">object_key</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating local directory for </span><span class="si">{</span><span class="n">message_viewpoint_id</span><span class="si">}</span><span class="s2"> in /</span><span class="si">{</span><span class="n">ServerConfig</span><span class="o">.</span><span class="n">efs_mount_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">local_viewpoint_folder</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">ServerConfig</span><span class="o">.</span><span class="n">efs_mount_name</span><span class="p">,</span> <span class="n">message_viewpoint_id</span><span class="p">)</span>
+        <span class="n">local_viewpoint_folder</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">local_object_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">local_viewpoint_folder</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">message_object_key</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">local_object_path</span><span class="o">.</span><span class="n">absolute</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">_download_s3_file_to_local_tmp</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">viewpoint_item</span><span class="p">:</span> <span class="n">ViewpointModel</span><span class="p">,</span> <span class="n">max_retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ViewpointStatus</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Download the object from S3 to the local tmp dorectory.</span>
+
+<span class="sd">        :param viewpoint_item: Item being processed by the worker.</span>
+
+<span class="sd">        :param max_retries: The number of times to retry the download if a non-fatal error is encountered.</span>
+
+<span class="sd">        :return: The viewpoint status and error message as a tuple. Returns None, None if the operation was successful.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">message_viewpoint_id</span> <span class="o">=</span> <span class="n">viewpoint_item</span><span class="o">.</span><span class="n">viewpoint_id</span>
+        <span class="n">message_object_key</span> <span class="o">=</span> <span class="n">viewpoint_item</span><span class="o">.</span><span class="n">object_key</span>
+        <span class="n">message_bucket_name</span> <span class="o">=</span> <span class="n">viewpoint_item</span><span class="o">.</span><span class="n">bucket_name</span>
+        <span class="n">local_object_path_str</span> <span class="o">=</span> <span class="n">viewpoint_item</span><span class="o">.</span><span class="n">local_object_path</span>
+
+        <span class="n">viewpoint_status</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">error_message</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">retry_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">retry_count</span> <span class="o">&lt;</span> <span class="n">max_retries</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Beginning download of </span><span class="si">{</span><span class="n">message_viewpoint_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">s3</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">download_file</span><span class="p">(</span><span class="n">message_bucket_name</span><span class="p">,</span> <span class="n">message_object_key</span><span class="p">,</span> <span class="n">local_object_path_str</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully download to </span><span class="si">{</span><span class="n">local_object_path_str</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+                <span class="n">viewpoint_status</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">error_message</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">break</span>
+
+            <span class="k">except</span> <span class="n">ClientError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="n">detailed_error</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+                <span class="k">if</span> <span class="n">err</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s2">&quot;Error&quot;</span><span class="p">][</span><span class="s2">&quot;Code&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;404&quot;</span><span class="p">:</span>
+                    <span class="n">detailed_error</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;The </span><span class="si">{</span><span class="n">message_bucket_name</span><span class="si">}</span><span class="s2"> bucket does not exist!&quot;</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">detailed_error</span><span class="p">)</span>
+
+                <span class="k">elif</span> <span class="n">err</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s2">&quot;Error&quot;</span><span class="p">][</span><span class="s2">&quot;Code&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;403&quot;</span><span class="p">:</span>
+                    <span class="n">detailed_error</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;You do not have permission to access </span><span class="si">{</span><span class="n">message_bucket_name</span><span class="si">}</span><span class="s2"> bucket!&quot;</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">detailed_error</span><span class="p">)</span>
+
+                <span class="n">error_message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Image Tile Server cannot process your S3 request! Error=</span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">detailed_error</span><span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
+                <span class="n">viewpoint_status</span> <span class="o">=</span> <span class="n">ViewpointStatus</span><span class="o">.</span><span class="n">FAILED</span>
+                <span class="k">break</span>
+
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="n">error_message</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Attempt </span><span class="si">{</span><span class="n">retry_count</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">max_retries</span><span class="si">}</span><span class="s2">: Something went wrong!&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot; Viewpoint_id: </span><span class="si">{</span><span class="n">message_viewpoint_id</span><span class="si">}</span><span class="s2"> | Error=</span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
+                <span class="n">viewpoint_status</span> <span class="o">=</span> <span class="n">ViewpointStatus</span><span class="o">.</span><span class="n">FAILED</span>
+
+            <span class="n">retry_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">viewpoint_status</span><span class="p">,</span> <span class="n">error_message</span>
+
+    <span class="k">def</span> <span class="nf">_download_supplementary_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">viewpoint_item</span><span class="p">:</span> <span class="n">ViewpointModel</span><span class="p">,</span> <span class="n">file_type</span><span class="p">:</span> <span class="n">SupplementaryFileType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Attempts to download associated supplementary file from S3, if present</span>
+
+<span class="sd">        :param viewpoint_item: Item being processed by the worker.</span>
+
+<span class="sd">        :param file_type: The type of supplementary file to download from S3.</span>
+
+<span class="sd">        :return: None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">message_viewpoint_id</span> <span class="o">=</span> <span class="n">viewpoint_item</span><span class="o">.</span><span class="n">viewpoint_id</span>
+        <span class="n">message_object_key</span> <span class="o">=</span> <span class="n">viewpoint_item</span><span class="o">.</span><span class="n">object_key</span>
+        <span class="n">message_bucket_name</span> <span class="o">=</span> <span class="n">viewpoint_item</span><span class="o">.</span><span class="n">bucket_name</span>
+        <span class="n">local_object_path</span> <span class="o">=</span> <span class="n">viewpoint_item</span><span class="o">.</span><span class="n">local_object_path</span>
+        <span class="n">extension_lookup</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">SupplementaryFileType</span><span class="o">.</span><span class="n">AUX</span><span class="p">:</span> <span class="n">ServerConfig</span><span class="o">.</span><span class="n">AUXXML_FILE_EXTENSION</span><span class="p">,</span>
+            <span class="n">SupplementaryFileType</span><span class="o">.</span><span class="n">OVERVIEW</span><span class="p">:</span> <span class="n">ServerConfig</span><span class="o">.</span><span class="n">OVERVIEW_FILE_EXTENSION</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Attempting to download optional </span><span class="si">{</span><span class="n">file_type</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> file for </span><span class="si">{</span><span class="n">message_viewpoint_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">s3</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">download_file</span><span class="p">(</span>
+                <span class="n">message_bucket_name</span><span class="p">,</span>
+                <span class="n">message_object_key</span> <span class="o">+</span> <span class="n">extension_lookup</span><span class="p">[</span><span class="n">file_type</span><span class="p">],</span>
+                <span class="n">local_object_path</span> <span class="o">+</span> <span class="n">extension_lookup</span><span class="p">[</span><span class="n">file_type</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Successfully downloaded </span><span class="si">{</span><span class="n">file_type</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> file to </span><span class="si">{</span><span class="n">local_object_path</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">extension_lookup</span><span class="p">[</span><span class="n">file_type</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="n">ClientError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No </span><span class="si">{</span><span class="n">file_type</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> file available for </span><span class="si">{</span><span class="n">message_viewpoint_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ViewpointWorker.get_default_tile_factory_pool_for_viewpoint">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.tile_server.viewpoint.worker.html#aws.osml.tile_server.viewpoint.worker.ViewpointWorker.get_default_tile_factory_pool_for_viewpoint">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_default_tile_factory_pool_for_viewpoint</span><span class="p">(</span><span class="n">viewpoint_item</span><span class="p">:</span> <span class="n">ViewpointModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TileFactoryPool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Helper method that creates a default tile factory pool for the image. This resource pool will not necessarily</span>
+<span class="sd">        be sufficient to build all tiles, but it is sufficient to build previews and handle metadata.</span>
+
+<span class="sd">        :param viewpoint_item: the description of the viewpoint item</span>
+<span class="sd">        :return: a default tile factory pool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tile_format</span> <span class="o">=</span> <span class="n">GDALImageFormats</span><span class="o">.</span><span class="n">PNG</span>
+        <span class="n">compression</span> <span class="o">=</span> <span class="n">GDALCompressionOptions</span><span class="o">.</span><span class="n">NONE</span>
+        <span class="n">output_type</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">viewpoint_item</span><span class="o">.</span><span class="n">range_adjustment</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">RangeAdjustmentType</span><span class="o">.</span><span class="n">NONE</span><span class="p">:</span>
+            <span class="n">output_type</span> <span class="o">=</span> <span class="n">gdalconst</span><span class="o">.</span><span class="n">GDT_Byte</span>
+        <span class="n">tile_factory_pool</span> <span class="o">=</span> <span class="n">get_tile_factory_pool</span><span class="p">(</span>
+            <span class="n">tile_format</span><span class="p">,</span>
+            <span class="n">compression</span><span class="p">,</span>
+            <span class="n">viewpoint_item</span><span class="o">.</span><span class="n">local_object_path</span><span class="p">,</span>
+            <span class="n">output_type</span><span class="p">,</span>
+            <span class="n">viewpoint_item</span><span class="o">.</span><span class="n">range_adjustment</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">tile_factory_pool</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_calculate_image_statistics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">viewpoint_item</span><span class="p">:</span> <span class="n">ViewpointModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This code forces GDAL to and compute the statistics / histograms for each band. This can be a</span>
+<span class="sd">        time-consuming operation, so we want to only do this once. GDAL will write those statistics into a</span>
+<span class="sd">        .aux.xml file associated with the dataset, but it only appears to do so when the dataset object is</span>
+<span class="sd">        cleaned up. So this code creates a temporary dataset, forces it to generate the statistics using the</span>
+<span class="sd">        gdal.Info() command and then closes the dataset to ensure that the auxiliary file is created. This is</span>
+<span class="sd">        somewhat of a hack but all future calls to gdal.Open (i.e. in the tile factory pool) should be able to</span>
+<span class="sd">        read the .aux.xml file and skip the expensive work of generating the statistics.</span>
+
+<span class="sd">        :param viewpoint_item: the description of the viewpoint item</span>
+<span class="sd">        :return: a default tile factory pool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Calculating Image Statistics for </span><span class="si">{</span><span class="n">viewpoint_item</span><span class="o">.</span><span class="n">local_object_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+        <span class="n">temp_ds</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="n">viewpoint_item</span><span class="o">.</span><span class="n">local_object_path</span><span class="p">)</span>
+        <span class="n">gdal</span><span class="o">.</span><span class="n">Info</span><span class="p">(</span><span class="n">temp_ds</span><span class="p">,</span> <span class="n">stats</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">approxStats</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">computeMinMax</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">reportHistograms</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">del</span> <span class="n">temp_ds</span>
+        <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;METRIC: GDAL Info Time: </span><span class="si">{</span><span class="n">end_time</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start_time</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="n">viewpoint_item</span><span class="o">.</span><span class="n">local_object_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_create_image_pyramid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tile_factory</span><span class="p">:</span> <span class="n">TileFactoryPool</span><span class="p">,</span> <span class="n">viewpoint_item</span><span class="p">:</span> <span class="n">ViewpointModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating Image Pyramid for </span><span class="si">{</span><span class="n">viewpoint_item</span><span class="o">.</span><span class="n">local_object_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="n">tile_factory</span><span class="o">.</span><span class="n">raster_dataset</span>
+        <span class="n">overviews</span> <span class="o">=</span> <span class="n">get_standard_overviews</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">RasterXSize</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">RasterYSize</span><span class="p">,</span> <span class="mi">1024</span><span class="p">)</span>
+        <span class="n">ds</span><span class="o">.</span><span class="n">BuildOverviews</span><span class="p">(</span><span class="s2">&quot;CUBIC&quot;</span><span class="p">,</span> <span class="n">overviews</span><span class="p">)</span>
+        <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;METRIC: BuildOverviews Time: </span><span class="si">{</span><span class="n">end_time</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start_time</span><span class="si">}</span><span class="s2">&quot;</span> <span class="sa">f</span><span class="s2">&quot; for </span><span class="si">{</span><span class="n">viewpoint_item</span><span class="o">.</span><span class="n">local_object_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_verify_tile_creation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tile_factory</span><span class="p">:</span> <span class="n">GDALTileFactory</span><span class="p">,</span> <span class="n">viewpoint_item</span><span class="p">:</span> <span class="n">ViewpointModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Verifying tile creation for </span><span class="si">{</span><span class="n">viewpoint_item</span><span class="o">.</span><span class="n">local_object_path</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+        <span class="n">tile_size</span> <span class="o">=</span> <span class="n">viewpoint_item</span><span class="o">.</span><span class="n">tile_size</span>
+        <span class="n">image_bytes</span> <span class="o">=</span> <span class="n">tile_factory</span><span class="o">.</span><span class="n">create_encoded_tile</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tile_size</span><span class="p">,</span> <span class="n">tile_size</span><span class="p">])</span>
+        <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;METRIC: Sample TileCreate Time: </span><span class="si">{</span><span class="n">end_time</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start_time</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="n">viewpoint_item</span><span class="o">.</span><span class="n">local_object_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image_bytes</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_write_metadata</span><span class="p">(</span><span class="n">tile_factory</span><span class="p">:</span> <span class="n">TileFactoryPool</span><span class="p">,</span> <span class="n">viewpoint_item</span><span class="p">:</span> <span class="n">ViewpointModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="n">tile_factory</span><span class="o">.</span><span class="n">raster_dataset</span><span class="o">.</span><span class="n">GetMetadata</span><span class="p">()</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">viewpoint_item</span><span class="o">.</span><span class="n">local_object_path</span> <span class="o">+</span> <span class="n">ServerConfig</span><span class="o">.</span><span class="n">METADATA_FILE_EXTENSION</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">md_file</span><span class="p">:</span>
+            <span class="n">md_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="n">metadata</span><span class="p">}))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_write_bounds</span><span class="p">(</span><span class="n">tile_factory</span><span class="p">:</span> <span class="n">TileFactoryPool</span><span class="p">,</span> <span class="n">viewpoint_item</span><span class="p">:</span> <span class="n">ViewpointModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="n">tile_factory</span><span class="o">.</span><span class="n">raster_dataset</span><span class="o">.</span><span class="n">RasterXSize</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="n">tile_factory</span><span class="o">.</span><span class="n">raster_dataset</span><span class="o">.</span><span class="n">RasterYSize</span>
+        <span class="n">image_coordinates</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">]</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">viewpoint_item</span><span class="o">.</span><span class="n">local_object_path</span> <span class="o">+</span> <span class="n">ServerConfig</span><span class="o">.</span><span class="n">BOUNDS_FILE_EXTENSION</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">bounds_file</span><span class="p">:</span>
+            <span class="n">bounds_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="n">image_coordinates</span><span class="p">}))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_write_info</span><span class="p">(</span><span class="n">tile_factory</span><span class="p">:</span> <span class="n">TileFactoryPool</span><span class="p">,</span> <span class="n">viewpoint_item</span><span class="p">:</span> <span class="n">ViewpointModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="n">tile_factory</span><span class="o">.</span><span class="n">raster_dataset</span><span class="o">.</span><span class="n">RasterXSize</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="n">tile_factory</span><span class="o">.</span><span class="n">raster_dataset</span><span class="o">.</span><span class="n">RasterYSize</span>
+        <span class="n">coordinates</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">corner</span> <span class="ow">in</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">height</span><span class="p">),</span> <span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">),</span> <span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]:</span>
+            <span class="n">world_coordinate</span> <span class="o">=</span> <span class="n">tile_factory</span><span class="o">.</span><span class="n">sensor_model</span><span class="o">.</span><span class="n">image_to_world</span><span class="p">(</span><span class="n">ImageCoordinate</span><span class="p">(</span><span class="n">corner</span><span class="p">))</span>
+            <span class="n">coordinates</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">degrees</span><span class="p">(</span><span class="n">world_coordinate</span><span class="o">.</span><span class="n">longitude</span><span class="p">),</span> <span class="n">degrees</span><span class="p">(</span><span class="n">world_coordinate</span><span class="o">.</span><span class="n">latitude</span><span class="p">)))</span>
+        <span class="n">coordinates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">feature</span> <span class="o">=</span> <span class="n">geojson</span><span class="o">.</span><span class="n">Feature</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">viewpoint_item</span><span class="o">.</span><span class="n">viewpoint_name</span><span class="p">,</span> <span class="n">geometry</span><span class="o">=</span><span class="n">geojson</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">Polygon</span><span class="p">([</span><span class="n">coordinates</span><span class="p">]),</span> <span class="n">properties</span><span class="o">=</span><span class="p">{}</span>
+        <span class="p">)</span>
+        <span class="n">feature_collection</span> <span class="o">=</span> <span class="n">geojson</span><span class="o">.</span><span class="n">FeatureCollection</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="p">[</span><span class="n">feature</span><span class="p">])</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">viewpoint_item</span><span class="o">.</span><span class="n">local_object_path</span> <span class="o">+</span> <span class="n">ServerConfig</span><span class="o">.</span><span class="n">INFO_FILE_EXTENSION</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">info_file</span><span class="p">:</span>
+            <span class="n">info_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">geojson</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">feature_collection</span><span class="p">))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_write_statistics</span><span class="p">(</span><span class="n">viewpoint_item</span><span class="p">:</span> <span class="n">ViewpointModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">gdal_options</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">InfoOptions</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s2">&quot;json&quot;</span><span class="p">,</span> <span class="n">showMetadata</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">gdal_info</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Info</span><span class="p">(</span><span class="n">viewpoint_item</span><span class="o">.</span><span class="n">local_object_path</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">gdal_options</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">viewpoint_item</span><span class="o">.</span><span class="n">local_object_path</span> <span class="o">+</span> <span class="n">ServerConfig</span><span class="o">.</span><span class="n">STATISTICS_FILE_EXTENSION</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stats_file</span><span class="p">:</span>
+            <span class="n">stats_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">&quot;image_statistics&quot;</span><span class="p">:</span> <span class="n">gdal_info</span><span class="p">}))</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

@@ -1,0 +1,340 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.tile_server.utils.tile_server_utils &mdash; OversightML Tile Server  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            OversightML Tile Server
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">OversightML Tile Server</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.tile_server.utils.tile_server_utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.tile_server.utils.tile_server_utils</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">lru_cache</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">ceil</span><span class="p">,</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">RLock</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">uuid</span> <span class="kn">import</span> <span class="n">uuid4</span>
+
+<span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">gdal</span>
+<span class="kn">from</span> <span class="nn">osgeo.gdal</span> <span class="kn">import</span> <span class="n">Dataset</span>
+
+<span class="kn">from</span> <span class="nn">aws.osml.gdal</span> <span class="kn">import</span> <span class="n">GDALCompressionOptions</span><span class="p">,</span> <span class="n">GDALImageFormats</span><span class="p">,</span> <span class="n">RangeAdjustmentType</span><span class="p">,</span> <span class="n">load_gdal_dataset</span>
+<span class="kn">from</span> <span class="nn">aws.osml.image_processing</span> <span class="kn">import</span> <span class="n">GDALTileFactory</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;uvicorn&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_media_type">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.tile_server.utils.tile_server_utils.html#aws.osml.tile_server.utils.tile_server_utils.get_media_type">[docs]</a>
+<span class="k">def</span> <span class="nf">get_media_type</span><span class="p">(</span><span class="n">tile_format</span><span class="p">:</span> <span class="n">GDALImageFormats</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Obtain the meta-type based on the given tile format.</span>
+
+<span class="sd">    :param tile_format: GDAL Image format associated with the tile.</span>
+
+<span class="sd">    :return: The associated image format in plain text.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">supported_media_types</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">GDALImageFormats</span><span class="o">.</span><span class="n">PNG</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span> <span class="s2">&quot;image/png&quot;</span><span class="p">,</span>
+        <span class="n">GDALImageFormats</span><span class="o">.</span><span class="n">NITF</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span> <span class="s2">&quot;image/nitf&quot;</span><span class="p">,</span>
+        <span class="n">GDALImageFormats</span><span class="o">.</span><span class="n">JPEG</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span> <span class="s2">&quot;image/jpeg&quot;</span><span class="p">,</span>
+        <span class="n">GDALImageFormats</span><span class="o">.</span><span class="n">GTIFF</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span> <span class="s2">&quot;image/tiff&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">default_media_type</span> <span class="o">=</span> <span class="s2">&quot;image&quot;</span>
+    <span class="k">return</span> <span class="n">supported_media_types</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tile_format</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">default_media_type</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_standard_overviews">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.tile_server.utils.tile_server_utils.html#aws.osml.tile_server.utils.tile_server_utils.get_standard_overviews">[docs]</a>
+<span class="k">def</span> <span class="nf">get_standard_overviews</span><span class="p">(</span><span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">preview_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This utility computes a list of reduced resolution scales that define a standard image pyramid for a given</span>
+<span class="sd">    image and desired final preview size.</span>
+
+<span class="sd">    :param width: Width of the full image at the highest resolution.</span>
+<span class="sd">    :param height: Height of the full image at the highest resolution.</span>
+<span class="sd">    :param preview_size: The desired size of the lowest resolution / thumbnail image.</span>
+<span class="sd">    :return: The list of scale factors needed for each level in the tile pyramid, e.g. [2, 4, 8, 16 ...]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">min_side</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+    <span class="n">num_overviews</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="n">min_side</span> <span class="o">/</span> <span class="n">preview_size</span><span class="p">)</span> <span class="o">/</span> <span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">num_overviews</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_overviews</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+    <span class="k">return</span> <span class="p">[]</span></div>
+
+
+
+<div class="viewcode-block" id="TileFactoryPool">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.tile_server.utils.tile_server_utils.html#aws.osml.tile_server.utils.tile_server_utils.TileFactoryPool">[docs]</a>
+<span class="k">class</span> <span class="nc">TileFactoryPool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class representing a pool of GDALTileFactory objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">tile_format</span><span class="p">:</span> <span class="n">GDALImageFormats</span><span class="p">,</span>
+        <span class="n">tile_compression</span><span class="p">:</span> <span class="n">GDALCompressionOptions</span><span class="p">,</span>
+        <span class="n">local_object_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">output_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">range_adjustment</span><span class="p">:</span> <span class="n">RangeAdjustmentType</span> <span class="o">=</span> <span class="n">RangeAdjustmentType</span><span class="o">.</span><span class="n">NONE</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This initializes a TileFactoryPool, representing a pool of GDALTileFactory objects. The purpose</span>
+<span class="sd">        of this class is to manage resources (the GDALTileFactory objects) efficiently, typically for a</span>
+<span class="sd">        multithreading environment.</span>
+
+
+<span class="sd">        :param tile_format: The image format of the tiles.</span>
+<span class="sd">        :param tile_compression: The compression options for the tiles.</span>
+<span class="sd">        :param local_object_path: The local path to the object.</span>
+<span class="sd">        :param output_type: The output type. Defaults to None.</span>
+<span class="sd">        :param range_adjustment: The range adjustment type, defaults to RangeAdjustmentType.NONE.</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span> <span class="o">=</span> <span class="n">RLock</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_inventory</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">total_inventory</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tile_format</span> <span class="o">=</span> <span class="n">tile_format</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tile_compression</span> <span class="o">=</span> <span class="n">tile_compression</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">local_object_path</span> <span class="o">=</span> <span class="n">local_object_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_type</span> <span class="o">=</span> <span class="n">output_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">range_adjustment</span> <span class="o">=</span> <span class="n">range_adjustment</span>
+
+<div class="viewcode-block" id="TileFactoryPool.checkout">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.tile_server.utils.tile_server_utils.html#aws.osml.tile_server.utils.tile_server_utils.TileFactoryPool.checkout">[docs]</a>
+    <span class="k">def</span> <span class="nf">checkout</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GDALTileFactory</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handles the checkout process. If the current inventory is not empty,</span>
+<span class="sd">        it pops out the first GDALTileFactory object. If the inventory is empty,</span>
+<span class="sd">        a new GDALTileFactory object is created, added to the inventory, and returned.</span>
+
+<span class="sd">        :return: Instance of the GDALTileFactory class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tf</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_inventory</span><span class="p">:</span>
+                <span class="n">tf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_inventory</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">tf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">thread_id</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">get_native_id</span><span class="p">()</span>
+
+            <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+            <span class="n">ds</span><span class="p">,</span> <span class="n">sensor_model</span> <span class="o">=</span> <span class="n">load_gdal_dataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">local_object_path</span><span class="p">)</span>
+            <span class="n">tf</span> <span class="o">=</span> <span class="n">GDALTileFactory</span><span class="p">(</span>
+                <span class="n">ds</span><span class="p">,</span> <span class="n">sensor_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_format</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_compression</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">range_adjustment</span>
+            <span class="p">)</span>
+            <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;New TileFactory for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">local_object_path</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; created by thread </span><span class="si">{</span><span class="n">thread_id</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">end_time</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start_time</span><span class="si">}</span><span class="s2"> seconds.&quot;</span>
+            <span class="p">)</span>
+
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">total_inventory</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total TileFactory count for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">local_object_path</span><span class="si">}</span><span class="s2"> is </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">total_inventory</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">tf</span></div>
+
+
+<div class="viewcode-block" id="TileFactoryPool.checkin">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.tile_server.utils.tile_server_utils.html#aws.osml.tile_server.utils.tile_server_utils.TileFactoryPool.checkin">[docs]</a>
+    <span class="k">def</span> <span class="nf">checkin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tf</span><span class="p">:</span> <span class="n">GDALTileFactory</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds a GDALTileFactory object to the current inventory.</span>
+
+<span class="sd">        :param tf: GDALTileFactory object to be checked in to the index.</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_inventory</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tf</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TileFactoryPool.checkout_in_context">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.tile_server.utils.tile_server_utils.html#aws.osml.tile_server.utils.tile_server_utils.TileFactoryPool.checkout_in_context">[docs]</a>
+    <span class="nd">@contextmanager</span>
+    <span class="k">def</span> <span class="nf">checkout_in_context</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A context manager for using the `checkout` method in a `with` statement. Exception safe - resources are</span>
+<span class="sd">        guaranteed to be `checkin`ed. It yields the resource obtained from `checkout` for use inside the `with`</span>
+<span class="sd">        statement.</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        :raise Exception: Any exceptions raised within the `with` block or by `checkout` and `checkin` methods</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tf</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">tf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkout</span><span class="p">()</span>
+            <span class="k">yield</span> <span class="n">tf</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">tf</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">checkin</span><span class="p">(</span><span class="n">tf</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="get_tile_factory_pool">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.tile_server.utils.tile_server_utils.html#aws.osml.tile_server.utils.tile_server_utils.get_tile_factory_pool">[docs]</a>
+<span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_tile_factory_pool</span><span class="p">(</span>
+    <span class="n">tile_format</span><span class="p">:</span> <span class="n">GDALImageFormats</span><span class="p">,</span>
+    <span class="n">tile_compression</span><span class="p">:</span> <span class="n">GDALCompressionOptions</span><span class="p">,</span>
+    <span class="n">local_object_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">output_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">range_adjustment</span><span class="p">:</span> <span class="n">RangeAdjustmentType</span> <span class="o">=</span> <span class="n">RangeAdjustmentType</span><span class="o">.</span><span class="n">NONE</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TileFactoryPool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create and return a pool of tile factories.</span>
+
+<span class="sd">    :param tile_format: The format of the tiles to be created.</span>
+<span class="sd">    :param tile_compression: The compression options for the tiles.</span>
+<span class="sd">    :param local_object_path: The path to the local object storage.</span>
+<span class="sd">    :param output_type: The optional output type for the tiles.</span>
+<span class="sd">    :param range_adjustment: The range adjustment type for the tiles.</span>
+<span class="sd">    :return: The tile factory pool.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">TileFactoryPool</span><span class="p">(</span><span class="n">tile_format</span><span class="p">,</span> <span class="n">tile_compression</span><span class="p">,</span> <span class="n">local_object_path</span><span class="p">,</span> <span class="n">output_type</span><span class="p">,</span> <span class="n">range_adjustment</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="perform_gdal_translation">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.tile_server.utils.tile_server_utils.html#aws.osml.tile_server.utils.tile_server_utils.perform_gdal_translation">[docs]</a>
+<span class="k">def</span> <span class="nf">perform_gdal_translation</span><span class="p">(</span><span class="n">dataset</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">gdal_options</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytearray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform GDAL translation on a dataset with given GDAL options.</span>
+
+<span class="sd">    :param dataset: The input GDAL dataset to be translated.</span>
+<span class="sd">    :param gdal_options: Options for the GDAL translation.</span>
+<span class="sd">    :return: A bytearray containing the translated data, or None if translation fails.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s2">&quot;format&quot;</span> <span class="ow">in</span> <span class="n">gdal_options</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gdal_options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;format&quot;</span><span class="p">),</span> <span class="n">GDALImageFormats</span><span class="p">):</span>
+        <span class="n">tmp_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;/vsimem/</span><span class="si">{</span><span class="n">uuid4</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="n">gdal</span><span class="o">.</span><span class="n">Translate</span><span class="p">(</span><span class="n">tmp_name</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="o">**</span><span class="n">gdal_options</span><span class="p">)</span>
+
+        <span class="c1"># Read the VSIFile</span>
+        <span class="n">vsifile_handle</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">vsifile_handle</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">VSIFOpenL</span><span class="p">(</span><span class="n">tmp_name</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">vsifile_handle</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="n">stat</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">VSIStatL</span><span class="p">(</span><span class="n">tmp_name</span><span class="p">,</span> <span class="n">gdal</span><span class="o">.</span><span class="n">VSI_STAT_SIZE_FLAG</span><span class="p">)</span>
+            <span class="n">vsibuf</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">VSIFReadL</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">stat</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">vsifile_handle</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">vsibuf</span>
+
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">vsifile_handle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">gdal</span><span class="o">.</span><span class="n">VSIFCloseL</span><span class="p">(</span><span class="n">vsifile_handle</span><span class="p">)</span>
+            <span class="n">gdal</span><span class="o">.</span><span class="n">GetDriverByName</span><span class="p">(</span><span class="n">gdal_options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;format&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">Delete</span><span class="p">(</span><span class="n">tmp_name</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;gdal_options missing format key ({&#39;format&#39;: &lt;GDALImageFormats object&gt;})&quot;</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

@@ -1,0 +1,47 @@
+tile_server.viewpoint.viewpoint_id.image.crop
+=============================================
+
+.. py:module:: tile_server.viewpoint.viewpoint_id.image.crop
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   tile_server.viewpoint.viewpoint_id.image.crop.crop_router
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   tile_server.viewpoint.viewpoint_id.image.crop.get_image_crop
+
+
+Module Contents
+---------------
+
+.. py:data:: crop_router
+
+.. py:function:: get_image_crop(aws: Annotated[aws.osml.tile_server.services.get_aws_services, Depends()], viewpoint_id: str = Path(description='Unique identifier for this viewpoint'), min_x: int = Path(description='The left pixel coordinate of the desired crop.'), min_y: int = Path(description='The upper pixel coordinate of the desired crop.'), max_x: int = Path(description='The right pixel coordinate of the desired crop.'), max_y: int = Path(description='The lower pixel coordinate of the pixel crop.'), img_format: aws.osml.gdal.GDALImageFormats = Path(description='Desired format for cropped output. Valid options are defined by GDALImageFormats.'), compression: aws.osml.gdal.GDALCompressionOptions = Query(default=GDALCompressionOptions.NONE, description='Desired compression algorithm for image.'), width: int = Query(default=None, description='Optional. Width in px of the desired crop.  If provided, max_x will be ignored.'), height: int = Query(default=None, description='Optional. Height in px of the desired crop.  If provided, max_y will be ignored.')) -> fastapi.Response
+
+   Crop out an arbitrary region of the full resolution image given a bounding box in pixel coordinates.
+   [0, 0] is assumed to be in the upper left corner of the image with x increasing in columns to the
+   right and y increasing in rows down. The [min_x, min_y, max_x, max_y] coordinates are the upper
+   left and lower right corners of the cropped region.
+
+   :param aws: Injected AWS services.
+   :param viewpoint_id: Unique viewpoint id to get from the table as a crop.
+   :param min_x: The left pixel coordinate of the desired crop.
+   :param min_y: The upper pixel coordinate of the desired crop.
+   :param max_x: The right pixel coordinate of the desired crop.
+   :param max_y: The lower pixel coordinate of the pixel crop.
+   :param img_format: Desired format for cropped output. Valid options are defined by GDALImageFormats.
+   :param compression: Desired compression algorithm for the output image.
+   :param width: Optional width in px of the desired crop, if provided, max_x will be ignored.
+   :param height: Optional height in px of the desired crop, if provided, max_y will be ignored.
+   :return: Response of cropped image binary with the appropriate mime type based on the img_format
+
+

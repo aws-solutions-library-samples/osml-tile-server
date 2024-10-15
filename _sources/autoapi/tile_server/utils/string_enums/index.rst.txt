@@ -1,0 +1,90 @@
+tile_server.utils.string_enums
+==============================
+
+.. py:module:: tile_server.utils.string_enums
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   tile_server.utils.string_enums.AutoStringEnum
+   tile_server.utils.string_enums.AutoLowerStringEnum
+   tile_server.utils.string_enums.AutoUnderscoreStringEnum
+
+
+Module Contents
+---------------
+
+.. py:class:: AutoStringEnum(*args, **kwds)
+
+   Bases: :py:obj:`enum.Enum`
+
+
+   A class used to represent an Enum where the value of the Enum member is the same as the name of the Enum member.
+
+
+   .. py:method:: _generate_next_value_(name, start, count, last_values) -> str
+      :staticmethod:
+
+
+      Function to iterate through the Enum members.
+
+      :param: name: Name of the Enum member.
+      :param: start: Initial integer to start with.
+      :param: count: Number of existing members.
+      :param: last_values: List of values for existing members.
+
+      :return: The next value of the enumeration which is the same as the name.
+
+
+
+.. py:class:: AutoLowerStringEnum(*args, **kwds)
+
+   Bases: :py:obj:`enum.Enum`
+
+
+   A class to represent an Enum where the value of the Enum member is the lowercase version of the name associated with
+   the Enum member.
+
+
+   .. py:method:: _generate_next_value_(name, start, count, last_values) -> str
+      :staticmethod:
+
+
+      Function to iterate through the Enum members.
+
+      :param: name: The name of the Enum member.
+      :param: start: The initial integer.
+      :param: count: The number of existing members.
+      :param: last_values: The list of values associated with existing members.
+
+      :return: The next value of the enumeration which is the lowercase version of the name.
+
+
+
+.. py:class:: AutoUnderscoreStringEnum(*args, **kwds)
+
+   Bases: :py:obj:`enum.Enum`
+
+
+   A class used to represent an Enum where the value of the Enum member is the name of the Enum member with
+   underscores replaced with spaces.
+
+
+   .. py:method:: _generate_next_value_(name, start, count, last_values) -> str
+      :staticmethod:
+
+
+      Function to iterate through the Enum members.
+
+      :param: name: Name of the Enum member.
+      :param: start: Initial integer to start with.
+      :param: count: Number of existing members.
+      :param: last_values: List of values of existing members.
+
+      :return: Next value of enumeration which is the name of the Enum member with underscores replaced by spaces.
+
+
+

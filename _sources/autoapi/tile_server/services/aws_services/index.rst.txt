@@ -1,0 +1,108 @@
+tile_server.services.aws_services
+=================================
+
+.. py:module:: tile_server.services.aws_services
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   tile_server.services.aws_services.logger
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   tile_server.services.aws_services.RefreshableBotoSession
+   tile_server.services.aws_services.AwsServices
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   tile_server.services.aws_services.get_aws_services
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:class:: RefreshableBotoSession
+
+   RefreshableBotoSession is a Boto3 helper class that allows for the creation of a refreshable session such that none
+   of the client/resources we want to call against will expire.
+
+
+   .. py:attribute:: sts_arn
+
+
+   .. py:attribute:: session_name
+      :value: 'TileServerSession'
+
+
+
+   .. py:attribute:: session_duration
+      :value: 3600
+
+
+
+   .. py:method:: _refresh() -> Dict[str, str]
+
+      Refresh the AWS credentials for the current session.
+
+      :return: Session credentials that were refreshed.
+
+
+
+   .. py:method:: refreshable_session() -> boto3.Session
+
+      Create a refreshable session which will automatically renew credentials when the credential expired.
+
+      :return: Refreshable credentials session to use for the task user.
+
+
+
+.. py:class:: AwsServices(ddb: boto3.resources.base.ServiceResource = None, s3: boto3.resources.base.ServiceResource = None, sqs: boto3.resources.base.ServiceResource = None)
+
+   .. py:method:: initialize_ddb(session: boto3.Session) -> boto3.resources.base.ServiceResource
+      :staticmethod:
+
+
+      Initialize DynamoDB service and return a service resource.
+
+      :param: session: The credential session to use for the ServiceResource.
+      :return: DynamoDB service resource for consumption.
+
+
+
+   .. py:method:: initialize_s3(session: boto3.Session) -> boto3.resources.base.ServiceResource
+      :staticmethod:
+
+
+      Initialize S3 service and return a service resource.
+
+      :param: session: The credential session to use for the ServiceResource.
+      :return: S3 service resource for consumption.
+
+
+
+   .. py:method:: initialize_sqs(session: boto3.Session) -> boto3.resources.base.ServiceResource
+      :staticmethod:
+
+
+      Initialize SQS service and return a service resource.
+
+      :param: session: The credential session to use for the ServiceResource.
+      :return: SQS service resource for consumption.
+
+
+
+.. py:function:: get_aws_services() -> AwsServices
+

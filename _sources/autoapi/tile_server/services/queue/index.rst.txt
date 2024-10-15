@@ -1,0 +1,41 @@
+tile_server.services.queue
+==========================
+
+.. py:module:: tile_server.services.queue
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   tile_server.services.queue.ViewpointRequestQueue
+
+
+Module Contents
+---------------
+
+.. py:class:: ViewpointRequestQueue(aws_sqs, queue_name: str, logger: logging.Logger = getLogger(__name__))
+
+   A class used to represent the ViewpointRequestQueue.
+
+
+   .. py:attribute:: sqs_client
+
+
+   .. py:attribute:: queue
+
+
+   .. py:attribute:: logger
+
+
+   .. py:method:: send_request(request: Dict, attributes: Dict = None) -> None
+
+      Send the message to an associated SQS queue.
+
+      :param request: A JSON request to assign the SQS message sent.
+      :param attributes: An optional set of attributes to attach to the message.
+      :return: None
+
+
+

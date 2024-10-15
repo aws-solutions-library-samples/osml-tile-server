@@ -1,0 +1,87 @@
+tile_server.main
+================
+
+.. py:module:: tile_server.main
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   tile_server.main.uvicorn_log_level_lookup
+   tile_server.main.app
+   tile_server.main.app
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   tile_server.main.configure_tile_server_logging
+   tile_server.main.lifespan
+   tile_server.main.root
+   tile_server.main.healthcheck
+
+
+Module Contents
+---------------
+
+.. py:data:: uvicorn_log_level_lookup
+
+.. py:function:: configure_tile_server_logging() -> logging.Logger
+
+   This function sets up the logging for the Tile Server.
+
+   :return: a Logger instance for the async worker to use.
+
+
+.. py:function:: lifespan(app: fastapi.FastAPI) -> contextlib.AbstractAsyncContextManager[None] | fastapi.FastAPI
+   :async:
+
+
+   Start the Viewpoint Worker as part of the FastAPI lifespan.
+
+   :return: The lifespan construct associated with the fast API
+
+   This function starts the Viewpoint Worker as part of the FastAPI lifespan,
+   and stops it after yield.
+   For more information, refer to FastAPI events
+   documentation at : https://fastapi.tiangolo.com/advanced/events/
+
+   Note:
+       aws_s3, viewpoint_database and viewpoint_request_queue should be predefined
+       before this function's call.
+       They represent your AWS S3 bucket instance,
+       your database instance and a queue of requests respectively.
+
+
+.. py:data:: app
+
+.. py:data:: app
+
+.. py:function:: root() -> str
+   :async:
+
+
+   Root endpoint for the application.
+
+   Returns a welcome message and basic application information including
+   contact and license details.
+
+   :return: Welcome message with application information.
+
+
+.. py:function:: healthcheck() -> tile_server.utils.HealthCheck
+   :async:
+
+
+   Endpoint to perform a healthcheck on. This endpoint can primarily be used by Docker
+   to ensure robust container orchestration and management is in place. Other
+   services which rely on proper functioning of the API service will not deploy if this
+   endpoint returns any other HTTP status code except 200 (OK).
+
+   :return: JSON response with the health status, 200
+
+

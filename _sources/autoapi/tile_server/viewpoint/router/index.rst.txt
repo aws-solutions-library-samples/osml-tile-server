@@ -1,0 +1,76 @@
+tile_server.viewpoint.router
+============================
+
+.. py:module:: tile_server.viewpoint.router
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   tile_server.viewpoint.router.logger
+   tile_server.viewpoint.router.viewpoint_router
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   tile_server.viewpoint.router._validate_viewpoint_id
+   tile_server.viewpoint.router.list_viewpoints
+   tile_server.viewpoint.router.create_viewpoint
+   tile_server.viewpoint.router.update_viewpoint
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:function:: _validate_viewpoint_id(viewpoint_id: str) -> bool
+
+   This is a helper function to validate that the user supplied viewpoint ID does not contain whitespace and
+   is URL safe.
+
+   :param id: The viewpoint_id input string.
+   :return: True/False if the viewpoint ID is valid or not.
+
+
+.. py:data:: viewpoint_router
+
+.. py:function:: list_viewpoints(aws: Annotated[aws.osml.tile_server.services.get_aws_services, Depends()], encryptor: Annotated[aws.osml.tile_server.services.get_encryptor, Depends()], max_results: int | None = None, next_token: str | None = None) -> aws.osml.tile_server.models.ViewpointListResponse
+
+   Retrieve a list of available viewpoints. Viewpoints are resources that are created to make images
+   stored in the cloud available through these service APIs.
+
+   :param aws: Injected AWS services
+   :param encryptor: Injected encryptor
+   :param max_results: Optional max number of viewpoints requested
+   :param next_token: Optional token to begin a query from provided by the previous query response.
+   :return: List of viewpoints with details from the table.
+
+
+.. py:function:: create_viewpoint(viewpoint_request: aws.osml.tile_server.models.ViewpointRequest, aws: Annotated[aws.osml.tile_server.services.get_aws_services, Depends()], response: fastapi.Response) -> Dict[str, Any]
+
+   Create a new viewpoint for an image stored in the cloud. This operation tells the tile server to
+   parse and index information about the source image necessary to improve performance of all following
+   calls to the tile server API.
+
+   :param aws: Injected AWS services
+   :param viewpoint_request: client's request which contains name, file source, and range type.
+   :param request: A handle to the FastAPI request object.
+   :return: Status associated with the request to create the viewpoint in the table.
+
+
+.. py:function:: update_viewpoint(viewpoint_request: aws.osml.tile_server.models.ViewpointUpdate, aws: Annotated[aws.osml.tile_server.services.get_aws_services, Depends()]) -> aws.osml.tile_server.models.ViewpointModel
+
+   Change a viewpoint that already exists. This operation can be called to update an existing viewpoint
+   when the display options have changed or when the image has moved to a new location.
+
+   :param aws: Injected AWS services.
+   :param viewpoint_request: Client's request, which contains name, file source, and range type.
+   :return: Updated viewpoint item details from the table.
+
+

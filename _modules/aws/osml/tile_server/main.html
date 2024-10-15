@@ -1,0 +1,295 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.tile_server.main &mdash; OversightML Tile Server  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OversightML Tile Server
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OversightML Tile Server</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.tile_server.main</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.tile_server.main</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">AbstractAsyncContextManager</span><span class="p">,</span> <span class="n">asynccontextmanager</span>
+
+<span class="kn">import</span> <span class="nn">uvicorn</span>
+<span class="kn">from</span> <span class="nn">asgi_correlation_id</span> <span class="kn">import</span> <span class="n">CorrelationIdFilter</span><span class="p">,</span> <span class="n">CorrelationIdMiddleware</span>
+<span class="kn">from</span> <span class="nn">fastapi</span> <span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span> <span class="nn">fastapi.middleware.cors</span> <span class="kn">import</span> <span class="n">CORSMiddleware</span>
+<span class="kn">from</span> <span class="nn">fastapi.responses</span> <span class="kn">import</span> <span class="n">HTMLResponse</span>
+<span class="kn">from</span> <span class="nn">fastapi_versioning</span> <span class="kn">import</span> <span class="n">VersionedFastAPI</span>
+<span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">gdal</span>
+<span class="kn">from</span> <span class="nn">pythonjsonlogger.jsonlogger</span> <span class="kn">import</span> <span class="n">JsonFormatter</span>
+
+<span class="kn">from</span> <span class="nn">.app_config</span> <span class="kn">import</span> <span class="n">ServerConfig</span>
+<span class="kn">from</span> <span class="nn">.services</span> <span class="kn">import</span> <span class="n">get_aws_services</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">HealthCheck</span><span class="p">,</span> <span class="n">ThreadingLocalContextFilter</span><span class="p">,</span> <span class="n">configure_logger</span>
+<span class="kn">from</span> <span class="nn">.viewpoint</span> <span class="kn">import</span> <span class="n">ViewpointWorker</span><span class="p">,</span> <span class="n">viewpoint_router</span>
+
+<span class="c1"># Configure GDAL to throw Python exceptions on errors</span>
+<span class="n">gdal</span><span class="o">.</span><span class="n">UseExceptions</span><span class="p">()</span>
+
+<span class="n">uvicorn_log_level_lookup</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">:</span> <span class="s2">&quot;critical&quot;</span><span class="p">,</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">:</span> <span class="s2">&quot;error&quot;</span><span class="p">,</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">:</span> <span class="s2">&quot;warning&quot;</span><span class="p">,</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">:</span> <span class="s2">&quot;info&quot;</span><span class="p">,</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">:</span> <span class="s2">&quot;debug&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="configure_tile_server_logging">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.tile_server.main.html#aws.osml.tile_server.main.configure_tile_server_logging">[docs]</a>
+<span class="k">def</span> <span class="nf">configure_tile_server_logging</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function sets up the logging for the Tile Server.</span>
+
+<span class="sd">    :return: a Logger instance for the async worker to use.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">default_formatter</span> <span class="o">=</span> <span class="n">JsonFormatter</span><span class="p">(</span><span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(asctime)s</span><span class="s2"> </span><span class="si">%(levelname)s</span><span class="s2"> </span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">datefmt</span><span class="o">=</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">T%H:%M:%S&quot;</span><span class="p">)</span>
+    <span class="n">correlation_formatter</span> <span class="o">=</span> <span class="n">JsonFormatter</span><span class="p">(</span>
+        <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(asctime)s</span><span class="s2"> </span><span class="si">%(levelname)s</span><span class="s2"> </span><span class="si">%(correlation_id)s</span><span class="s2"> </span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="n">datefmt</span><span class="o">=</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">T%H:%M:%S&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">worker_filter</span> <span class="o">=</span> <span class="n">ThreadingLocalContextFilter</span><span class="p">([</span><span class="s2">&quot;correlation_id&quot;</span><span class="p">])</span>
+    <span class="n">access_filter</span> <span class="o">=</span> <span class="n">CorrelationIdFilter</span><span class="p">(</span><span class="n">default_value</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">)</span>
+    <span class="n">log_level</span> <span class="o">=</span> <span class="n">ServerConfig</span><span class="o">.</span><span class="n">tile_server_log_level</span>
+    <span class="n">uvicorn_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;uvicorn&quot;</span><span class="p">)</span>
+    <span class="n">configure_logger</span><span class="p">(</span><span class="n">uvicorn_logger</span><span class="p">,</span> <span class="n">log_level</span><span class="p">,</span> <span class="n">log_formatter</span><span class="o">=</span><span class="n">default_formatter</span><span class="p">)</span>
+    <span class="n">worker_logger</span> <span class="o">=</span> <span class="n">uvicorn_logger</span><span class="o">.</span><span class="n">getChild</span><span class="p">(</span><span class="s2">&quot;worker&quot;</span><span class="p">)</span>
+    <span class="n">configure_logger</span><span class="p">(</span><span class="n">worker_logger</span><span class="p">,</span> <span class="n">log_level</span><span class="p">,</span> <span class="n">log_formatter</span><span class="o">=</span><span class="n">correlation_formatter</span><span class="p">,</span> <span class="n">log_filter</span><span class="o">=</span><span class="n">worker_filter</span><span class="p">)</span>
+    <span class="n">uvicorn_error_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;uvicorn.error&quot;</span><span class="p">)</span>
+    <span class="n">configure_logger</span><span class="p">(</span><span class="n">uvicorn_error_logger</span><span class="p">,</span> <span class="n">log_level</span><span class="p">,</span> <span class="n">log_formatter</span><span class="o">=</span><span class="n">default_formatter</span><span class="p">)</span>
+    <span class="n">uvicorn_access_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;uvicorn.access&quot;</span><span class="p">)</span>
+    <span class="n">configure_logger</span><span class="p">(</span><span class="n">uvicorn_access_logger</span><span class="p">,</span> <span class="n">log_level</span><span class="p">,</span> <span class="n">log_formatter</span><span class="o">=</span><span class="n">correlation_formatter</span><span class="p">,</span> <span class="n">log_filter</span><span class="o">=</span><span class="n">access_filter</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">worker_logger</span></div>
+
+
+
+<div class="viewcode-block" id="lifespan">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.tile_server.main.html#aws.osml.tile_server.main.lifespan">[docs]</a>
+<span class="nd">@asynccontextmanager</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">lifespan</span><span class="p">(</span><span class="n">app</span><span class="p">:</span> <span class="n">FastAPI</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AbstractAsyncContextManager</span><span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="n">FastAPI</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Start the Viewpoint Worker as part of the FastAPI lifespan.</span>
+
+<span class="sd">    :return: The lifespan construct associated with the fast API</span>
+
+<span class="sd">    This function starts the Viewpoint Worker as part of the FastAPI lifespan,</span>
+<span class="sd">    and stops it after yield.</span>
+<span class="sd">    For more information, refer to FastAPI events</span>
+<span class="sd">    documentation at : https://fastapi.tiangolo.com/advanced/events/</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        aws_s3, viewpoint_database and viewpoint_request_queue should be predefined</span>
+<span class="sd">        before this function&#39;s call.</span>
+<span class="sd">        They represent your AWS S3 bucket instance,</span>
+<span class="sd">        your database instance and a queue of requests respectively.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># startup functions before serving requests</span>
+    <span class="n">worker_logger</span> <span class="o">=</span> <span class="n">configure_tile_server_logging</span><span class="p">()</span>
+
+    <span class="c1"># create viewpoint worker</span>
+    <span class="n">aws</span> <span class="o">=</span> <span class="n">get_aws_services</span><span class="p">()</span>
+    <span class="n">viewpoint_worker</span> <span class="o">=</span> <span class="n">ViewpointWorker</span><span class="p">(</span><span class="n">aws</span><span class="o">.</span><span class="n">sqs</span><span class="p">,</span> <span class="n">aws</span><span class="o">.</span><span class="n">s3</span><span class="p">,</span> <span class="n">aws</span><span class="o">.</span><span class="n">ddb</span><span class="p">,</span> <span class="n">worker_logger</span><span class="p">)</span>
+    <span class="n">viewpoint_worker</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="k">yield</span>
+    <span class="c1"># shutdown functions after done serving requests</span>
+    <span class="n">viewpoint_worker</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># Initialize FastAPI app</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;OSML Tile Server&quot;</span><span class="p">)</span>
+
+<span class="c1"># Include the viewpoint router in the FastAPI app</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">viewpoint_router</span><span class="p">)</span>
+
+<span class="c1"># Apply API versioning</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">VersionedFastAPI</span><span class="p">(</span>
+    <span class="n">app</span><span class="p">,</span>
+    <span class="n">enable_latest</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;A minimalistic tile server for imagery hosted in the cloud&quot;</span><span class="p">,</span>
+    <span class="n">terms_of_service</span><span class="o">=</span><span class="s2">&quot;https://example.com/terms/&quot;</span><span class="p">,</span>
+    <span class="n">contact</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Amazon Web Services&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;aws-osml-admin@amazon.com&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/aws-solutions-library-samples/osml-tile-server/issues&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="n">license_info</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;license&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;&quot;Copyright 2023-2024 Amazon Web Services, Inc. or its affiliates. All Rights Reserved.</span>
+<span class="s2">        This AWS Content is provided subject to the terms of the AWS Customer Agreement</span>
+<span class="s2">        available at https://aws.amazon.com/agreement or other written agreement between</span>
+<span class="s2">        Customer and either Amazon Web Services, Inc. or Amazon Web Services EMEA SARL or both.&quot;&quot;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Amazon Web Services&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="n">lifespan</span><span class="o">=</span><span class="n">lifespan</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">add_middleware</span><span class="p">(</span>
+    <span class="n">CORSMiddleware</span><span class="p">,</span>
+    <span class="n">allow_origins</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;*&quot;</span><span class="p">],</span>
+    <span class="n">allow_methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;*&quot;</span><span class="p">],</span>
+    <span class="n">allow_headers</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;X-Requested-With&quot;</span><span class="p">,</span> <span class="s2">&quot;X-Request-ID&quot;</span><span class="p">],</span>
+    <span class="n">expose_headers</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;X-Request-ID&quot;</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">add_middleware</span><span class="p">(</span><span class="n">CorrelationIdMiddleware</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="root">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.tile_server.main.html#aws.osml.tile_server.main.root">[docs]</a>
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="n">response_class</span><span class="o">=</span><span class="n">HTMLResponse</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">root</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Root endpoint for the application.</span>
+
+<span class="sd">    Returns a welcome message and basic application information including</span>
+<span class="sd">    contact and license details.</span>
+
+<span class="sd">    :return: Welcome message with application information.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">homepage_description</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    &lt;html&gt;</span>
+<span class="s2">        &lt;head&gt;</span>
+<span class="s2">            &lt;title&gt;</span><span class="si">{</span><span class="n">app</span><span class="o">.</span><span class="n">title</span><span class="si">}</span><span class="s2">&lt;/title&gt;</span>
+<span class="s2">        &lt;/head&gt;</span>
+<span class="s2">        &lt;body&gt;</span>
+<span class="s2">            &lt;h1&gt;</span><span class="si">{</span><span class="n">app</span><span class="o">.</span><span class="n">title</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">app</span><span class="o">.</span><span class="n">version</span><span class="si">}</span><span class="s2">&lt;/h1&gt;</span>
+<span class="s2">            &lt;p&gt;</span><span class="si">{</span><span class="n">app</span><span class="o">.</span><span class="n">description</span><span class="si">}</span><span class="s2">.&lt;/p&gt;</span>
+<span class="s2">            &lt;p&gt;If you need help or support,</span>
+<span class="s2">                please cut an issue ticket &lt;a href=&quot;</span><span class="si">{</span><span class="n">app</span><span class="o">.</span><span class="n">contact</span><span class="p">[</span><span class="s2">&quot;url&quot;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;&gt;in our github project&lt;/a&gt;.&lt;/p&gt;</span>
+<span class="s2">            &lt;p&gt;&lt;a href=&quot;/latest/docs&quot;&gt;Swagger&lt;/a&gt;&lt;/p&gt;</span>
+<span class="s2">            &lt;p&gt;&lt;a href=&quot;/latest/redoc&quot;&gt;ReDoc&lt;/a&gt;&lt;/p&gt;</span>
+<span class="s2">            &lt;p&gt;The license of this product: </span><span class="si">{</span><span class="n">app</span><span class="o">.</span><span class="n">license_info</span><span class="p">[</span><span class="s2">&quot;license&quot;</span><span class="p">]</span><span class="si">}</span><span class="s2">&lt;/p&gt;</span>
+<span class="s2">        &lt;/body&gt;</span>
+<span class="s2">    &lt;/html&gt;</span>
+<span class="s2">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">homepage_description</span></div>
+
+
+
+<div class="viewcode-block" id="healthcheck">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.tile_server.main.html#aws.osml.tile_server.main.healthcheck">[docs]</a>
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">&quot;/ping&quot;</span><span class="p">,</span>
+    <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;healthcheck&quot;</span><span class="p">],</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">&quot;Perform a Health Check&quot;</span><span class="p">,</span>
+    <span class="n">response_description</span><span class="o">=</span><span class="s2">&quot;Return HTTP Status Code 200 (OK)&quot;</span><span class="p">,</span>
+    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_200_OK</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">HealthCheck</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">healthcheck</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">HealthCheck</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Endpoint to perform a healthcheck on. This endpoint can primarily be used by Docker</span>
+<span class="sd">    to ensure robust container orchestration and management is in place. Other</span>
+<span class="sd">    services which rely on proper functioning of the API service will not deploy if this</span>
+<span class="sd">    endpoint returns any other HTTP status code except 200 (OK).</span>
+
+<span class="sd">    :return: JSON response with the health status, 200</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">HealthCheck</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s2">&quot;OK&quot;</span><span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">uvicorn</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="n">app</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s2">&quot;0.0.0.0&quot;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">4557</span><span class="p">,</span> <span class="n">reload</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="n">uvicorn_log_level_lookup</span><span class="p">[</span><span class="n">ServerConfig</span><span class="o">.</span><span class="n">tile_server_log_level</span><span class="p">]</span>
+    <span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

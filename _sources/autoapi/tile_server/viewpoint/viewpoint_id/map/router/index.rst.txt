@@ -1,0 +1,37 @@
+tile_server.viewpoint.viewpoint_id.map.router
+=============================================
+
+.. py:module:: tile_server.viewpoint.viewpoint_id.map.router
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   tile_server.viewpoint.viewpoint_id.map.router.map_tiles_router
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   tile_server.viewpoint.viewpoint_id.map.router.get_map_tilesets
+
+
+Module Contents
+---------------
+
+.. py:data:: map_tiles_router
+
+.. py:function:: get_map_tilesets(viewpoint_id: str, aws: Annotated[aws.osml.tile_server.services.get_aws_services, Depends()], request: fastapi.Request) -> aws.osml.tile_server.ogc.TileSetList
+
+   Retrieves the list of tilesets available for this viewpoint. This endpoint conforms to the
+   OGC API - Tiles: Tileset & Tilsets List specification.
+
+   :param aws: Injected AWS services.
+   :param viewpoint_id: The viewpoint id.
+   :return: A TileSetList object containing a list of tilesets that are available for this viewpoint.
+
+

@@ -1,0 +1,426 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tile_server.viewpoint.worker &mdash; OversightML Tile Server  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="tile_server.app_config" href="../../app_config/index.html" />
+    <link rel="prev" title="tile_server.viewpoint.router" href="../router/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OversightML Tile Server
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html">tile_server</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../index.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../../ogc/index.html">tile_server.ogc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../services/index.html">tile_server.services</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../utils/index.html">tile_server.utils</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="../index.html">tile_server.viewpoint</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../index.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OversightML Tile Server</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">tile_server</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">tile_server.viewpoint</a></li>
+      <li class="breadcrumb-item active">tile_server.viewpoint.worker</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/autoapi/tile_server/viewpoint/worker/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-tile_server.viewpoint.worker">
+<span id="tile-server-viewpoint-worker"></span><h1>tile_server.viewpoint.worker<a class="headerlink" href="#module-tile_server.viewpoint.worker" title="Link to this heading"></a></h1>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tile_server.viewpoint.worker.SupplementaryFileType" title="tile_server.viewpoint.worker.SupplementaryFileType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SupplementaryFileType</span></code></a></p></td>
+<td><p>Provides supplementary file types to download from S3.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tile_server.viewpoint.worker.ViewpointWorker" title="tile_server.viewpoint.worker.ViewpointWorker"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ViewpointWorker</span></code></a></p></td>
+<td><p>A class that represents a thread of control.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.SupplementaryFileType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.viewpoint.worker.</span></span><span class="sig-name descname"><span class="pre">SupplementaryFileType</span></span><a class="headerlink" href="#tile_server.viewpoint.worker.SupplementaryFileType" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">aws.osml.tile_server.utils.AutoLowerStringEnum</span></code></p>
+<p>Provides supplementary file types to download from S3.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>AUX</strong> – Aux file.</p></li>
+<li><p><strong>OVERVIEW</strong> – Overview file.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.SupplementaryFileType.AUX">
+<span class="sig-name descname"><span class="pre">AUX</span></span><a class="headerlink" href="#tile_server.viewpoint.worker.SupplementaryFileType.AUX" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.SupplementaryFileType.OVERVIEW">
+<span class="sig-name descname"><span class="pre">OVERVIEW</span></span><a class="headerlink" href="#tile_server.viewpoint.worker.SupplementaryFileType.OVERVIEW" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tile_server.viewpoint.worker.</span></span><span class="sig-name descname"><span class="pre">ViewpointWorker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">aws_sqs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">boto3.resources.base.ServiceResource</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aws_s3</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">boto3.resources.base.ServiceResource</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aws_ddb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">boto3.resources.base.ServiceResource</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.Logger" title="(in Python v3.13)"><span class="pre">logging.Logger</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">logging.getLogger(__name__)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/threading.html#threading.Thread" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">threading.Thread</span></code></a></p>
+<p>A class that represents a thread of control.</p>
+<p>This class can be safely subclassed in a limited fashion. There are two ways
+to specify the activity: by passing a callable object to the constructor, or
+by overriding the run() method in a subclass.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker.daemon">
+<span class="sig-name descname"><span class="pre">daemon</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker.daemon" title="Link to this definition"></a></dt>
+<dd><p>A boolean value indicating whether this thread is a daemon thread.</p>
+<p>This must be set before start() is called, otherwise RuntimeError is
+raised. Its initial value is inherited from the creating thread; the
+main thread is not a daemon thread and therefore all threads created in
+the main thread default to daemon = False.</p>
+<p>The entire Python program exits when only daemon threads are left.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker.viewpoint_request_queue">
+<span class="sig-name descname"><span class="pre">viewpoint_request_queue</span></span><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker.viewpoint_request_queue" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker.s3">
+<span class="sig-name descname"><span class="pre">s3</span></span><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker.s3" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker.viewpoint_database">
+<span class="sig-name descname"><span class="pre">viewpoint_database</span></span><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker.viewpoint_database" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker.logger">
+<span class="sig-name descname"><span class="pre">logger</span></span><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker.logger" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker.stop_event">
+<span class="sig-name descname"><span class="pre">stop_event</span></span><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker.stop_event" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker.join">
+<span class="sig-name descname"><span class="pre">join</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">...</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker.join" title="Link to this definition"></a></dt>
+<dd><p>Join the ViewpointWorker threads together.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>timeout</strong> – The maximum number of seconds to wait for the thread to finish execution. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, the method
+will block until the thread is finished. (Default is <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker.run" title="Link to this definition"></a></dt>
+<dd><p>Monitors SQS queues for ViewpointRequest and be able to process it. First, it will
+pick up a message from ViewpointRequest SQS. Then, it will download an image from S3
+and save it to the local temp directory. Once that’s completed, it will update the DynamoDB
+to reflect that this Viewpoint is READY to review. This function will run in the background.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker.download_image">
+<span class="sig-name descname"><span class="pre">download_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">viewpoint_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../_apidoc/aws.osml.tile_server.models.html#aws.osml.tile_server.models.ViewpointModel" title="aws.osml.tile_server.models.ViewpointModel"><span class="pre">aws.osml.tile_server.models.ViewpointModel</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker.download_image" title="Link to this definition"></a></dt>
+<dd><p>This method downloads an image file from an S3 bucket using the bucket_name and object_key attributes of a
+ViewpointModel instance. The downloaded image is saved under specific server configuration, and its path is
+stored. The method also attempts to download optional files, logging their unavailability. Note: The method
+assumes the existence of the following constants: OVERVIEW_FILE_EXTENSION and AUXXML_FILE_EXTENSION,
+which represent the file extensions for the optional overview and aux files respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>viewpoint_item</strong> – Instance of ViewpointModel representing the viewpoint item to be downloaded.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker.create_tile_pyramid">
+<span class="sig-name descname"><span class="pre">create_tile_pyramid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">viewpoint_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../_apidoc/aws.osml.tile_server.models.html#aws.osml.tile_server.models.ViewpointModel" title="aws.osml.tile_server.models.ViewpointModel"><span class="pre">aws.osml.tile_server.models.ViewpointModel</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker.create_tile_pyramid" title="Link to this definition"></a></dt>
+<dd><p>Main tile pyramid creation function. It creates a tile pyramid for a specific viewpoint item
+by considering its range adjustment and local object path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The viewpoint item object for which to create the tile pyramid.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker.extract_metadata">
+<span class="sig-name descname"><span class="pre">extract_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">viewpoint_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../_apidoc/aws.osml.tile_server.models.html#aws.osml.tile_server.models.ViewpointModel" title="aws.osml.tile_server.models.ViewpointModel"><span class="pre">aws.osml.tile_server.models.ViewpointModel</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker.extract_metadata" title="Link to this definition"></a></dt>
+<dd><p>Extracts the metadata from an image and creates various JSON files for the metadata, bounds, info, etc. so
+that they can be easily returned by the web API without need to reparse the information from the image itself.
+This reduces the pressure on the tile factory resource pool making those resources more available for
+operations that need to return pixels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the description of the viewpoint item</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker._process_message">
+<span class="sig-name descname"><span class="pre">_process_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker._process_message" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker._update_status">
+<span class="sig-name descname"><span class="pre">_update_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">viewpoint_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../_apidoc/aws.osml.tile_server.models.html#aws.osml.tile_server.models.ViewpointModel" title="aws.osml.tile_server.models.ViewpointModel"><span class="pre">aws.osml.tile_server.models.ViewpointModel</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker._update_status" title="Link to this definition"></a></dt>
+<dd><p>Update ddb table to reflect status change after processed by the worker.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>viewpoint_item</strong> – Item being processed by the worker.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker._create_local_tmp_directory">
+<span class="sig-name descname"><span class="pre">_create_local_tmp_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">viewpoint_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../_apidoc/aws.osml.tile_server.models.html#aws.osml.tile_server.models.ViewpointModel" title="aws.osml.tile_server.models.ViewpointModel"><span class="pre">aws.osml.tile_server.models.ViewpointModel</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></span><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker._create_local_tmp_directory" title="Link to this definition"></a></dt>
+<dd><p>Create a tmp directory locally to store the downloaded files</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>viewpoint_item</strong> – Item being processed by the worker.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The path to the temp directory.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker._download_s3_file_to_local_tmp">
+<span class="sig-name descname"><span class="pre">_download_s3_file_to_local_tmp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">viewpoint_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../_apidoc/aws.osml.tile_server.models.html#aws.osml.tile_server.models.ViewpointModel" title="aws.osml.tile_server.models.ViewpointModel"><span class="pre">aws.osml.tile_server.models.ViewpointModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_retries</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../../../_apidoc/aws.osml.tile_server.models.html#aws.osml.tile_server.models.ViewpointStatus" title="aws.osml.tile_server.models.ViewpointStatus"><span class="pre">aws.osml.tile_server.models.ViewpointStatus</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker._download_s3_file_to_local_tmp" title="Link to this definition"></a></dt>
+<dd><p>Download the object from S3 to the local tmp dorectory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>viewpoint_item</strong> – Item being processed by the worker.</p></li>
+<li><p><strong>max_retries</strong> – The number of times to retry the download if a non-fatal error is encountered.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The viewpoint status and error message as a tuple. Returns None, None if the operation was successful.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker._download_supplementary_file">
+<span class="sig-name descname"><span class="pre">_download_supplementary_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">viewpoint_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../_apidoc/aws.osml.tile_server.models.html#aws.osml.tile_server.models.ViewpointModel" title="aws.osml.tile_server.models.ViewpointModel"><span class="pre">aws.osml.tile_server.models.ViewpointModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#tile_server.viewpoint.worker.SupplementaryFileType" title="tile_server.viewpoint.worker.SupplementaryFileType"><span class="pre">SupplementaryFileType</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker._download_supplementary_file" title="Link to this definition"></a></dt>
+<dd><p>Attempts to download associated supplementary file from S3, if present</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>viewpoint_item</strong> – Item being processed by the worker.</p></li>
+<li><p><strong>file_type</strong> – The type of supplementary file to download from S3.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker.get_default_tile_factory_pool_for_viewpoint">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_default_tile_factory_pool_for_viewpoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">viewpoint_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../_apidoc/aws.osml.tile_server.models.html#aws.osml.tile_server.models.ViewpointModel" title="aws.osml.tile_server.models.ViewpointModel"><span class="pre">aws.osml.tile_server.models.ViewpointModel</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">aws.osml.tile_server.utils.TileFactoryPool</span></span></span><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker.get_default_tile_factory_pool_for_viewpoint" title="Link to this definition"></a></dt>
+<dd><p>Helper method that creates a default tile factory pool for the image. This resource pool will not necessarily
+be sufficient to build all tiles, but it is sufficient to build previews and handle metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>viewpoint_item</strong> – the description of the viewpoint item</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a default tile factory pool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker._calculate_image_statistics">
+<span class="sig-name descname"><span class="pre">_calculate_image_statistics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">viewpoint_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../_apidoc/aws.osml.tile_server.models.html#aws.osml.tile_server.models.ViewpointModel" title="aws.osml.tile_server.models.ViewpointModel"><span class="pre">aws.osml.tile_server.models.ViewpointModel</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker._calculate_image_statistics" title="Link to this definition"></a></dt>
+<dd><p>This code forces GDAL to and compute the statistics / histograms for each band. This can be a
+time-consuming operation, so we want to only do this once. GDAL will write those statistics into a
+.aux.xml file associated with the dataset, but it only appears to do so when the dataset object is
+cleaned up. So this code creates a temporary dataset, forces it to generate the statistics using the
+gdal.Info() command and then closes the dataset to ensure that the auxiliary file is created. This is
+somewhat of a hack but all future calls to gdal.Open (i.e. in the tile factory pool) should be able to
+read the .aux.xml file and skip the expensive work of generating the statistics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>viewpoint_item</strong> – the description of the viewpoint item</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a default tile factory pool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker._create_image_pyramid">
+<span class="sig-name descname"><span class="pre">_create_image_pyramid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tile_factory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.tile_server.utils.TileFactoryPool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">viewpoint_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../_apidoc/aws.osml.tile_server.models.html#aws.osml.tile_server.models.ViewpointModel" title="aws.osml.tile_server.models.ViewpointModel"><span class="pre">aws.osml.tile_server.models.ViewpointModel</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker._create_image_pyramid" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker._verify_tile_creation">
+<span class="sig-name descname"><span class="pre">_verify_tile_creation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tile_factory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.image_processing.GDALTileFactory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">viewpoint_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../_apidoc/aws.osml.tile_server.models.html#aws.osml.tile_server.models.ViewpointModel" title="aws.osml.tile_server.models.ViewpointModel"><span class="pre">aws.osml.tile_server.models.ViewpointModel</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.13)"><span class="pre">bytes</span></a></span></span><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker._verify_tile_creation" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker._write_metadata">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_write_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tile_factory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.tile_server.utils.TileFactoryPool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">viewpoint_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../_apidoc/aws.osml.tile_server.models.html#aws.osml.tile_server.models.ViewpointModel" title="aws.osml.tile_server.models.ViewpointModel"><span class="pre">aws.osml.tile_server.models.ViewpointModel</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker._write_metadata" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker._write_bounds">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_write_bounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tile_factory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.tile_server.utils.TileFactoryPool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">viewpoint_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../_apidoc/aws.osml.tile_server.models.html#aws.osml.tile_server.models.ViewpointModel" title="aws.osml.tile_server.models.ViewpointModel"><span class="pre">aws.osml.tile_server.models.ViewpointModel</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker._write_bounds" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker._write_info">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_write_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tile_factory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.tile_server.utils.TileFactoryPool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">viewpoint_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../_apidoc/aws.osml.tile_server.models.html#aws.osml.tile_server.models.ViewpointModel" title="aws.osml.tile_server.models.ViewpointModel"><span class="pre">aws.osml.tile_server.models.ViewpointModel</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker._write_info" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tile_server.viewpoint.worker.ViewpointWorker._write_statistics">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_write_statistics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">viewpoint_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../_apidoc/aws.osml.tile_server.models.html#aws.osml.tile_server.models.ViewpointModel" title="aws.osml.tile_server.models.ViewpointModel"><span class="pre">aws.osml.tile_server.models.ViewpointModel</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#tile_server.viewpoint.worker.ViewpointWorker._write_statistics" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../router/index.html" class="btn btn-neutral float-left" title="tile_server.viewpoint.router" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../app_config/index.html" class="btn btn-neutral float-right" title="tile_server.app_config" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

@@ -1,0 +1,7 @@
+aws.osml.tile\_server.ogc.tms module
+====================================
+
+.. automodule:: aws.osml.tile_server.ogc.tms
+   :members:
+   :undoc-members:
+   :show-inheritance:

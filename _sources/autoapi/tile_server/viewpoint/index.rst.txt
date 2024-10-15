@@ -1,0 +1,264 @@
+tile_server.viewpoint
+=====================
+
+.. py:module:: tile_server.viewpoint
+
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/tile_server/viewpoint/viewpoint_id/index
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/tile_server/viewpoint/router/index
+   /autoapi/tile_server/viewpoint/worker/index
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   tile_server.viewpoint.viewpoint_router
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   tile_server.viewpoint.SupplementaryFileType
+   tile_server.viewpoint.ViewpointWorker
+
+
+Package Contents
+----------------
+
+.. py:data:: viewpoint_router
+
+.. py:class:: SupplementaryFileType
+
+   Bases: :py:obj:`str`, :py:obj:`aws.osml.tile_server.utils.AutoLowerStringEnum`
+
+
+   Provides supplementary file types to download from S3.
+
+   :cvar AUX: Aux file.
+   :cvar OVERVIEW: Overview file.
+
+
+   .. py:attribute:: AUX
+
+
+   .. py:attribute:: OVERVIEW
+
+
+.. py:class:: ViewpointWorker(aws_sqs: boto3.resources.base.ServiceResource, aws_s3: boto3.resources.base.ServiceResource, aws_ddb: boto3.resources.base.ServiceResource, logger: logging.Logger = logging.getLogger(__name__))
+
+   Bases: :py:obj:`threading.Thread`
+
+
+   A class that represents a thread of control.
+
+   This class can be safely subclassed in a limited fashion. There are two ways
+   to specify the activity: by passing a callable object to the constructor, or
+   by overriding the run() method in a subclass.
+
+
+
+   .. py:attribute:: daemon
+      :value: True
+
+
+      A boolean value indicating whether this thread is a daemon thread.
+
+      This must be set before start() is called, otherwise RuntimeError is
+      raised. Its initial value is inherited from the creating thread; the
+      main thread is not a daemon thread and therefore all threads created in
+      the main thread default to daemon = False.
+
+      The entire Python program exits when only daemon threads are left.
+
+
+
+
+   .. py:attribute:: viewpoint_request_queue
+
+
+   .. py:attribute:: s3
+
+
+   .. py:attribute:: viewpoint_database
+
+
+   .. py:attribute:: logger
+
+
+   .. py:attribute:: stop_event
+
+
+   .. py:method:: join(timeout: float | None = ...) -> None
+
+      Join the ViewpointWorker threads together.
+
+      :param timeout: The maximum number of seconds to wait for the thread to finish execution. If `None`, the method
+          will block until the thread is finished. (Default is `None`)
+      :return: None
+
+
+
+   .. py:method:: run() -> None
+
+      Monitors SQS queues for ViewpointRequest and be able to process it. First, it will
+      pick up a message from ViewpointRequest SQS. Then, it will download an image from S3
+      and save it to the local temp directory. Once that's completed, it will update the DynamoDB
+      to reflect that this Viewpoint is READY to review. This function will run in the background.
+
+      :return: None
+
+
+
+   .. py:method:: download_image(viewpoint_item: aws.osml.tile_server.models.ViewpointModel) -> None
+
+      This method downloads an image file from an S3 bucket using the bucket_name and object_key attributes of a
+      ViewpointModel instance. The downloaded image is saved under specific server configuration, and its path is
+      stored. The method also attempts to download optional files, logging their unavailability. Note: The method
+      assumes the existence of the following constants: OVERVIEW_FILE_EXTENSION and AUXXML_FILE_EXTENSION,
+      which represent the file extensions for the optional overview and aux files respectively.
+
+      :param viewpoint_item: Instance of ViewpointModel representing the viewpoint item to be downloaded.
+      :return: None
+
+
+
+
+   .. py:method:: create_tile_pyramid(viewpoint_item: aws.osml.tile_server.models.ViewpointModel) -> None
+
+      Main tile pyramid creation function. It creates a tile pyramid for a specific viewpoint item
+      by considering its range adjustment and local object path.
+
+      :param: The viewpoint item object for which to create the tile pyramid.
+      :return: None
+
+
+
+   .. py:method:: extract_metadata(viewpoint_item: aws.osml.tile_server.models.ViewpointModel) -> None
+
+      Extracts the metadata from an image and creates various JSON files for the metadata, bounds, info, etc. so
+      that they can be easily returned by the web API without need to reparse the information from the image itself.
+      This reduces the pressure on the tile factory resource pool making those resources more available for
+      operations that need to return pixels.
+
+      :param: the description of the viewpoint item
+
+
+
+   .. py:method:: _process_message(message) -> None
+
+
+   .. py:method:: _update_status(viewpoint_item: aws.osml.tile_server.models.ViewpointModel) -> None
+
+      Update ddb table to reflect status change after processed by the worker.
+
+      :param viewpoint_item: Item being processed by the worker.
+
+      :return: None.
+
+
+
+   .. py:method:: _create_local_tmp_directory(viewpoint_item: aws.osml.tile_server.models.ViewpointModel) -> str
+
+      Create a tmp directory locally to store the downloaded files
+
+      :param viewpoint_item: Item being processed by the worker.
+
+      :return: The path to the temp directory.
+
+
+
+   .. py:method:: _download_s3_file_to_local_tmp(viewpoint_item: aws.osml.tile_server.models.ViewpointModel, max_retries: int = 3) -> Tuple[aws.osml.tile_server.models.ViewpointStatus | None, str | None]
+
+      Download the object from S3 to the local tmp dorectory.
+
+      :param viewpoint_item: Item being processed by the worker.
+
+      :param max_retries: The number of times to retry the download if a non-fatal error is encountered.
+
+      :return: The viewpoint status and error message as a tuple. Returns None, None if the operation was successful.
+
+
+
+   .. py:method:: _download_supplementary_file(viewpoint_item: aws.osml.tile_server.models.ViewpointModel, file_type: SupplementaryFileType) -> None
+
+      Attempts to download associated supplementary file from S3, if present
+
+      :param viewpoint_item: Item being processed by the worker.
+
+      :param file_type: The type of supplementary file to download from S3.
+
+      :return: None.
+
+
+
+   .. py:method:: get_default_tile_factory_pool_for_viewpoint(viewpoint_item: aws.osml.tile_server.models.ViewpointModel) -> aws.osml.tile_server.utils.TileFactoryPool
+      :staticmethod:
+
+
+      Helper method that creates a default tile factory pool for the image. This resource pool will not necessarily
+      be sufficient to build all tiles, but it is sufficient to build previews and handle metadata.
+
+      :param viewpoint_item: the description of the viewpoint item
+      :return: a default tile factory pool
+
+
+
+   .. py:method:: _calculate_image_statistics(viewpoint_item: aws.osml.tile_server.models.ViewpointModel) -> None
+
+      This code forces GDAL to and compute the statistics / histograms for each band. This can be a
+      time-consuming operation, so we want to only do this once. GDAL will write those statistics into a
+      .aux.xml file associated with the dataset, but it only appears to do so when the dataset object is
+      cleaned up. So this code creates a temporary dataset, forces it to generate the statistics using the
+      gdal.Info() command and then closes the dataset to ensure that the auxiliary file is created. This is
+      somewhat of a hack but all future calls to gdal.Open (i.e. in the tile factory pool) should be able to
+      read the .aux.xml file and skip the expensive work of generating the statistics.
+
+      :param viewpoint_item: the description of the viewpoint item
+      :return: a default tile factory pool
+
+
+
+   .. py:method:: _create_image_pyramid(tile_factory: aws.osml.tile_server.utils.TileFactoryPool, viewpoint_item: aws.osml.tile_server.models.ViewpointModel) -> None
+
+
+   .. py:method:: _verify_tile_creation(tile_factory: aws.osml.image_processing.GDALTileFactory, viewpoint_item: aws.osml.tile_server.models.ViewpointModel) -> bytes
+
+
+   .. py:method:: _write_metadata(tile_factory: aws.osml.tile_server.utils.TileFactoryPool, viewpoint_item: aws.osml.tile_server.models.ViewpointModel) -> None
+      :staticmethod:
+
+
+
+   .. py:method:: _write_bounds(tile_factory: aws.osml.tile_server.utils.TileFactoryPool, viewpoint_item: aws.osml.tile_server.models.ViewpointModel) -> None
+      :staticmethod:
+
+
+
+   .. py:method:: _write_info(tile_factory: aws.osml.tile_server.utils.TileFactoryPool, viewpoint_item: aws.osml.tile_server.models.ViewpointModel) -> None
+      :staticmethod:
+
+
+
+   .. py:method:: _write_statistics(viewpoint_item: aws.osml.tile_server.models.ViewpointModel) -> None
+      :staticmethod:
+
+
+

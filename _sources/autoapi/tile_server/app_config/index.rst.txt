@@ -1,0 +1,103 @@
+tile_server.app_config
+======================
+
+.. py:module:: tile_server.app_config
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   tile_server.app_config.ServerConfig
+   tile_server.app_config.BotoConfig
+
+
+Module Contents
+---------------
+
+.. py:class:: ServerConfig
+
+   ServerConfig class to house the high-level configuration settings.
+
+   The ServerConfig is a dataclass meant to house the high-level configuration settings
+   required for OSML Tile Server to operate that are provided through ENV variables. Note
+   that required env parameters are enforced by the implied schema validation as os.environ[]
+   is used to fetch the values. Optional parameters are fetched using os.getenv(),
+   which returns None.
+
+   :param aws_region: The AWS region, defaults to 'us-west-2'
+   :param viewpoint_status_table: The name of the viewpoint status DDB table, defaults to 'TSJobTable'
+   :param viewpoint_request_queue: The name of the viewpoint request queue, defaults to 'TSJobQueue'
+   :param efs_mount_name: The name of the EFS mount, defaults to 'ts-efs-volume'
+
+
+   .. py:attribute:: aws_region
+      :type:  str
+
+
+   .. py:attribute:: viewpoint_status_table
+      :type:  str
+
+
+   .. py:attribute:: viewpoint_request_queue
+      :type:  str
+
+
+   .. py:attribute:: efs_mount_name
+      :type:  str
+
+
+   .. py:attribute:: sts_arn
+      :type:  str
+
+
+   .. py:attribute:: ddb_ttl_days
+      :type:  int
+
+
+   .. py:attribute:: tile_server_log_level
+
+
+   .. py:attribute:: OVERVIEW_FILE_EXTENSION
+      :value: '.ovr'
+
+
+
+   .. py:attribute:: AUXXML_FILE_EXTENSION
+      :value: '.aux.xml'
+
+
+
+   .. py:attribute:: METADATA_FILE_EXTENSION
+      :value: '.metadata'
+
+
+
+   .. py:attribute:: BOUNDS_FILE_EXTENSION
+      :value: '.bounds'
+
+
+
+   .. py:attribute:: INFO_FILE_EXTENSION
+      :value: '.geojson'
+
+
+
+   .. py:attribute:: STATISTICS_FILE_EXTENSION
+      :value: '.stats'
+
+
+
+.. py:class:: BotoConfig
+
+   BotoConfig is a dataclass meant to vend our application the set of boto client configurations required for OSML
+
+   The data schema is defined as follows:
+   :param default:  Standard boto client configuration
+
+
+   .. py:attribute:: default
+      :type:  botocore.config.Config
+
+

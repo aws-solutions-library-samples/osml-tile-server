@@ -1,0 +1,7 @@
+aws.osml.tile\_server.services.queue module
+===========================================
+
+.. automodule:: aws.osml.tile_server.services.queue
+   :members:
+   :undoc-members:
+   :show-inheritance:

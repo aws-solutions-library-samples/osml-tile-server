@@ -1,0 +1,265 @@
+tile_server.models
+==================
+
+.. py:module:: tile_server.models
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   tile_server.models.ViewpointApiNames
+   tile_server.models.ViewpointStatus
+   tile_server.models.ViewpointRequest
+   tile_server.models.ViewpointModel
+   tile_server.models.ViewpointListResponse
+   tile_server.models.ViewpointUpdate
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   tile_server.models.validate_viewpoint_status
+
+
+Module Contents
+---------------
+
+.. py:class:: ViewpointApiNames
+
+   Bases: :py:obj:`str`, :py:obj:`aws.osml.tile_server.utils.string_enums.AutoLowerStringEnum`
+
+
+   Provides enumeration of API names associated with a viewpoint.
+
+   These API names are used to map to specific operations on the viewpoint.
+
+   :cvar UPDATE: Update viewpoint.
+   :cvar DESCRIBE: Describe viewpoint.
+   :cvar METADATA: Viewpoint metadata.
+   :cvar BOUNDS: Viewpoint bounds.
+   :cvar INFO: Viewpoint information.
+   :cvar TILE: Viewpoint tile.
+   :cvar PREVIEW: Viewpoint preview.
+   :cvar CROP: Crop viewpoint.
+   :cvar STATISTICS: Viewpoint statistics.
+
+
+   .. py:attribute:: UPDATE
+
+
+   .. py:attribute:: DESCRIBE
+
+
+   .. py:attribute:: METADATA
+
+
+   .. py:attribute:: BOUNDS
+
+
+   .. py:attribute:: INFO
+
+
+   .. py:attribute:: TILE
+
+
+   .. py:attribute:: PREVIEW
+
+
+   .. py:attribute:: CROP
+
+
+   .. py:attribute:: STATISTICS
+
+
+.. py:class:: ViewpointStatus
+
+   Bases: :py:obj:`str`, :py:obj:`aws.osml.tile_server.utils.string_enums.AutoUnderscoreStringEnum`
+
+
+   Provides status options for a viewpoint that represents the state of processing or readiness for a viewpoint.
+
+   :cvar NOT_FOUND: Viewpoint isn't found.
+   :cvar REQUESTED: Viewpoint requested.
+   :cvar UPDATING: Viewpoint updating.
+   :cvar READY: Viewpoint ready.
+   :cvar DELETED: Viewpoint deleted.
+   :cvar FAILED: Viewpoint failed.
+
+
+   .. py:attribute:: NOT_FOUND
+
+
+   .. py:attribute:: REQUESTED
+
+
+   .. py:attribute:: UPDATING
+
+
+   .. py:attribute:: READY
+
+
+   .. py:attribute:: DELETED
+
+
+   .. py:attribute:: FAILED
+
+
+.. py:class:: ViewpointRequest(/, **data: Any)
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+
+   Represents a request to create or update a viewpoint. All fields are required.
+
+   :param bucket_name: The name of the bucket, the Minimum length is 1.
+   :param object_key: The key of the object, the Minimum length is 1.
+   :param viewpoint_name: The name of the viewpoint, the Minimum length is 1.
+   :param tile_size: The tile size, it Should be greater than 0.
+   :param range_adjustment: The range adjustment type, the Minimum string length is 1.
+
+
+   .. py:attribute:: viewpoint_id
+      :type:  str
+
+
+   .. py:attribute:: viewpoint_name
+      :type:  str
+
+
+   .. py:attribute:: bucket_name
+      :type:  str
+
+
+   .. py:attribute:: object_key
+      :type:  str
+
+
+   .. py:attribute:: tile_size
+      :type:  int
+
+
+   .. py:attribute:: range_adjustment
+      :type:  aws.osml.gdal.RangeAdjustmentType
+
+
+.. py:class:: ViewpointModel(/, **data: Any)
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+
+   Represents the model data for a viewpoint.
+
+   :param viewpoint_id: The ID to associate with the viewpoint.
+   :param viewpoint_name: The name of the viewpoint.
+   :param viewpoint_status: The status of the viewpoint.
+   :param bucket_name: The name of the bucket the images are located in.
+   :param object_key: The object is key to associate with the viewpoint.
+   :param tile_size: The tile size to use for the viewpoint model.
+   :param range_adjustment: The type of range adjustment.
+   :param local_object_path: Optional local path of the object.
+   :param error_message: Optional error messages to include.
+   :param expire_time: Optional expiration time for the message.
+
+
+   .. py:attribute:: viewpoint_id
+      :type:  str
+
+
+   .. py:attribute:: viewpoint_name
+      :type:  str
+
+
+   .. py:attribute:: viewpoint_status
+      :type:  ViewpointStatus
+
+
+   .. py:attribute:: bucket_name
+      :type:  str
+
+
+   .. py:attribute:: object_key
+      :type:  str
+
+
+   .. py:attribute:: tile_size
+      :type:  int
+
+
+   .. py:attribute:: range_adjustment
+      :type:  aws.osml.gdal.RangeAdjustmentType
+
+
+   .. py:attribute:: local_object_path
+      :type:  str | None
+
+
+   .. py:attribute:: error_message
+      :type:  str | None
+
+
+   .. py:attribute:: expire_time
+      :type:  int | None
+
+
+.. py:class:: ViewpointListResponse(/, **data: Any)
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+
+   Represents the return structure of a request for viewpoints.
+
+
+   .. py:attribute:: items
+      :type:  List[ViewpointModel]
+
+
+   .. py:attribute:: next_token
+      :type:  Optional[str]
+      :value: None
+
+
+
+.. py:class:: ViewpointUpdate(/, **data: Any)
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+
+   Represents the model for a viewpoint update operation.
+
+   :param viewpoint_id: The ID of the viewpoint.
+   :param viewpoint_name: The name of the viewpoint.
+   :param tile_size: The tile size.
+   :param range_adjustment: The type of range adjustment.
+
+
+   .. py:attribute:: viewpoint_id
+      :type:  str
+
+
+   .. py:attribute:: viewpoint_name
+      :type:  str
+
+
+   .. py:attribute:: tile_size
+      :type:  int
+
+
+   .. py:attribute:: range_adjustment
+      :type:  aws.osml.gdal.RangeAdjustmentType
+
+
+.. py:function:: validate_viewpoint_status(current_status: ViewpointStatus, api_operation: ViewpointApiNames) -> None
+
+   This is a helper function that is to validate if we can execute an operation based on the
+   given status
+
+   :param current_status: Current status of a viewpoint in the table.
+   :param api_operation: The associated API operation being used on the viewpoint.
+   :return: None.
+   :raises: ValueError if the viewpoint is DELETED or REQUESTED.
+
+

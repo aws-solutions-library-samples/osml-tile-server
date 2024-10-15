@@ -1,0 +1,16 @@
+aws.osml.tile\_server.viewpoint.viewpoint\_id 
+==============================================
+
+.. automodule:: aws.osml.tile_server.viewpoint.viewpoint_id
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   aws.osml.tile_server.viewpoint.viewpoint_id.image
+   aws.osml.tile_server.viewpoint.viewpoint_id.map

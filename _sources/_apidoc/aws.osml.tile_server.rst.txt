@@ -1,0 +1,18 @@
+aws.osml.tile\_server 
+======================
+
+.. automodule:: aws.osml.tile_server
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   aws.osml.tile_server.ogc
+   aws.osml.tile_server.services
+   aws.osml.tile_server.utils
+   aws.osml.tile_server.viewpoint

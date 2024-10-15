@@ -1,0 +1,7 @@
+aws.osml.tile\_server.viewpoint.viewpoint\_id.map.tileset.router module
+=======================================================================
+
+.. automodule:: aws.osml.tile_server.viewpoint.viewpoint_id.map.tileset.router
+   :members:
+   :undoc-members:
+   :show-inheritance:

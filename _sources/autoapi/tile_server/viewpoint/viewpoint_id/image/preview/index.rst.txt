@@ -1,0 +1,41 @@
+tile_server.viewpoint.viewpoint_id.image.preview
+================================================
+
+.. py:module:: tile_server.viewpoint.viewpoint_id.image.preview
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   tile_server.viewpoint.viewpoint_id.image.preview.preview_router
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   tile_server.viewpoint.viewpoint_id.image.preview.get_image_preview
+
+
+Module Contents
+---------------
+
+.. py:data:: preview_router
+
+.. py:function:: get_image_preview(aws: Annotated[aws.osml.tile_server.services.get_aws_services, Depends()], viewpoint_id: str, img_format: aws.osml.gdal.GDALImageFormats = Path(description='Output image type.'), max_size: int = 1024, width: int = 0, height: int = 0, compression: aws.osml.gdal.GDALCompressionOptions = Query(GDALCompressionOptions.NONE, description='Compression Algorithm for image.')) -> fastapi.Response
+
+   Get a preview/thumbnail image in the requested format
+
+   :param aws: Injected AWS services.
+   :param viewpoint_id: Unique viewpoint id to get from the table.
+   :param img_format: The Desired format for preview output, valid options are defined by GDALImageFormats.
+   :param max_size: Max size of the preview image, defaults to 1024 pixels.
+   :param width: Preview width in pixels that supersedes scale if > 0.
+   :param height: Preview height in pixels that supersedes scale if > 0.
+   :param compression: GDAL image compression format to use.
+   :return: Response of preview binary with the appropriate mime type based on the img_format
+
+

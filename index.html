@@ -1,0 +1,632 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OversightML Tile Server &mdash; OversightML Tile Server  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Reference" href="autoapi/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            OversightML Tile Server
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">OversightML Tile Server</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">OversightML Tile Server</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="oversightml-tile-server">
+<h1>OversightML Tile Server<a class="headerlink" href="#oversightml-tile-server" title="Link to this heading"></a></h1>
+<p>The OversightML Tile Server is a lightweight, cloud-based tile service which provides RESTful APIs for accessing
+pixels and metadata for imagery stored in the cloud. Key features include:</p>
+<ul class="simple">
+<li><p>Works with imagery conforming to the <a class="reference external" href="https://www.cogeo.org/">Cloud Optimized GeoTIFF (COG)</a> and
+<a class="reference external" href="https://en.wikipedia.org/wiki/National_Imagery_Transmission_Format">National Imagery Transmission Format (NITF)</a>
+standards</p></li>
+<li><p>Creates both orthophoto map and unwarped image tiles as needed from the source image pyramid</p></li>
+<li><p>Outputs image tiles in PNG, TIFF, JPEG formats and can also output NITFs for tiles without warping</p></li>
+<li><p>Conforms to the <a class="reference external" href="https://ogcapi.ogc.org/tiles/">OGC API - Tiles</a> specification</p></li>
+</ul>
+<hr class="docutils" />
+<section id="rest-apis">
+<h2>REST APIs<a class="headerlink" href="#rest-apis" title="Link to this heading"></a></h2>
+<dl class="http get">
+<dt class="sig sig-object http" id="get--viewpoints-">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/viewpoints/</span></span><a class="headerlink" href="#get--viewpoints-" title="Link to this definition"></a></dt>
+<dd><p><strong>List Viewpoints</strong></p>
+<p>Retrieve a list of available viewpoints. Viewpoints are resources that are created to make images
+stored in the cloud available through these service APIs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>aws</strong> – Injected AWS services</p></li>
+<li><p><strong>encryptor</strong> – Injected encryptor</p></li>
+<li><p><strong>max_results</strong> – Optional max number of viewpoints requested</p></li>
+<li><p><strong>next_token</strong> – Optional token to begin a query from provided by the previous query response.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of viewpoints with details from the table.</p>
+</dd>
+<dt class="field-odd">Query Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_results</strong></p></li>
+<li><p><strong>next_token</strong></p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Successful Response</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a></span> – Not found!</p></li>
+<li><p><span><a class="reference external" href="https://www.rfc-editor.org/rfc/rfc4918#section-11.2">422 Unprocessable Entity</a></span> – Validation Error</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http post">
+<dt class="sig sig-object http" id="post--viewpoints-">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/viewpoints/</span></span><a class="headerlink" href="#post--viewpoints-" title="Link to this definition"></a></dt>
+<dd><p><strong>Create Viewpoint</strong></p>
+<p>Create a new viewpoint for an image stored in the cloud. This operation tells the tile server to
+parse and index information about the source image necessary to improve performance of all following
+calls to the tile server API.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>aws</strong> – Injected AWS services</p></li>
+<li><p><strong>viewpoint_request</strong> – client’s request which contains name, file source, and range type.</p></li>
+<li><p><strong>request</strong> – A handle to the FastAPI request object.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return<span class="colon">:</span></dt>
+<dd class="field-even"><p>Status associated with the request to create the viewpoint in the table.</p>
+</dd>
+<dt class="field-odd">Status Codes<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.2">201 Created</a></span> – Successful Response</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a></span> – Not found!</p></li>
+<li><p><span><a class="reference external" href="https://www.rfc-editor.org/rfc/rfc4918#section-11.2">422 Unprocessable Entity</a></span> – Validation Error</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http put">
+<dt class="sig sig-object http" id="put--viewpoints-">
+<span class="sig-name descname"><span class="pre">PUT</span> </span><span class="sig-name descname"><span class="pre">/viewpoints/</span></span><a class="headerlink" href="#put--viewpoints-" title="Link to this definition"></a></dt>
+<dd><p><strong>Update Viewpoint</strong></p>
+<p>Change a viewpoint that already exists. This operation can be called to update an existing viewpoint
+when the display options have changed or when the image has moved to a new location.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>aws</strong> – Injected AWS services.</p></li>
+<li><p><strong>viewpoint_request</strong> – Client’s request, which contains name, file source, and range type.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return<span class="colon">:</span></dt>
+<dd class="field-even"><p>Updated viewpoint item details from the table.</p>
+</dd>
+<dt class="field-odd">Status Codes<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.2">201 Created</a></span> – Successful Response</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a></span> – Not found!</p></li>
+<li><p><span><a class="reference external" href="https://www.rfc-editor.org/rfc/rfc4918#section-11.2">422 Unprocessable Entity</a></span> – Validation Error</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http delete">
+<dt class="sig sig-object http" id="delete--viewpoints-viewpoint_id">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/viewpoints/{viewpoint_id}</span></span><a class="headerlink" href="#delete--viewpoints-viewpoint_id" title="Link to this definition"></a></dt>
+<dd><p><strong>Delete Viewpoint</strong></p>
+<p>Delete a viewpoint when it is no longer needed. This notifies the tile server to clean up any cached
+information and release resources allocated to the viewpoint that are no longer necessary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>aws</strong> – Injected AWS services.</p></li>
+<li><p><strong>viewpoint_id</strong> (<em>string, required</em>) – Unique viewpoint id to get from the table.</p></li>
+<li><p><strong>viewpoint_id</strong></p></li>
+</ul>
+</dd>
+<dt class="field-even">Return<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Status Codes<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.5">204 No Content</a></span> – Successful Response</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a></span> – Not found!</p></li>
+<li><p><span><a class="reference external" href="https://www.rfc-editor.org/rfc/rfc4918#section-11.2">422 Unprocessable Entity</a></span> – Validation Error</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--viewpoints-viewpoint_id">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/viewpoints/{viewpoint_id}</span></span><a class="headerlink" href="#get--viewpoints-viewpoint_id" title="Link to this definition"></a></dt>
+<dd><p><strong>Describe Viewpoint</strong></p>
+<p>Retrieve the current status information about a viewpoint along with a detailed description of all
+options chosen.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>aws</strong> – Injected AWS services</p></li>
+<li><p><strong>viewpoint_id</strong> (<em>string, required</em>) – Unique viewpoint id to get from the table.</p></li>
+<li><p><strong>viewpoint_id</strong></p></li>
+</ul>
+</dd>
+<dt class="field-even">Return<span class="colon">:</span></dt>
+<dd class="field-even"><p>Details from the viewpoint item in the table.</p>
+</dd>
+<dt class="field-odd">Status Codes<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Successful Response</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a></span> – Not found!</p></li>
+<li><p><span><a class="reference external" href="https://www.rfc-editor.org/rfc/rfc4918#section-11.2">422 Unprocessable Entity</a></span> – Validation Error</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--viewpoints-viewpoint_id-image-bounds">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/viewpoints/{viewpoint_id}/image/bounds</span></span><a class="headerlink" href="#get--viewpoints-viewpoint_id-image-bounds" title="Link to this definition"></a></dt>
+<dd><p><strong>Get Image Bounds</strong></p>
+<p>Get the [min X, min Y, max X, max Y] boundary of the image in pixels. [0, 0] is assumed to be in the upper
+left corner of the image with x increasing in columns to the right and y increasing in rows down. The
+boundary coordinates are the upper left and lower right corners of the cropped region.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>aws</strong> – Injected AWS services.</p></li>
+<li><p><strong>viewpoint_id</strong> (<em>string, required</em>) – Unique viewpoint id to get from the table.</p></li>
+<li><p><strong>viewpoint_id</strong></p></li>
+</ul>
+</dd>
+<dt class="field-even">Return<span class="colon">:</span></dt>
+<dd class="field-even"><p>FileResponse containing bounds for the given item.</p>
+</dd>
+<dt class="field-odd">Status Codes<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Successful Response</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a></span> – Not found!</p></li>
+<li><p><span><a class="reference external" href="https://www.rfc-editor.org/rfc/rfc4918#section-11.2">422 Unprocessable Entity</a></span> – Validation Error</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--viewpoints-viewpoint_id-image-crop-min_x,min_y,max_x,max_y.img_format">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/viewpoints/{viewpoint_id}/image/crop/{min_x},{min_y},{max_x},{max_y}.{img_format}</span></span><a class="headerlink" href="#get--viewpoints-viewpoint_id-image-crop-min_x,min_y,max_x,max_y.img_format" title="Link to this definition"></a></dt>
+<dd><p><strong>Get Image Crop</strong></p>
+<p>Crop out an arbitrary region of the full resolution image given a bounding box in pixel coordinates.
+[0, 0] is assumed to be in the upper left corner of the image with x increasing in columns to the
+right and y increasing in rows down. The [min_x, min_y, max_x, max_y] coordinates are the upper
+left and lower right corners of the cropped region.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>aws</strong> – Injected AWS services.</p></li>
+<li><p><strong>viewpoint_id</strong> (<em>string, required</em>) – Unique viewpoint id to get from the table as a crop.</p></li>
+<li><p><strong>min_x</strong> (<em>integer, required</em>) – The left pixel coordinate of the desired crop.</p></li>
+<li><p><strong>min_y</strong> (<em>integer, required</em>) – The upper pixel coordinate of the desired crop.</p></li>
+<li><p><strong>max_x</strong> (<em>integer, required</em>) – The right pixel coordinate of the desired crop.</p></li>
+<li><p><strong>max_y</strong> (<em>integer, required</em>) – The lower pixel coordinate of the pixel crop.</p></li>
+<li><p><strong>img_format</strong> (<em>required</em>) – Desired format for cropped output. Valid options are defined by GDALImageFormats.</p></li>
+<li><p><strong>compression</strong> – Desired compression algorithm for the output image.</p></li>
+<li><p><strong>width</strong> – Optional width in px of the desired crop, if provided, max_x will be ignored.</p></li>
+<li><p><strong>height</strong> – Optional height in px of the desired crop, if provided, max_y will be ignored.</p></li>
+<li><p><strong>viewpoint_id</strong> – Unique identifier for this viewpoint</p></li>
+<li><p><strong>min_x</strong> – The left pixel coordinate of the desired crop.</p></li>
+<li><p><strong>min_y</strong> – The upper pixel coordinate of the desired crop.</p></li>
+<li><p><strong>max_x</strong> – The right pixel coordinate of the desired crop.</p></li>
+<li><p><strong>max_y</strong> – The lower pixel coordinate of the pixel crop.</p></li>
+<li><p><strong>img_format</strong> – Desired format for cropped output. Valid options are defined by GDALImageFormats.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return<span class="colon">:</span></dt>
+<dd class="field-even"><p>Response of cropped image binary with the appropriate mime type based on the img_format</p>
+</dd>
+<dt class="field-odd">Query Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>compression</strong> – Desired compression algorithm for image.</p></li>
+<li><p><strong>width</strong> (<em>integer</em>) – Optional. Width in px of the desired crop.  If provided, max_x will be ignored.</p></li>
+<li><p><strong>height</strong> (<em>integer</em>) – Optional. Height in px of the desired crop.  If provided, max_y will be ignored.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Successful Response</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a></span> – Not found!</p></li>
+<li><p><span><a class="reference external" href="https://www.rfc-editor.org/rfc/rfc4918#section-11.2">422 Unprocessable Entity</a></span> – Validation Error</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--viewpoints-viewpoint_id-image-info">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/viewpoints/{viewpoint_id}/image/info</span></span><a class="headerlink" href="#get--viewpoints-viewpoint_id-image-info" title="Link to this definition"></a></dt>
+<dd><p><strong>Get Image Info</strong></p>
+<p>Get a sample GeoJSON feature that represents the extent / boundary of this image in the world.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>aws</strong> – Injected AWS services.</p></li>
+<li><p><strong>viewpoint_id</strong> (<em>string, required</em>) – Unique viewpoint id to get from the table.</p></li>
+<li><p><strong>viewpoint_id</strong></p></li>
+</ul>
+</dd>
+<dt class="field-even">Return<span class="colon">:</span></dt>
+<dd class="field-even"><p>FileResponse containing info associated with the given viewpoint.</p>
+</dd>
+<dt class="field-odd">Status Codes<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Successful Response</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a></span> – Not found!</p></li>
+<li><p><span><a class="reference external" href="https://www.rfc-editor.org/rfc/rfc4918#section-11.2">422 Unprocessable Entity</a></span> – Validation Error</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--viewpoints-viewpoint_id-image-metadata">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/viewpoints/{viewpoint_id}/image/metadata</span></span><a class="headerlink" href="#get--viewpoints-viewpoint_id-image-metadata" title="Link to this definition"></a></dt>
+<dd><p><strong>Get Image Metadata</strong></p>
+<p>Get the metadata associated with the image. The specific format and amount of information will vary based
+on the source image format and image type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>aws</strong> – Injected AWS services.</p></li>
+<li><p><strong>viewpoint_id</strong> (<em>string, required</em>) – Unique viewpoint id to get from the table.</p></li>
+<li><p><strong>viewpoint_id</strong></p></li>
+</ul>
+</dd>
+<dt class="field-even">Return<span class="colon">:</span></dt>
+<dd class="field-even"><p>FileResponse containing metadata associated with the viewpoint item from the table.</p>
+</dd>
+<dt class="field-odd">Status Codes<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Successful Response</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a></span> – Not found!</p></li>
+<li><p><span><a class="reference external" href="https://www.rfc-editor.org/rfc/rfc4918#section-11.2">422 Unprocessable Entity</a></span> – Validation Error</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--viewpoints-viewpoint_id-image-preview.img_format">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/viewpoints/{viewpoint_id}/image/preview.{img_format}</span></span><a class="headerlink" href="#get--viewpoints-viewpoint_id-image-preview.img_format" title="Link to this definition"></a></dt>
+<dd><p><strong>Get Image Preview</strong></p>
+<p>Get a preview/thumbnail image in the requested format</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>aws</strong> – Injected AWS services.</p></li>
+<li><p><strong>viewpoint_id</strong> (<em>string, required</em>) – Unique viewpoint id to get from the table.</p></li>
+<li><p><strong>img_format</strong> (<em>required</em>) – The Desired format for preview output, valid options are defined by GDALImageFormats.</p></li>
+<li><p><strong>max_size</strong> – Max size of the preview image, defaults to 1024 pixels.</p></li>
+<li><p><strong>width</strong> – Preview width in pixels that supersedes scale if &gt; 0.</p></li>
+<li><p><strong>height</strong> – Preview height in pixels that supersedes scale if &gt; 0.</p></li>
+<li><p><strong>compression</strong> – GDAL image compression format to use.</p></li>
+<li><p><strong>viewpoint_id</strong></p></li>
+<li><p><strong>img_format</strong> – Output image type.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return<span class="colon">:</span></dt>
+<dd class="field-even"><p>Response of preview binary with the appropriate mime type based on the img_format</p>
+</dd>
+<dt class="field-odd">Query Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_size</strong> (<em>integer</em>)</p></li>
+<li><p><strong>width</strong> (<em>integer</em>)</p></li>
+<li><p><strong>height</strong> (<em>integer</em>)</p></li>
+<li><p><strong>compression</strong> – Compression Algorithm for image.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Successful Response</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a></span> – Not found!</p></li>
+<li><p><span><a class="reference external" href="https://www.rfc-editor.org/rfc/rfc4918#section-11.2">422 Unprocessable Entity</a></span> – Validation Error</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--viewpoints-viewpoint_id-image-statistics">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/viewpoints/{viewpoint_id}/image/statistics</span></span><a class="headerlink" href="#get--viewpoints-viewpoint_id-image-statistics" title="Link to this definition"></a></dt>
+<dd><p><strong>Get Image Statistics</strong></p>
+<p>Get viewpoint statistics based on provided viewpoint id.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>aws</strong> – Injected AWS services.</p></li>
+<li><p><strong>viewpoint_id</strong> (<em>string, required</em>) – Unique viewpoint id to get from the table.</p></li>
+<li><p><strong>viewpoint_id</strong></p></li>
+</ul>
+</dd>
+<dt class="field-even">Return<span class="colon">:</span></dt>
+<dd class="field-even"><p>FileResponse containing statistics associated with the viewpoint.</p>
+</dd>
+<dt class="field-odd">Status Codes<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Successful Response</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a></span> – Not found!</p></li>
+<li><p><span><a class="reference external" href="https://www.rfc-editor.org/rfc/rfc4918#section-11.2">422 Unprocessable Entity</a></span> – Validation Error</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--viewpoints-viewpoint_id-image-tiles-z-x-y.tile_format">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/viewpoints/{viewpoint_id}/image/tiles/{z}/{x}/{y}.{tile_format}</span></span><a class="headerlink" href="#get--viewpoints-viewpoint_id-image-tiles-z-x-y.tile_format" title="Link to this definition"></a></dt>
+<dd><p><strong>Get Image Tile</strong></p>
+<p>Create a tile of this image using the options set when creating the viewpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>aws</strong> – Injected AWS services.</p></li>
+<li><p><strong>viewpoint_id</strong> (<em>string, required</em>) – Unique viewpoint id to get from the table.</p></li>
+<li><p><strong>z</strong> (<em>integer, required</em>) – Resolution-level in the image pyramid 0 = full resolution, 1 = full/2, 2 = full/4, …</p></li>
+<li><p><strong>x</strong> (<em>integer, required</em>) – Tile row location in pixels for the given tile.</p></li>
+<li><p><strong>y</strong> (<em>integer, required</em>) – Tile column location in pixels for the given tile.</p></li>
+<li><p><strong>tile_format</strong> (<em>required</em>) – Desired format for tile output, valid options are defined by GDALImageFormats.</p></li>
+<li><p><strong>compression</strong> – GDAL tile compression format.</p></li>
+<li><p><strong>viewpoint_id</strong></p></li>
+<li><p><strong>z</strong></p></li>
+<li><p><strong>x</strong></p></li>
+<li><p><strong>y</strong></p></li>
+<li><p><strong>tile_format</strong> – Output image type.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return<span class="colon">:</span></dt>
+<dd class="field-even"><p>Response of tile image binary payload.</p>
+</dd>
+<dt class="field-odd">Query Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>compression</strong> – Compression Algorithm for image.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Successful Response</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a></span> – Not found!</p></li>
+<li><p><span><a class="reference external" href="https://www.rfc-editor.org/rfc/rfc4918#section-11.2">422 Unprocessable Entity</a></span> – Validation Error</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--viewpoints-viewpoint_id-map-tiles">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/viewpoints/{viewpoint_id}/map/tiles</span></span><a class="headerlink" href="#get--viewpoints-viewpoint_id-map-tiles" title="Link to this definition"></a></dt>
+<dd><p><strong>Get Map Tilesets</strong></p>
+<p>Retrieves the list of tilesets available for this viewpoint. This endpoint conforms to the
+OGC API - Tiles: Tileset &amp; Tilsets List specification.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>aws</strong> – Injected AWS services.</p></li>
+<li><p><strong>viewpoint_id</strong> (<em>string, required</em>) – The viewpoint id.</p></li>
+<li><p><strong>viewpoint_id</strong></p></li>
+</ul>
+</dd>
+<dt class="field-even">Return<span class="colon">:</span></dt>
+<dd class="field-even"><p>A TileSetList object containing a list of tilesets that are available for this viewpoint.</p>
+</dd>
+<dt class="field-odd">Status Codes<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Successful Response</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a></span> – Not found!</p></li>
+<li><p><span><a class="reference external" href="https://www.rfc-editor.org/rfc/rfc4918#section-11.2">422 Unprocessable Entity</a></span> – Validation Error</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--viewpoints-viewpoint_id-map-tiles-tile_matrix_set_id">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/viewpoints/{viewpoint_id}/map/tiles/{tile_matrix_set_id}</span></span><a class="headerlink" href="#get--viewpoints-viewpoint_id-map-tiles-tile_matrix_set_id" title="Link to this definition"></a></dt>
+<dd><p><strong>Get Map Tileset Metadata</strong></p>
+<p>Retrieves the metadata for a specific tileset. This endpoint conforms to the OGC API - Tiles: Tileset &amp;
+Tilsets List specification.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>aws</strong> – Injected AWS services.</p></li>
+<li><p><strong>viewpoint_id</strong> (<em>string, required</em>) – The viewpoint id.</p></li>
+<li><p><strong>tile_matrix_set_id</strong> (<em>string, required</em>) – The name of the tile matrix set (e.g. WebMercatorQuad).</p></li>
+<li><p><strong>request</strong> – A handle to the FastAPI request object.</p></li>
+<li><p><strong>viewpoint_id</strong></p></li>
+<li><p><strong>tile_matrix_set_id</strong></p></li>
+</ul>
+</dd>
+<dt class="field-even">Return<span class="colon">:</span></dt>
+<dd class="field-even"><p>A TileSetMetadata object containing the tileset metadata.</p>
+</dd>
+<dt class="field-odd">Status Codes<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Successful Response</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a></span> – Not found!</p></li>
+<li><p><span><a class="reference external" href="https://www.rfc-editor.org/rfc/rfc4918#section-11.2">422 Unprocessable Entity</a></span> – Validation Error</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--viewpoints-viewpoint_id-map-tiles-tile_matrix_set_id-tile_matrix-tile_row-tile_col.tile_format">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/viewpoints/{viewpoint_id}/map/tiles/{tile_matrix_set_id}/{tile_matrix}/{tile_row}/{tile_col}.{tile_format}</span></span><a class="headerlink" href="#get--viewpoints-viewpoint_id-map-tiles-tile_matrix_set_id-tile_matrix-tile_row-tile_col.tile_format" title="Link to this definition"></a></dt>
+<dd><p><strong>Get Map Tile</strong></p>
+<p>Create a tile by warping the image into an orthophoto and clipping it at the appropriate resolution/bounds
+for the requested tile. This endpoint conforms to the OGC API - Tiles specification.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>aws</strong> – Injected AWS services.</p></li>
+<li><p><strong>viewpoint_id</strong> (<em>string, required</em>) – The viewpoint id.</p></li>
+<li><p><strong>tile_matrix_set_id</strong> (<em>string, required</em>) – The name of the tile matrix set (e.g. WebMercatorQuad).</p></li>
+<li><p><strong>tile_matrix</strong> (<em>integer, required</em>) – The zoom level or tile matrix it.</p></li>
+<li><p><strong>tile_row</strong> (<em>integer, required</em>) – The tile row in the tile matrix.</p></li>
+<li><p><strong>tile_col</strong> (<em>integer, required</em>) – The tile column in the tile matrix.</p></li>
+<li><p><strong>tile_format</strong> (<em>required</em>) – The desired output format.</p></li>
+<li><p><strong>compression</strong> – The desired compression.</p></li>
+<li><p><strong>invert_y</strong> – Whether to invert the tile y index.</p></li>
+<li><p><strong>viewpoint_id</strong></p></li>
+<li><p><strong>tile_matrix_set_id</strong></p></li>
+<li><p><strong>tile_matrix</strong></p></li>
+<li><p><strong>tile_row</strong></p></li>
+<li><p><strong>tile_col</strong></p></li>
+<li><p><strong>tile_format</strong> – Output image type.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Response binary image containing the map tile created from this viewpoint.</p>
+</dd>
+<dt class="field-odd">Query Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>compression</strong> – Compression Algorithm for image.</p></li>
+<li><p><strong>invert_y</strong> (<em>boolean</em>) – Invert the TMS tile y-index.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Successful Response</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a></span> – Not found!</p></li>
+<li><p><span><a class="reference external" href="https://www.rfc-editor.org/rfc/rfc4918#section-11.2">422 Unprocessable Entity</a></span> – Validation Error</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="modules-classes-and-functions">
+<h2>Modules, Classes, and Functions<a class="headerlink" href="#modules-classes-and-functions" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="autoapi/index.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="autoapi/tile_server/index.html">tile_server</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="autoapi/tile_server/index.html#subpackages">Subpackages</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoapi/tile_server/index.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<hr class="docutils" />
+<section id="indices">
+<h2>Indices<a class="headerlink" href="#indices" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="autoapi/index.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>
