@@ -15,7 +15,7 @@
     "@types/node": "^25.3.0",
     "@typescript-eslint/eslint-plugin": "^8.56.1",
     "@typescript-eslint/parser": "^8.56.1",
-    "aws-cdk": "^2.1107.0",
+    "aws-cdk": "^2.1126.0",
     "cdk-nag": "^2.37.55",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
@@ -33,8 +33,8 @@
     "typescript": "~5.9.3"
   },
   "dependencies": {
-    "@aws-cdk/cloud-assembly-schema": "^52.2.0",
-    "aws-cdk-lib": "^2.240.0",
+    "@aws-cdk/cloud-assembly-schema": "^54.0.0",
+    "aws-cdk-lib": "^2.258.0",
     "constructs": "^10.5.1"
   }
 }

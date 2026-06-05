@@ -1,9 +1,12 @@
-# Copyright 2023-2025 Amazon.com, Inc. or its affiliates.
+# Copyright 2023-2026 Amazon.com, Inc. or its affiliates.
 
 name: osml_tile_server
 channels:
   - conda-forge
 dependencies:
+  # pip is required because recent conda-forge python builds no longer
+  # bundle it, and the image installs the app via `python3 -m pip install`.
+  - conda-forge::pip
   - conda-forge::cryptography=46.0.3
   - conda-forge::numpy=2.3.5
   - conda-forge::gdal=3.12.0
